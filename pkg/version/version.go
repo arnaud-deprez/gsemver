@@ -48,10 +48,15 @@ type versionBumper func(Version) Version
 
 // Version object to represent a SemVer version
 type Version struct {
-	Major         int
-	Minor         int
-	Patch         int
-	PreRelease    string
+	// Major represents the major (aka X) number in a semver version
+	Major int
+	// Minor represents the minor (aka Y) number in a semver version
+	Minor int
+	// Patch represents the patch (aka Z) number in a semver version
+	Patch int
+	// PreRelease represents the optional pre-release information in a semver version
+	PreRelease string
+	// BuildMetadata represents the optional build metadata in a semver version
 	BuildMetadata string
 }
 
@@ -155,7 +160,7 @@ func (v Version) BumpPreRelease(preRelease string, overwrite bool, semverBumper 
 			next.PreRelease = strings.Join(append(desiredIdentifiers, strconv.Itoa(id+1)), ".")
 			return next
 		}
-		// TODO: else compare if pre-release name is >= than v.PreRelease
+		// TODO: eventually compare if pre-release name is >= v.PreRelease
 	}
 	next.PreRelease = strings.Join(append(desiredIdentifiers, strconv.Itoa(0)), ".")
 	return next

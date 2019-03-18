@@ -1,0 +1,21 @@
+language: go
+
+go:
+- 1.12.x
+stages:
+- Build
+- name: Release
+  if: branch =~ ^master|release/.*$
+
+env:
+- GO111MODULE=on 
+
+jobs:
+  include:
+  - stage: Build
+    script: make build test
+  - stage: Release
+    name: "Prepare release"
+    script: make release
+  # - name: "Publish release"
+  #   script: make publish

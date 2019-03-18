@@ -75,7 +75,7 @@ func TestUnknownCommand(t *testing.T) {
 	_, err := cmd.Run()
 	assert.NotNil(err)
 	assert.True(cmd.DidError())
-	_, ok := cmd.Error().(CommandError)
+	_, ok := cmd.Error().(Error)
 	assert.True(ok)
 }
 
@@ -87,6 +87,6 @@ func TestCommandTimedOut(t *testing.T) {
 	assert.NotNil(err)
 	assert.True(cmd.DidError())
 	assert.Equal(fmt.Sprintf("Failed to run '%s' command in directory '%s', output: '%s' caused by: 'Command timed out after %.2f seconds'", cmd.String(), cmd.Dir, out, cmd.Timeout.Seconds()), err.Error())
-	_, ok := cmd.Error().(CommandError)
+	_, ok := cmd.Error().(Error)
 	assert.True(ok)
 }

@@ -58,33 +58,8 @@ That's why I decided to build this tool using [go](https://golang.org/) with ins
 
 ## Usage
 
-* generate next version
+The CLI usage is documented [here](docs/cmd/gsemver.md).
 
-```sh
-gsemver next
-# eventually
-gsemver next patch
-gsemver next minor
-gsemver next major
-# and more eventually. name can be eg build, alpha, beta, etc and so the result will be X.Y.Z-<name>.N
-gsemver next --pre-release <name>
-```
+You can also use the api:
 
-* helper to update version in json and yaml (for javascript and helm for example)
-
-```sh
-gsemver patch -f file.[json|yaml|xml] -p {<json>} [--dry-run]
-```
-
-* generate changelog
-
-```sh
-gsemver changelog [--version <version>]
-```
-
-* help
-
-```sh
-gsemver [help|--help]
-gsemver <command> --help
-```
+* [version bumper example](internal/release/main.go)

@@ -7,7 +7,7 @@ import (
 	"github.com/arnaud-deprez/gsemver/cmd/app"
 )
 
-// Entrypoint for jx command
+// Entrypoint for gsemver command
 func main() {
 	if err := app.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)

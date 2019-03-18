@@ -3,10 +3,11 @@ package version
 import (
 	"testing"
 
-	"github.com/arnaud-deprez/gsemver/pkg/git"
-	mock_version "github.com/arnaud-deprez/gsemver/pkg/version/mock"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/arnaud-deprez/gsemver/pkg/git"
+	mock_version "github.com/arnaud-deprez/gsemver/pkg/version/mock"
 )
 
 func TestBumpVersionStrategyWithoutTag(t *testing.T) {

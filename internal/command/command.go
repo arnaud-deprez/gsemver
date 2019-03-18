@@ -9,8 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/arnaud-deprez/gsemver/internal/log"
 	shellquote "github.com/kballard/go-shellquote"
+
+	"github.com/arnaud-deprez/gsemver/internal/log"
 )
 
 // Command is a struct containing the details of an external command to be executed
@@ -26,14 +27,14 @@ type Command struct {
 	_error  error
 }
 
-// CommandError is the error object encapsulating an error from a Command
-type CommandError struct {
+// Error is the error object encapsulating an error from a Command
+type Error struct {
 	Command Command
 	Output  string
 	cause   error
 }
 
-func (c CommandError) Error() string {
+func (c Error) Error() string {
 	var sb strings.Builder
 	fmt.Fprintf(&sb, "Failed to run '%s %s' command in directory '%s', output: '%s'",
 		c.Command.Name, strings.Join(c.Command.SanitisedArgs(), " "), c.Command.Dir, c.Output)
@@ -149,7 +150,7 @@ func (c *Command) Run() (string, error) {
 	// The error returned by cmd.Output() will be OS specific based on what
 	// happens when a process is killed.
 	if ctx.Err() == context.DeadlineExceeded {
-		err := CommandError{
+		err := Error{
 			Command: *c,
 			cause:   fmt.Errorf("Command timed out after %.2f seconds", c.Timeout.Seconds()),
 		}
@@ -215,7 +216,7 @@ func (c *Command) RunWithContext(ctx *context.Context) (string, error) {
 	if c.Out != nil {
 		err := e.Run()
 		if err != nil {
-			return text, CommandError{
+			return text, Error{
 				Command: *c,
 				cause:   err,
 			}
@@ -225,7 +226,7 @@ func (c *Command) RunWithContext(ctx *context.Context) (string, error) {
 		output := string(data)
 		text = strings.TrimSpace(output)
 		if err != nil {
-			return text, CommandError{
+			return text, Error{
 				Command: *c,
 				Output:  text,
 				cause:   err,

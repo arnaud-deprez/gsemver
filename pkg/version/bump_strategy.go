@@ -79,7 +79,7 @@ func (o *BumpStrategyOptions) Bump() (Version, error) {
 	// This assumes we used annotated tags for the release. Annotated tag are created with: git tag -a -m "<message>" <tag>
 	// Annotated tags adds timestamp, author and message to a tag compared to lightweight tag which does not contain any of these information.
 	// Thanks to that git describe will only show the more recent annotated tag if many annotated tags are on the same commit.
-	// If many lightweight tags are on the same commit, it just takes the first one.
+	// However if you use lightweight tags there are many on the same commit, it just takes the first one.
 	lastTag, err := o.gitRepo.GetLastRelativeTag("HEAD")
 	if err != nil {
 		// just log for debug but the program can continue

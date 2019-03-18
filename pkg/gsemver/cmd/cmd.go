@@ -4,8 +4,9 @@ import (
 	"io"
 	"os"
 
-	log "github.com/arnaud-deprez/gsemver/internal/log"
 	"github.com/spf13/cobra"
+
+	log "github.com/arnaud-deprez/gsemver/internal/log"
 )
 
 const (
@@ -78,7 +79,11 @@ func NewRootCommand(in io.Reader, out, errout io.Writer) *cobra.Command {
 	globalOpts := &GlobalOptions{ioStreams: NewIOStreams(in, out, errout)}
 	globalOpts.addGlobalFlags(cmds)
 
-	cmds.AddCommand(NewBumpCommands(globalOpts))
+	cmds.AddCommand(
+		NewBumpCommands(globalOpts),
+		// Hidden documentation generator command: 'helm docs'
+		newDocsCmd(globalOpts),
+	)
 	return cmds
 }
 

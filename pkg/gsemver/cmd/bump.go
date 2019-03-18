@@ -3,9 +3,10 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/spf13/cobra"
+
 	"github.com/arnaud-deprez/gsemver/internal/git"
 	"github.com/arnaud-deprez/gsemver/pkg/version"
-	"github.com/spf13/cobra"
 )
 
 // NewBumpCommands create the bump command with its subcommands
