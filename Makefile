@@ -8,7 +8,7 @@ GOPATH        = $(shell go env GOPATH)
 GOX           = $(GOPATH)/bin/gox
 MOCKGEN		  = $(GOPATH)/bin/mockgen
 GOIMPORTS     = $(GOPATH)/bin/goimports
-# GOLANGCI_LINT = $(GOPATH)/bin/golangci-lint
+GOLANGCI_LINT = $(GOPATH)/bin/golangci-lint
 GHR           = $(GOPATH)/bin/ghr
 
 # go option
@@ -41,8 +41,8 @@ $(GOX):
 $(MOCKGEN):
 	go get -u github.com/golang/mock/mockgen
 
-# $(GOLANGCI_LINT):
-# 	go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
+$(GOLANGCI_LINT):
+	go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
  
 $(GOIMPORTS):
 	go get -u golang.org/x/tools/cmd/goimports
@@ -74,7 +74,7 @@ docs: $(BINDIR)/$(BINNAME)
 .PHONY: test
 test: build
 test: TESTFLAGS += -race -v
-# test: test-style
+test: test-style
 test: test-coverage
 
 .PHONY: test-unit
@@ -89,10 +89,9 @@ test-coverage:
 	@echo "==> Running unit tests with coverage <=="
 	@scripts/coverage.sh --html
 
-# .PHONY: test-style
-# test-style: $(GOLANGCI_LINT)
-# 	$(GOLANGCI_LINT) run
-# 	@scripts/validate-license.sh
+.PHONY: test-style
+test-style: $(GOLANGCI_LINT)
+	$(GOLANGCI_LINT) run
 
 # .PHONY: verify-docs
 # verify-docs: build

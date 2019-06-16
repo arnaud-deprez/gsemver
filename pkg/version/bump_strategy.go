@@ -107,13 +107,10 @@ func (o *BumpStrategyOptions) Bump() (Version, error) {
 		switch o.Strategy {
 		case MAJOR:
 			versionBumper = Version.BumpMajor
-			break
 		case MINOR:
 			versionBumper = Version.BumpMinor
-			break
 		case PATCH:
 			versionBumper = Version.BumpPatch
-			break
 		default:
 			return zeroVersion, Error{message: fmt.Sprintf("Unable to create versionBumper with strategy <%v>", o.Strategy)}
 		}

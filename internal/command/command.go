@@ -59,7 +59,7 @@ func New(cmd string) *Command {
 // NewWithVarArgs construct new command based on a string array
 func NewWithVarArgs(cmd ...string) *Command {
 	if len(cmd) == 0 {
-		log.Error("Cannot instanciate an empty command!")
+		log.Error("Cannot instantiate an empty command!")
 		// if we cannot parse the command, we should stop here and panic
 		os.Exit(1)
 	}
