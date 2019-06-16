@@ -8,7 +8,7 @@ stages:
   if: branch =~ ^master|release/.*$
 
 env:
-- GO111MODULE=on 
+- GO111MODULE=on
 
 jobs:
   include:

@@ -4,12 +4,13 @@ DIST_DIRS  := find * -type d -exec
 TARGETS    := darwin/amd64 linux/amd64 linux/386 linux/arm linux/arm64 linux/ppc64le windows/amd64
 BINNAME    ?= gsemver
 
-GOPATH        = $(shell go env GOPATH)
-GOX           = $(GOPATH)/bin/gox
-MOCKGEN		  = $(GOPATH)/bin/mockgen
-GOIMPORTS     = $(GOPATH)/bin/goimports
-GOLANGCI_LINT = $(GOPATH)/bin/golangci-lint
-GHR           = $(GOPATH)/bin/ghr
+GO_NOMOD      := GO111MODULE=off go
+GOPATH        := $(shell go env GOPATH)
+GOX           := $(GOPATH)/bin/gox
+MOCKGEN		  := $(GOPATH)/bin/mockgen
+GOIMPORTS     := $(GOPATH)/bin/goimports
+GOLANGCI_LINT := $(GOPATH)/bin/golangci-lint
+GHR           := $(GOPATH)/bin/ghr
 
 # go option
 PKG        := ./...
@@ -21,7 +22,7 @@ GOFLAGS    :=
 SRC        := $(shell find . -type f -name '*.go' -print)
 
 # Required for globs to work correctly
-SHELL      = /bin/bash
+SHELL      := /bin/bash
 
 # use gsemver to retrieve version
 VERSION	   = $(shell go run internal/release/main.go)
@@ -36,19 +37,19 @@ all: build docs release
 # ------------------------------------------------------------------------------
 #  dependencies
 $(GOX):
-	go get -u github.com/mitchellh/gox
+	$(GO_NOMOD) get -u github.com/mitchellh/gox
 
 $(MOCKGEN):
-	go get -u github.com/golang/mock/mockgen
+	$(GO_NOMOD) get -u github.com/golang/mock/mockgen
 
 $(GOLANGCI_LINT):
-	go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
+	$(GO_NOMOD) get -u github.com/golangci/golangci-lint/cmd/golangci-lint
  
 $(GOIMPORTS):
-	go get -u golang.org/x/tools/cmd/goimports
+	$(GO_NOMOD) get -u golang.org/x/tools/cmd/goimports
 
 $(GHR):
-	go get -u github.com/tcnksm/ghr
+	$(GO_NOMOD) get -u github.com/tcnksm/ghr
 
 # ------------------------------------------------------------------------------
 #  build
