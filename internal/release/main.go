@@ -9,15 +9,9 @@ import (
 	"github.com/arnaud-deprez/gsemver/pkg/version"
 )
 
-// Entrypoint for gsemver command
+// Use to compte the next version of gsemver itself
 func main() {
-	dir, err := os.Getwd()
-	if err != nil {
-		log.Error("Unable to retrieve working directory: %v", err)
-		os.Exit(1)
-	}
-
-	gitRepo := git.NewVersionGitRepo(dir)
+	gitRepo := git.NewDefaultVersionGitRepo()
 	bumper := version.NewConventionalCommitBumpStrategyOptions(gitRepo)
 	version, err := bumper.Bump()
 

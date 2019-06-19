@@ -171,6 +171,16 @@ func (v Version) IsPreRelease() bool {
 	return v.PreRelease != ""
 }
 
+// HasSamePreReleaseIdentifiers returns true if the version has the same pre-release identifiers.
+// identifiers is a string where identifiers are separated by .
+func (v Version) HasSamePreReleaseIdentifiers(identifiers string) bool {
+	if v.PreRelease == "" {
+		return false
+	}
+	idx := strings.LastIndexByte(v.PreRelease, '.')
+	return idx == -1 || v.PreRelease[:idx] == identifiers
+}
+
 // WithBuildMetadata return a new Version with build metadata
 func (v Version) WithBuildMetadata(metadata string) Version {
 	next := v

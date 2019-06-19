@@ -70,7 +70,7 @@ func (p *commitParser) parseCommit(input string) *git.Commit {
 
 		switch field {
 		case hashField:
-			commit.Hash = git.NewHash(value)
+			commit.Hash = git.Hash(value)
 		case authorField:
 			commit.Author = p.parseSignature(value)
 		case committerField:
