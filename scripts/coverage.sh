@@ -28,7 +28,7 @@ generate_cover_data() {
     (
       local output="${coverdir}/${d//\//-}.cover"
       echo "$coverdir -> $output"
-      go test -coverprofile="${output}" -covermode="$covermode" "$d"
+      go test -short -coverprofile="${output}" -covermode="$covermode" "$d"
     )
   done
 

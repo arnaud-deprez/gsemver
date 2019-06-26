@@ -62,7 +62,7 @@ func NewConventionalCommitBumpStrategyOptions(gitRepo GitRepo) *BumpStrategyOpti
 		BuildMetadata:        "",
 		RegexReleaseBranches: regexp.MustCompile(`^(master|release/.*)$`),
 		RegexMajor:           regexp.MustCompile(`(?m)^BREAKING CHANGE:.*$`),
-		RegexMinor:           regexp.MustCompile(`^feat(?:\(.+\))?:.*$`),
+		RegexMinor:           regexp.MustCompile(`^feat(?:\(.+\))?:.*`),
 		gitRepo:              gitRepo,
 	}
 }

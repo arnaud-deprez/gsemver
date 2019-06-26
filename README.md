@@ -63,25 +63,70 @@ That's why I decided to build this tool using [go](https://golang.org/) with ins
 
 ### CLI
 
-1. Automatic version bump
+#### Automatic version bump
 
-    ```sh
-    gsemver bump
-    ```
+```sh
+gsemver bump
+```
 
-    This will use the git commits convention to generate the next version.
+This will use the git commits convention to generate the next version.
 
-    The only current supported convention is [conventional commits](https://www.conventionalcommits.org).
-    It also uses by default `master` and `release/*` branches by default as release branches and it generates version with build metadata for any branch that does not match.
-    This is a current limitation but the [roadmap](https://github.com/arnaud-deprez/gsemver/issues/4) is to make more configurable.
+The only current supported convention is [conventional commits](https://www.conventionalcommits.org).
+It also uses by default `master` and `release/*` branches by default as release branches and it generates version with build metadata for any branch that does not match.
+This is a current limitation but the [roadmap](https://github.com/arnaud-deprez/gsemver/issues/4) is to make more configurable.
 
-2. Manual version bump
+The [conventional commits integration tests](test/integration/gsemver_bump_auto_conventionalcommits_test.go) shows you in depth how version is generated.
+For a more comprehension view, here an example of the logs graph these tests generate:
 
-    ```sh
-    gsemver bump major
-    gsemver bump minor
-    gsemver bump patch
-    ```
+```git
+*   34385d9 (HEAD -> master, tag: v1.2.2) Merge from feature/merge2-release-1.1.x
+|\  
+| *   b884197 Merge from release/1.1.x
+| |\  
+|/ /  
+| *   869c83f (tag: v1.1.3, release/1.1.x) Merge from fix/fix-3
+| |\  
+| | * 22eabaf fix: my bug fix 3 on release/1.1.x
+| |/  
+* |   704fde4 (tag: v1.2.1) Merge from feature/merge-release-1.1.x
+|\ \  
+| * \   61b6a7c Merge from release/1.1.x
+| |\ \  
+|/ / /  
+| | _   
+| *   f2d9b5e (tag: v1.1.2) Merge from fix/fix-2
+| |\  
+| | * f95ccbe fix: my bug fix 2 on release/1.1.x
+| |/  
+* |   99a3662 (tag: v1.2.0) Merge from feature/awesome-3
+|\ \  
+| |/  
+|/|   
+| * cc6c1ed feat: my awesome 3rd change
+|/  
+*   145cbff (tag: v1.1.1) Merge from bug/fix-1
+|\  
+| * 681a11b fix: my bug fix on master
+|/  
+*   e9e7644 (tag: v1.1.0) Merge from feature/awesome-2
+|\  
+| * f30042e feat: my awesome 2nd change
+|/  
+*   fba50a2 (tag: v1.0.0, tag: v0.2.0) Merge from feature/awesome-1
+|\  
+| * bf05218 feat: my awesome change
+|/  
+* c619bff (tag: v0.1.1) fix(doc): fix documentation
+* 128a5d9 (tag: v0.1.0) feat: add README.md
+```
+
+#### Manual version bump
+
+```sh
+gsemver bump major
+gsemver bump minor
+gsemver bump patch
+```
 
 All the CLI options are documented [here](docs/cmd/gsemver.md).
 

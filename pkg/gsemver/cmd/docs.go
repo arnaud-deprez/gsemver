@@ -54,6 +54,7 @@ func newDocsCmd(globalOpts *GlobalOptions) *cobra.Command {
 }
 
 func (o *docsOptions) run() error {
+	o.topCmd.DisableAutoGenTag = true
 	switch o.docTypeString {
 	case "markdown", "mdown", "md":
 		return doc.GenMarkdownTree(o.topCmd, o.dest)

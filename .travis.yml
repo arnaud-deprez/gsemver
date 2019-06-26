@@ -4,6 +4,7 @@ go:
 - 1.12.x
 stages:
 - Build
+- Integration tests
 - name: Release
   if: branch =~ ^master|release/.*$
 
@@ -13,7 +14,9 @@ env:
 jobs:
   include:
   - stage: Build
-    script: make build test
+    script: make build test 
+  - stage: Integration tests
+    script: make test-integration
   - stage: Release
     name: "Prepare release"
     script: make release
