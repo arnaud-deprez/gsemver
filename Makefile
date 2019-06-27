@@ -14,7 +14,7 @@ GHR           := $(GOPATH)/bin/ghr
 
 # go option
 PKG        := ./...
-TAGS       :=
+TAGS       := 
 TESTS      := .
 TESTFLAGS  :=
 LDFLAGS    := -w -s
@@ -54,7 +54,7 @@ $(GHR):
 # ------------------------------------------------------------------------------
 #  build
 
-.PHONY: build
+.PHONY: build docs
 build: $(BINDIR)/$(BINNAME)
 
 .PHONY: generate
@@ -82,7 +82,7 @@ test: test-coverage
 test-unit:
 	@echo
 	@echo "==> Running unit tests <=="
-	go test $(GOFLAGS) -run $(TESTS) $(PKG) $(TESTFLAGS)
+	go test $(GOFLAGS) -run $(TESTS) $(PKG) -short $(TESTFLAGS)
 
 .PHONY: test-coverage
 test-coverage:
@@ -94,13 +94,15 @@ test-coverage:
 test-style: $(GOLANGCI_LINT)
 	$(GOLANGCI_LINT) run
 
+.PHONY: test-integration
+test-integration:
+	@echo
+	@echo "==> Running integration tests <=="
+	go test $(GOFLAGS) -run $(TESTS) $(PKG) $(TESTFLAGS)
+
 # .PHONY: verify-docs
 # verify-docs: build
 #	@scripts/verify-docs.sh
-
-# .PHONY: coverage
-# coverage:
-# 	@scripts/coverage.sh
 
 .PHONY: format
 format: $(GOIMPORTS) generate
