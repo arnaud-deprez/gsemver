@@ -92,6 +92,12 @@ func (o *BumpStrategyOptions) Bump() (Version, error) {
 		return zeroVersion, err
 	}
 
+	currentBranch, err := o.gitRepo.GetCurrentBranch()
+	if err != nil {
+		log.Error("Cannot get current branch name caused by %v", err)
+		return zeroVersion, err
+	}
+
 	// Check if describe is a tag, if so return the version that matches this tag
 	commits, cErr := o.gitRepo.GetCommits(lastTag.Name, "HEAD")
 	if cErr != nil {
@@ -100,26 +106,30 @@ func (o *BumpStrategyOptions) Bump() (Version, error) {
 	}
 
 	var versionBumper versionBumper
-	// If strategy is auto, we should convert it to MAJOR, MINOR or PATCH
-	if o.Strategy == AUTO {
-		versionBumper = o.detectVersionBumper(&lastVersion, commits)
-	} else {
-		switch o.Strategy {
-		case MAJOR:
-			versionBumper = Version.BumpMajor
-		case MINOR:
-			versionBumper = Version.BumpMinor
-		case PATCH:
-			versionBumper = Version.BumpPatch
-		default:
-			return zeroVersion, Error{message: fmt.Sprintf("Unable to create versionBumper with strategy <%v>", o.Strategy)}
-		}
+	switch o.Strategy {
+	case MAJOR:
+		versionBumper = Version.BumpMajor
+	case MINOR:
+		versionBumper = Version.BumpMinor
+	case PATCH:
+		versionBumper = Version.BumpPatch
+	case AUTO:
+		versionBumper = o.detectVersionBumper(currentBranch, &lastVersion, commits)
+	default:
+		return zeroVersion, Error{message: fmt.Sprintf("Unable to create versionBumper with strategy <%v>", o.Strategy)}
 	}
 
 	if o.Strategy != AUTO || len(commits) > 0 {
 		if o.BuildMetadata != "" { // if BuildMetadata
 			return lastVersion.WithBuildMetadata(o.BuildMetadata), nil
-		} else if o.PreRelease != "" { // if pre-release bump
+		} else if o.PreRelease != "" && // if PreRelease
+			(o.Strategy != AUTO || o.RegexReleaseBranches.MatchString(currentBranch) || !lastVersion.HasSamePreReleaseIdentifiers(o.PreRelease)) {
+			// if AUTO
+			//   if branch = master/release 
+			//     bump
+			//   else if branch != master/release && !HasSamePreReleaseIdentifiers 
+		    //     bump
+			// else bump
 			// will automatically suffix the pre-release with an identifier. Eg: *-alpha.0
 			return lastVersion.BumpPreRelease(o.PreRelease, o.PreReleaseOverwrite, versionBumper), nil
 		}
@@ -130,9 +140,17 @@ func (o *BumpStrategyOptions) Bump() (Version, error) {
 }
 
 // detectVersionBumper detects what bump strategy to apply based on commits history
-func (o *BumpStrategyOptions) detectVersionBumper(v *Version, commits []git.Commit) versionBumper {
+func (o *BumpStrategyOptions) detectVersionBumper(currentBranch string, v *Version, commits []git.Commit) versionBumper {
 	if len(commits) == 0 {
 		return versionBumperIdentity
+	}
+
+	if !o.RegexReleaseBranches.MatchString(currentBranch) {
+		return func(v Version) Version {
+			lastCommitShortHash := commits[0].Hash.Short()
+			count := len(commits)
+			return v.WithBuildMetadata(fmt.Sprintf("%d.%s", count, lastCommitShortHash.String()))
+		}
 	}
 
 	bumper := Version.BumpPatch

@@ -60,16 +60,11 @@ func (g *gitRepoCLI) GetLastRelativeTag(rev string) (git.Tag, error) {
 	return git.Tag{Name: strings.TrimSpace(out)}, nil
 }
 
-// git-symbolic-ref - Read symbolic refs
-func (g *gitRepoCLI) GetSymbolicRef(name string, short bool) (string, error) {
-	cmd := gitCmd(g).WithArgs("symbolic-ref")
-
-	if short {
-		cmd.WithArg("--short")
-	}
-	cmd.WithArg(parseRev("", name))
-
-	return cmd.Run()
+// GetCurrentBranch - use git symbolic-ref to retrieve the current branch name
+func (g *gitRepoCLI) GetCurrentBranch() (string, error) {
+	return gitCmd(g).
+		WithArgs("symbolic-ref", "--short", parseRev("", "HEAD")).
+		Run()
 }
 
 func gitCmd(g *gitRepoCLI) *command.Command {

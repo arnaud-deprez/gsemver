@@ -19,17 +19,20 @@ Then, you have 2 choices:
     * etc.
 2. you can use a human meaningful convention such as [semver](https://semver.org/spec/v2.0.0.html).
 
-The first option is easy and does not need any tool but it will also prevent you using a lot of well known tools - such as [go modules](https://github.com/golang/go/wiki/Modules), [helm](https://helm.sh/), etc. - that are using [semver](https://semver.org/spec/v2.0.0.html) as a convention.
+The first option is easy and does not required any tool.
 
-So for the second option, in order to provide human meaningful information, you need to rely on some conventions.
+However some tools/tech require you to use a [semver](https://semver.org/spec/v2.0.0.html) compatible format version (eg. [go modules](https://github.com/golang/go/wiki/Modules), [helm](https://helm.sh/), etc.).
+You can still decide to always bump the major, minor or patch number but then your version is not meaningful in you are just doing a hack to be compliant with the spec format but not with spec semantic.
 
-You can find some around and at the end there all based on git commit message convention:
+So for the second option, in order to provide human meaningful information by following the spec semantic, you need to rely on some conventions.
 
-* [angular commit convention](https://github.com/angular/angular/blob/master/CONTRIBUTING.md#-commit-message-guidelines) 
+You can find some git convention such as:
+
 * [conventional commits](https://www.conventionalcommits.org): generalization of angular commit convention to other projects
+* [angular commit convention](https://github.com/angular/angular/blob/master/CONTRIBUTING.md#-commit-message-guidelines)
 * [gitflow](https://datasift.github.io/gitflow/IntroducingGitFlow.html)
 
-Then I looked for existing tools and here is what I've found so far:
+Then I looked for existing tools and here is a non exhaustive list of what I've found so far:
 
 * [GitVersion](https://gitversion.readthedocs.io/en/latest/): tool written in .NET.
 * [semantic-release](https://github.com/semantic-release/semantic-release): tool for npm
@@ -41,11 +44,11 @@ Then I looked for existing tools and here is what I've found so far:
 
 All these tools have at least one of these problems:
 
-* They rely on a runtime environment (nodejs, python, java). But what if I want to build an application on another runtime ?
-* They are not designed to automatically generate a new version based on a convention. Instead, you have to specify what number you want to bump (major, minor, patch) or what type of version you want to generate (alpha, beta, build, etc.)
+* They rely on a runtime environment (nodejs, python, java). But what if I want to build an application on another runtime ? On a VM, this is probably not a big deal but in a container where we try keep them as small as possible, this can be annoying.
+* They are not designed to automatically generate a new version based on a convention. Instead, you have to specify what number you want to bump (major, minor, patch) and/or what type of version you want to generate (alpha, beta, build, etc.)
 * They manage the full release lifecycle and so they are tightly coupled to some build tools like `npm`, `maven` or `gradle`.
 
-I've found some libraries written in [go](https://golang.org/) but they don't deal with git tags:
+I've found some libraries written in [go](https://golang.org/) but they don't deal with git commits/tags convention:
 
 * [hashicorp/go-version](https://github.com/hashicorp/go-version)
 * [coreos/go-semver](https://github.com/coreos/go-semver)
@@ -54,12 +57,36 @@ I've found some libraries written in [go](https://golang.org/) but they don't de
 
 I needed a tool to generate the next release semver compatible version based on previous git tag that I could use on every type of application/library and so that is not relying on a specific runtime environment.
 
-That's why I decided to build this tool using [go](https://golang.org/) with inspirations from the tools I've found.
+That's why I decided to build this tool using [go](https://golang.org/) with inspirations and credits from the tools I've found.
 
 ## Usage
 
-The CLI usage is documented [here](docs/cmd/gsemver.md).
+### CLI
 
-You can also use the api:
+1. Automatic version bump
+
+    ```sh
+    gsemver bump
+    ```
+
+    This will use the git commits convention to generate the next version.
+
+    The only current supported convention is [conventional commits](https://www.conventionalcommits.org).
+    It also uses by default `master` and `release/*` branches by default as release branches and it generates version with build metadata for any branch that does not match.
+    This is a current limitation but the [roadmap](https://github.com/arnaud-deprez/gsemver/issues/4) is to make more configurable.
+
+2. Manual version bump
+
+    ```sh
+    gsemver bump major
+    gsemver bump minor
+    gsemver bump patch
+    ```
+
+All the CLI options are documented [here](docs/cmd/gsemver.md).
+
+### API
+
+Example:
 
 * [version bumper example](internal/release/main.go)

@@ -63,6 +63,21 @@ func (mr *MockGitRepoMockRecorder) GetCommits(arg0, arg1 interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCommits", reflect.TypeOf((*MockGitRepo)(nil).GetCommits), arg0, arg1)
 }
 
+// GetCurrentBranch mocks base method
+func (m *MockGitRepo) GetCurrentBranch() (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCurrentBranch")
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCurrentBranch indicates an expected call of GetCurrentBranch
+func (mr *MockGitRepoMockRecorder) GetCurrentBranch() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCurrentBranch", reflect.TypeOf((*MockGitRepo)(nil).GetCurrentBranch))
+}
+
 // GetLastRelativeTag mocks base method
 func (m *MockGitRepo) GetLastRelativeTag(arg0 string) (git.Tag, error) {
 	m.ctrl.T.Helper()
@@ -76,19 +91,4 @@ func (m *MockGitRepo) GetLastRelativeTag(arg0 string) (git.Tag, error) {
 func (mr *MockGitRepoMockRecorder) GetLastRelativeTag(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLastRelativeTag", reflect.TypeOf((*MockGitRepo)(nil).GetLastRelativeTag), arg0)
-}
-
-// GetSymbolicRef mocks base method
-func (m *MockGitRepo) GetSymbolicRef(arg0 string, arg1 bool) (string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSymbolicRef", arg0, arg1)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetSymbolicRef indicates an expected call of GetSymbolicRef
-func (mr *MockGitRepoMockRecorder) GetSymbolicRef(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSymbolicRef", reflect.TypeOf((*MockGitRepo)(nil).GetSymbolicRef), arg0, arg1)
 }
