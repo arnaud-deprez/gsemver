@@ -39,12 +39,17 @@ func NewBumpCommands(globalOpts *GlobalOptions) *cobra.Command {
 }
 
 // BumpOptions type to represent the available options for the bump commands
+// It extends GlobalOptions.
 type BumpOptions struct {
 	*GlobalOptions
-	Bump                string
-	PreRelease          string
+	// Bump is mapped to pkg/version/BumpStrategyOptions#Strategy
+	Bump string
+	// PreRelease is mapped to pkg/version/BumpStrategyOptions#PreRelease
+	PreRelease string
+	// PreReleaseOverwrite is mapped to pkg/version/BumpStrategyOptions#PreReleaseOverwrite
 	PreReleaseOverwrite bool
-	BuildMetadata       string
+	// BuildMetadata is mapped to pkg/version/BumpStrategyOptions#BuildMetadata
+	BuildMetadata string
 }
 
 func (o *BumpOptions) addBumpFlags(cmd *cobra.Command) {

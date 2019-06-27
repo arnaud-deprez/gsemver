@@ -36,12 +36,18 @@ func NewIOStreams(in io.Reader, out, err io.Writer) *IOStreams {
 
 // GlobalOptions provides the global options of the CLI
 type GlobalOptions struct {
-	Cmd        *cobra.Command
-	Args       []string
+	// Cmd is the current *cobra.Command
+	Cmd *cobra.Command
+	// Args contains all the non options args for the command
+	Args []string
+	// CurrentDir is the directory from where the command has been executed.
 	CurrentDir string
-	Verbose    bool
-	LogLevel   string
-	ioStreams  *IOStreams
+	// Verbose enables verbose output
+	Verbose bool
+	// LogLevel sets the log level (panic, fatal, error, warning, info, debug)
+	LogLevel string
+	// ioStreams contains the input, output and error stream
+	ioStreams *IOStreams
 }
 
 // addGlobalFlags adds the common flags to the given command
@@ -82,7 +88,7 @@ func NewRootCommand(in io.Reader, out, errout io.Writer) *cobra.Command {
 	cmds.AddCommand(
 		NewBumpCommands(globalOpts),
 		// Hidden documentation generator command: 'helm docs'
-		newDocsCmd(globalOpts),
+		newDocsCommands(globalOpts),
 	)
 	return cmds
 }

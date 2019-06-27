@@ -43,17 +43,42 @@ func ParseBumpStrategy(value string) BumpStrategy {
 
 // BumpStrategyOptions allows you to configure the bump strategy
 type BumpStrategyOptions struct {
+	// Strategy defines the strategy to use to bump the version.
+	// It can be automatic (AUTO) or manual (MAJOR, MINOR, PATCH)
 	Strategy             BumpStrategy
+	// PreRelease defines the pre-release class (alpha, beta, etc.) for the next version
 	PreRelease           string
+	// PreReleaseOverwrite defines if a pre-release can be overwritten
+	// If true, it will not append an index to the next version
+	// If false, it will append an incremented index based on the previous same version of same class if any and 0 otherwise
 	PreReleaseOverwrite  bool
+	// BuildMetadata defines the build metadata for the next version
 	BuildMetadata        string
+	// RegexReleaseBranches is the regex used to detect if the current branch is a release branch
 	RegexReleaseBranches *regexp.Regexp
+	// RegexMajor is the regex used to detect if a commit contains a breaking/major change
+	// See RegexMinor for more details
 	RegexMajor           *regexp.Regexp
+	// RegexMinor is the regex used to detect if a commit contains a minor change
+	// If no commit match RegexMajor or RegexMinor, the change is considered as a patch
 	RegexMinor           *regexp.Regexp
+	// gitRepo is an implementation of GitRepo
 	gitRepo              GitRepo
 }
 
-// NewConventionalCommitBumpStrategyOptions create a BumpStrategyOptions following https://www.conventionalcommits.org:
+/*
+NewConventionalCommitBumpStrategyOptions create a BumpStrategyOptions following https://www.conventionalcommits.org
+
+The strategy configuration is:
+
+	Strategy:             AUTO
+	PreRelease:           ""
+	PreReleaseOverwrite:  false
+	BuildMetadata:        ""
+	RegexReleaseBranches: ^(master|release/.*)$
+	RegexMajor:           (?m)^BREAKING CHANGE:.*$
+	RegexMinor:           ^feat(?:\(.+\))?:.*
+*/
 func NewConventionalCommitBumpStrategyOptions(gitRepo GitRepo) *BumpStrategyOptions {
 	return &BumpStrategyOptions{
 		Strategy:             AUTO,
