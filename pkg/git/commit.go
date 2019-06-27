@@ -6,8 +6,8 @@ type Commit struct {
 	Hash Hash
 	// Author is the original author of the commit.
 	Author Signature
-	// Committer is the one performing the commit, might be different from
-	// Author.
+	// Committer is the one performing the commit.
+	// It might be different from Author.
 	Committer Signature
 	// Message is the commit message, contains arbitrary text.
 	Message string

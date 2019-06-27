@@ -24,7 +24,7 @@ type docsOptions struct {
 	topCmd        *cobra.Command
 }
 
-func newDocsCmd(globalOpts *GlobalOptions) *cobra.Command {
+func newDocsCommands(globalOpts *GlobalOptions) *cobra.Command {
 	o := &docsOptions{
 		GlobalOptions: globalOpts,
 	}

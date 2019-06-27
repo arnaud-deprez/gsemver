@@ -172,7 +172,7 @@ func (v Version) IsPreRelease() bool {
 }
 
 // HasSamePreReleaseIdentifiers returns true if the version has the same pre-release identifiers.
-// identifiers is a string where identifiers are separated by .
+// The parameter identifiers is a string where identifiers are separated by .
 func (v Version) HasSamePreReleaseIdentifiers(identifiers string) bool {
 	if v.PreRelease == "" {
 		return false
