@@ -138,6 +138,6 @@ All the CLI options are documented [here](docs/cmd/gsemver.md).
 
 ### API
 
-Example:
+For the API usage, you can check the [godoc](https://godoc.org/github.com/arnaud-deprez/gsemver) where there are some examples.
 
-* [version bumper example](internal/release/main.go)
+You can also check [version bumper release](internal/release/main.go) which is used to release gsemver itself.

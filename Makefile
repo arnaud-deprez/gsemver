@@ -27,9 +27,14 @@ SHELL      := /bin/bash
 # use gsemver to retrieve version
 VERSION	   = $(shell go run internal/release/main.go)
 GIT_COMMIT = $(shell git rev-parse HEAD)
-GIT_SHA    = $(shell git rev-parse --short HEAD)
-GIT_TAG    = $(shell git describe --tags --abbrev=0 --exact-match 2>/dev/null)
 GIT_DIRTY  = $(shell test -n "`git status --porcelain`" && echo "dirty" || echo "clean")
+BUILD_DATE = $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
+
+LDFLAGS += -X github.com/arnaud-deprez/gsemver/internal/version.version=v$(VERSION)
+LDFLAGS += -X github.com/arnaud-deprez/gsemver/internal/version.gitCommit=$(GIT_COMMIT)
+LDFLAGS += -X github.com/arnaud-deprez/gsemver/internal/version.gitTreeState=$(GIT_DIRTY)
+LDFLAGS += -X github.com/arnaud-deprez/gsemver/internal/version.buildDate=$(BUILD_DATE)
+
 
 .PHONY: all
 all: build docs release

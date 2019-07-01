@@ -1,4 +1,4 @@
-package cmd
+package gsemver
 
 import (
 	"fmt"
@@ -10,9 +10,9 @@ import (
 )
 
 // NewBumpCommands create the bump command with its subcommands
-func NewBumpCommands(globalOpts *GlobalOptions) *cobra.Command {
-	options := &BumpOptions{
-		GlobalOptions: globalOpts,
+func newBumpCommands(globalOpts *globalOptions) *cobra.Command {
+	options := &bumpOptions{
+		globalOptions: globalOpts,
 	}
 
 	cmd := &cobra.Command{
@@ -40,8 +40,8 @@ func NewBumpCommands(globalOpts *GlobalOptions) *cobra.Command {
 
 // BumpOptions type to represent the available options for the bump commands
 // It extends GlobalOptions.
-type BumpOptions struct {
-	*GlobalOptions
+type bumpOptions struct {
+	*globalOptions
 	// Bump is mapped to pkg/version/BumpStrategyOptions#Strategy
 	Bump string
 	// PreRelease is mapped to pkg/version/BumpStrategyOptions#PreRelease
@@ -52,7 +52,7 @@ type BumpOptions struct {
 	BuildMetadata string
 }
 
-func (o *BumpOptions) addBumpFlags(cmd *cobra.Command) {
+func (o *bumpOptions) addBumpFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&o.PreRelease, "pre-release", "", "", "Use pre-release version such as alpha which will give a version like X.Y.Z-alpha.N")
 	cmd.PersistentFlags().BoolVarP(&o.PreReleaseOverwrite, "pre-release-overwrite", "", false, "Use pre-release overwrite option to remove the pre-release identifier suffix which will give a version like X.Y.Z-SNAPSHOT if pre-release=SNAPSHOT")
 	cmd.PersistentFlags().StringVarP(&o.BuildMetadata, "build", "", "", "Use build metadata which will give something like X.Y.Z+<build>")
@@ -60,7 +60,7 @@ func (o *BumpOptions) addBumpFlags(cmd *cobra.Command) {
 	o.Cmd = cmd
 }
 
-func (o *BumpOptions) createBumpStrategy() *version.BumpStrategyOptions {
+func (o *bumpOptions) createBumpStrategy() *version.BumpStrategyOptions {
 	ret := version.NewConventionalCommitBumpStrategyOptions(git.NewVersionGitRepo(o.CurrentDir))
 	ret.Strategy = version.ParseBumpStrategy(o.Bump)
 	ret.PreRelease = o.PreRelease
@@ -69,11 +69,11 @@ func (o *BumpOptions) createBumpStrategy() *version.BumpStrategyOptions {
 	return ret
 }
 
-func (o *BumpOptions) run() error {
+func (o *bumpOptions) run() error {
 	version, err := o.createBumpStrategy().Bump()
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(o.GlobalOptions.ioStreams.Out, "%v", version)
+	fmt.Fprintf(o.globalOptions.ioStreams.Out, "%v", version)
 	return nil
 }
