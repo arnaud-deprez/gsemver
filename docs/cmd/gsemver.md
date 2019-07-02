@@ -22,4 +22,5 @@ gsemver [flags]
 ### SEE ALSO
 
 * [gsemver bump](gsemver_bump.md)	 - Bump to next version
+* [gsemver version](gsemver_version.md)	 - Print the CLI version information
 

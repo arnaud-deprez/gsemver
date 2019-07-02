@@ -1,4 +1,4 @@
-package cmd
+package gsemver
 
 import (
 	"path/filepath"
@@ -18,15 +18,15 @@ It can also generate bash autocompletions.
 `
 
 type docsOptions struct {
-	*GlobalOptions
+	*globalOptions
 	dest          string
 	docTypeString string
 	topCmd        *cobra.Command
 }
 
-func newDocsCommands(globalOpts *GlobalOptions) *cobra.Command {
+func newDocsCommands(globalOpts *globalOptions) *cobra.Command {
 	o := &docsOptions{
-		GlobalOptions: globalOpts,
+		globalOptions: globalOpts,
 	}
 
 	cmd := &cobra.Command{

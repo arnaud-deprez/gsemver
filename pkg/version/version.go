@@ -49,15 +49,15 @@ type versionBumper func(Version) Version
 // Version object to represent a SemVer version
 type Version struct {
 	// Major represents the major (aka X) number in a semver version
-	Major int
+	Major int `json:"major"`
 	// Minor represents the minor (aka Y) number in a semver version
-	Minor int
+	Minor int `json:"minor"`
 	// Patch represents the patch (aka Z) number in a semver version
-	Patch int
+	Patch int `json:"patch"`
 	// PreRelease represents the optional pre-release information in a semver version
-	PreRelease string
+	PreRelease string `json:"preRelease,omitempty"`
 	// BuildMetadata represents the optional build metadata in a semver version
-	BuildMetadata string
+	BuildMetadata string `json:"buildMetadata,omitempty"`
 }
 
 // String returns a string representation of a Version object.
