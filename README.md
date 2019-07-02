@@ -67,6 +67,19 @@ That's why I decided to build this tool using [go](https://golang.org/) with ins
 
 ## Usage
 
+### Pre-requisites
+
+Most of CI server uses - by default - [shallow git clone](https://git-scm.com/docs/git-clone#Documentation/git-clone.txt---depthltdepthgt) when cloning your git repository.
+
+When performing such a clone, the local copy of your git repository will contain a _truncated history_ and most probably will be _detached from HEAD_.
+As `gsemver` is currently using `git describe` and `git symbolic-ref`, it needs to have access to the whole history and HEAD needs to be attached.
+
+This can cause error like `fatal: ref HEAD is not a symbolic ref` in case you need to google it for your CI server.
+
+To overcome the situation, you can execute `git fetch --unshallow` before using `gsemver` or use custom options for your CI server: 
+
+* [Travis options](https://docs.travis-ci.com/user/customizing-the-build#git-clone-depth) (which is used in this project)
+
 ### CLI
 
 #### Automatic version bump
