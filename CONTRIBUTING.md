@@ -49,7 +49,7 @@ The **footer** should contain any information about **Breaking Changes** and is 
 1. Fork (https://github.com/arnaud-deprez/gsemver) :tada:
 1. Create a feature branch :coffee:
 1. Run test suite with the `$ make test test-integration` command and confirm that it passes :zap:
-1. Ensure the doc is up to date with your changes with the `$ make docs`command.
+1. Ensure the doc is up to date with your changes with the `$ make docs`command :+1:
 1. Commit your changes :memo:
 1. Rebase your local changes against the `master` branch and squash your commits if necessary :bulb:
 1. Create new Pull Request :love_letter:
