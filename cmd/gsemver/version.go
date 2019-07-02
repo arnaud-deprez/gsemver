@@ -8,7 +8,8 @@ import (
 	"github.com/arnaud-deprez/gsemver/internal/version"
 )
 
-const versionDesc = `
+const (
+	versionDesc = `
 Show the version for gsemver.
 
 This will print a representation the version of gsemver.
@@ -25,6 +26,11 @@ version.BuildInfo{Version:"0.1.0", GitCommit:"acfe51b15f9a1f12d47a20f88c29e53649
 - Compiler is the go compiler with which it has been built.
 - Platform is the current OS platform on which it is running and for which it has been built.
 `
+	versionExample = `
+# Print version of gsemver
+$ gsemver version
+`
+)
 
 // newVersionCommands create the version commands
 func newVersionCommands(globalOpts *globalOptions) *cobra.Command {
@@ -33,10 +39,11 @@ func newVersionCommands(globalOpts *globalOptions) *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Use:   "version",
-		Short: "Print the CLI version information",
-		Long:  versionDesc,
-		Args:  cobra.ExactArgs(0),
+		Use:     "version",
+		Short:   "Print the CLI version information",
+		Long:    versionDesc,
+		Example: versionExample,
+		Args:    cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return options.run()
 		},
