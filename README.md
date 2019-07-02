@@ -65,9 +65,34 @@ I needed a tool to generate the next release semver compatible version based on 
 
 That's why I decided to build this tool using [go](https://golang.org/) with inspirations and credits from the tools I've found.
 
-## Usage
+## Getting Started
 
-### Pre-requisites
+### Installation
+
+Please install `gsemver` in a way that matches your environment.
+
+#### Go users
+
+```sh
+go get -u github.com/arnaud-deprez/gsemver/cmd
+```
+
+#### Manual
+
+For a manual installation, you can download binary from [release page](https://github.com/arnaud-deprez/gsemver/releases) and place it in `$PATH` directory.
+
+### Test Installation
+
+You can check with the following command whether the `gsemver` command was included in a valid `$PATH`.
+
+```bash
+$ gsemver version
+# output the gsemver version
+```
+
+### Usage
+
+#### Pre-requisites
 
 Most of CI server uses - by default - [shallow git clone](https://git-scm.com/docs/git-clone#Documentation/git-clone.txt---depthltdepthgt) when cloning your git repository.
 
@@ -80,9 +105,9 @@ To overcome the situation, you can execute `git fetch --unshallow` before using 
 
 * [Travis options](https://docs.travis-ci.com/user/customizing-the-build#git-clone-depth) (which is used in this project)
 
-### CLI
+#### CLI
 
-#### Automatic version bump
+##### Automatic version bump
 
 ```sh
 gsemver bump
@@ -139,7 +164,7 @@ For a more comprehension view, here an example of the logs graph these tests gen
 * 128a5d9 (tag: v0.1.0) feat: add README.md
 ```
 
-#### Manual version bump
+##### Manual version bump
 
 ```sh
 gsemver bump major
@@ -149,8 +174,21 @@ gsemver bump patch
 
 All the CLI options are documented [here](docs/cmd/gsemver.md).
 
-### API
+#### API
 
 For the API usage, you can check the [godoc](https://godoc.org/github.com/arnaud-deprez/gsemver) where there are some examples.
 
 You can also check [version bumper release](internal/release/main.go) which is used to release gsemver itself.
+
+## Contributing
+
+We are always welcoming your contribution :clap:
+
+But to make everyone's work easier, please read the [CONTRIBUTING guide](CONTRIBUTING.md) first.
+
+### Feedback
+
+I would like to make `gsemver` a better tool and take more scenario into account and eventually non conventional commits log.
+
+Therefore, your feedback is very useful.  
+I am very happy to hear your opinions on Issues and PR :heart:
