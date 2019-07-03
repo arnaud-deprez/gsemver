@@ -8,7 +8,25 @@ gsemver is a command line tool developed in go that uses git commit convention t
 [![GoReport](https://goreportcard.com/badge/github.com/arnaud-deprez/gsemver)](https://goreportcard.com/report/github.com/arnaud-deprez/gsemver)
 [![MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/arnaud-deprez/gsemver/blob/master/LICENSE)
 
-## Motivations
+## Table of Contents
+
+* [Motivations and Thanks](#motivations-and-thanks)
+* [Getting Started](#getting-started)
+  * [Installation](#installation)
+    * [Go users](#go-users)
+    * [Manual](#manual)
+  * [Test Installation](#test-installation)
+* [Usage](#usage)
+  * [Pre-requisites](#pre-requisites)
+  * [CLI](#cli)
+    * [Automatic version bump](#automatic-version-bump)
+    * [Manual version bump](#manual-version-bump)
+  * [API](#api)
+* [Contributing](#contributing)
+  * [Feedback](#feedback)
+* [License](#license)
+
+## Motivations and Thanks
 
 Why yet another git version tool ?
 
@@ -90,9 +108,9 @@ $ gsemver version
 # output the gsemver version
 ```
 
-### Usage
+## Usage
 
-#### Pre-requisites
+### Pre-requisites
 
 Most of CI server uses - by default - [shallow git clone](https://git-scm.com/docs/git-clone#Documentation/git-clone.txt---depthltdepthgt) when cloning your git repository.
 
@@ -105,9 +123,9 @@ To overcome the situation, you can execute `git fetch --unshallow` before using 
 
 * [Travis options](https://docs.travis-ci.com/user/customizing-the-build#git-clone-depth) (which is used in this project)
 
-#### CLI
+### CLI
 
-##### Automatic version bump
+#### Automatic version bump
 
 ```sh
 gsemver bump
@@ -164,7 +182,7 @@ For a more comprehension view, here an example of the logs graph these tests gen
 * 128a5d9 (tag: v0.1.0) feat: add README.md
 ```
 
-##### Manual version bump
+#### Manual version bump
 
 ```sh
 gsemver bump major
@@ -174,7 +192,7 @@ gsemver bump patch
 
 All the CLI options are documented [here](docs/cmd/gsemver.md).
 
-#### API
+### API
 
 For the API usage, you can check the [godoc](https://godoc.org/github.com/arnaud-deprez/gsemver) where there are some examples.
 
@@ -192,3 +210,7 @@ I would like to make `gsemver` a better tool and take more scenario into account
 
 Therefore, your feedback is very useful.  
 I am very happy to hear your opinions on Issues and PR :heart:
+
+## License
+
+[MIT © Arnaud Deprez](./LICENSE)
