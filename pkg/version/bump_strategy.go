@@ -101,6 +101,13 @@ func (o *BumpStrategyOptions) WithPreRelease(value string, override bool) *BumpS
 
 // Bump performs the version bumping based on the strategy
 func (o *BumpStrategyOptions) Bump() (Version, error) {
+	// Make sure we have the tags
+	err := o.gitRepo.FetchTags()
+	if err != nil {
+		log.Error("Cannot fetch tags caused by %v", err)
+		return zeroVersion, err
+	}
+	
 	// This assumes we used annotated tags for the release. Annotated tag are created with: git tag -a -m "<message>" <tag>
 	// Annotated tags adds timestamp, author and message to a tag compared to lightweight tag which does not contain any of these information.
 	// Thanks to that git describe will only show the more recent annotated tag if many annotated tags are on the same commit.

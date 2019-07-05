@@ -37,6 +37,7 @@ func TestBumpVersionStrategyWithoutTag(t *testing.T) {
 
 	for _, tc := range testData {
 		gitRepo := mock_version.NewMockGitRepo(ctrl)
+		gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
 		gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{}, nil)
 		// no commit so it should return the same version
 		gitRepo.EXPECT().GetCommits("", "HEAD").Times(1).Return([]git.Commit{
@@ -94,6 +95,7 @@ func TestBumpVersionStrategyNoDeltaCommit(t *testing.T) {
 
 	for _, tc := range testData {
 		gitRepo := mock_version.NewMockGitRepo(ctrl)
+		gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
 		gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{Name: tc.from}, nil)
 		// no commit so it should return the same version
 		gitRepo.EXPECT().GetCommits(tc.from, "HEAD").Times(1).Return([]git.Commit{}, nil)
@@ -120,6 +122,7 @@ func TestBumpVersionStrategyMajor(t *testing.T) {
 
 	gitRepo := mock_version.NewMockGitRepo(ctrl)
 	from := "v0.1.0"
+	gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
 	gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{Name: from}, nil)
 	gitRepo.EXPECT().GetCommits(from, "HEAD").Times(1).Return([]git.Commit{
 		{
@@ -147,6 +150,7 @@ func TestBumpVersionStrategyMinor(t *testing.T) {
 
 	gitRepo := mock_version.NewMockGitRepo(ctrl)
 	from := "v0.1.0"
+	gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
 	gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{Name: from}, nil)
 	gitRepo.EXPECT().GetCommits(from, "HEAD").Times(1).Return([]git.Commit{
 		{
@@ -174,6 +178,7 @@ func TestBumpVersionStrategyPatch(t *testing.T) {
 
 	gitRepo := mock_version.NewMockGitRepo(ctrl)
 	from := "v0.1.0"
+	gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
 	gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{Name: from}, nil)
 	gitRepo.EXPECT().GetCommits(from, "HEAD").Times(1).Return([]git.Commit{
 		{
@@ -210,6 +215,7 @@ func TestBumpVersionStrategyAutoBreakingShouldBumpMinorOnInitialDevelopmentRelea
 
 	for _, tc := range testData {
 		gitRepo := mock_version.NewMockGitRepo(ctrl)
+		gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
 		gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{Name: tc.from}, nil)
 		gitRepo.EXPECT().GetCommits(tc.from, "HEAD").Times(1).Return([]git.Commit{
 			{
@@ -250,6 +256,7 @@ func TestBumpVersionStrategyAutoBreakingShouldBumpMajor(t *testing.T) {
 
 	for _, tc := range testData {
 		gitRepo := mock_version.NewMockGitRepo(ctrl)
+		gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
 		gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{Name: tc.from}, nil)
 		gitRepo.EXPECT().GetCommits(tc.from, "HEAD").Times(1).Return([]git.Commit{
 			{
@@ -296,6 +303,7 @@ func TestBumpVersionStrategyAutoShouldBumpMinor(t *testing.T) {
 
 	for _, tc := range testData {
 		gitRepo := mock_version.NewMockGitRepo(ctrl)
+		gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
 		gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{Name: tc.from}, nil)
 		gitRepo.EXPECT().GetCommits(tc.from, "HEAD").Times(1).Return([]git.Commit{
 			{
@@ -334,6 +342,7 @@ func TestBumpVersionStrategyAutoShouldBumpPatch(t *testing.T) {
 
 	for _, tc := range testData {
 		gitRepo := mock_version.NewMockGitRepo(ctrl)
+		gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
 		gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{Name: tc.from}, nil)
 		gitRepo.EXPECT().GetCommits(tc.from, "HEAD").Times(1).Return([]git.Commit{
 			{
@@ -376,6 +385,7 @@ func TestBumpVersionStrategyAutoShouldBumpWithPreRelease(t *testing.T) {
 
 	for _, tc := range testData {
 		gitRepo := mock_version.NewMockGitRepo(ctrl)
+		gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
 		gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{Name: tc.from}, nil)
 		gitRepo.EXPECT().GetCommits(tc.from, "HEAD").Times(1).Return([]git.Commit{
 			{
@@ -404,6 +414,7 @@ func TestBumpVersionStrategyAutoShouldBumpPreReleaseMavenLike(t *testing.T) {
 
 	gitRepo := mock_version.NewMockGitRepo(ctrl)
 	from := "v1.0.0"
+	gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
 	gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{Name: from}, nil)
 	gitRepo.EXPECT().GetCommits(from, "HEAD").Times(1).Return([]git.Commit{
 		{

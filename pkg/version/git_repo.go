@@ -7,6 +7,8 @@ import (
 // GitRepo defines common git actions used by gsemver
 //go:generate mockgen -destination mock/git_repo.go github.com/arnaud-deprez/gsemver/pkg/version GitRepo
 type GitRepo interface {
+	// FetchTags fetches the tags from remote
+	FetchTags() error
 	// GetCommits return the list of commits between 2 revisions.
 	// If no revision is provided, it does from beginning to HEAD
 	GetCommits(from string, to string) ([]git.Commit, error)

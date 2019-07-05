@@ -16,6 +16,16 @@ type gitRepoCLI struct {
 	commitParser *commitParser
 }
 
+// FetchTags implements version.GitRepo.FetchTags
+func (g *gitRepoCLI) FetchTags() error {
+	_, err := gitCmd(g).
+		WithArgs(
+			"fetch",
+			"--tags",
+		).Run()
+	return err
+}
+
 // GetCommits implements version.GitRepo.Getcommits
 func (g *gitRepoCLI) GetCommits(from string, to string) ([]git.Commit, error) {
 	rev := parseRev(from, to)

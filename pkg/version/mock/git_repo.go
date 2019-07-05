@@ -48,6 +48,20 @@ func (mr *MockGitRepoMockRecorder) CountCommits(arg0, arg1 interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountCommits", reflect.TypeOf((*MockGitRepo)(nil).CountCommits), arg0, arg1)
 }
 
+// FetchTags mocks base method
+func (m *MockGitRepo) FetchTags() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FetchTags")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// FetchTags indicates an expected call of FetchTags
+func (mr *MockGitRepoMockRecorder) FetchTags() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchTags", reflect.TypeOf((*MockGitRepo)(nil).FetchTags))
+}
+
 // GetCommits mocks base method
 func (m *MockGitRepo) GetCommits(arg0, arg1 string) ([]git.Commit, error) {
 	m.ctrl.T.Helper()
