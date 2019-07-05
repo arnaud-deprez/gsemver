@@ -27,7 +27,7 @@ gsemver is a command line tool developed in go that uses git commit convention t
   * [Feedback](#feedback)
 * [License](#license)
 
-## Motivations and Thanks
+## Motivations
 
 Why yet another git version tool ?
 
