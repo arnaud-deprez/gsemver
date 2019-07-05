@@ -11,6 +11,7 @@ MOCKGEN		  := $(GOPATH)/bin/mockgen
 GOIMPORTS     := $(GOPATH)/bin/goimports
 GOLANGCI_LINT := $(GOPATH)/bin/golangci-lint
 GHR           := $(GOPATH)/bin/ghr
+GIT_CHGLOG    := $(GOPATH)/bin/git-chglog
 
 # go option
 PKG        := ./...
@@ -55,6 +56,9 @@ $(GOIMPORTS):
 
 $(GHR):
 	$(GO_NOMOD) get -u github.com/tcnksm/ghr
+
+$(GIT_CHGLOG):
+	$(GO_NOMOD) get -u github.com/git-chglog/git-chglog/cmd/git-chglog
 
 # ------------------------------------------------------------------------------
 #  build
@@ -116,35 +120,14 @@ format: $(GOIMPORTS) generate
 # ------------------------------------------------------------------------------
 #  release
 
+.PHONY: test-release
+test-release: $(GIT_CHGLOG)
+	export VERION=$(VERSION) GIT_DIRTY=$(GIT_DIRTY) && curl -sL https://git.io/goreleaser | bash -s -- release --config=./.goreleaser.yml --snapshot --skip-publish --rm-dist --release-notes <($(GIT_CHGLOG) --next-tag $(VERSION))
+
 .PHONY: release
-release: build-cross dist checksum
-
-.PHONY: build-cross
-build-cross: LDFLAGS += -extldflags "-static"
-build-cross: generate $(GOX)
-	CGO_ENABLED=0 $(GOX) -parallel=3 -output="$(BUILDDIR)/dist/{{.OS}}-{{.Arch}}/$(BINNAME)" -osarch='$(TARGETS)' $(GOFLAGS) -tags '$(TAGS)' -ldflags '$(LDFLAGS)' github.com/arnaud-deprez/gsemver/cmd
-
-.PHONY: dist
-dist:
-	( \
-		cd $(BUILDDIR)/dist && \
-		$(DIST_DIRS) cp ../../LICENSE {} \; && \
-		$(DIST_DIRS) cp ../../README.md {} \; && \
-		$(DIST_DIRS) tar -zcf $(BINNAME)-$(VERSION)-{}.tar.gz {} \; && \
-		$(DIST_DIRS) zip -r $(BINNAME)-$(VERSION)-{}.zip {} \; \
-	)
-
-.PHONY: checksum
-checksum:
-	for f in $(BUILDDIR)/dist/*.{gz,zip} ; do \
-		shasum -a 256 "$${f}"  | awk '{print $$1}' > "$${f}.sha256" ; \
-	done
-
-.PHONY: publish
-publish:
-	# TODO: generate changelog and link it to release
-	#$(GHR) -body="$$(ghch --latest -F markdown)" v$(VERSION) $(BUILDDIR)/dist
-	$(GHR) -delete -prerelease v$$($(BINDIR)/$(BINNAME) bump) $(BUILDDIR)/dist
+release: $(GIT_CHGLOG)
+	git tag -am "Release v$(VERSION) by ci script" v$(VERSION)
+	export GIT_DIRTY=$(GIT_DIRTY) && curl -sL https://git.io/goreleaser | bash -s -- release --config=./.goreleaser.yml --rm-dist --release-notes <($(GIT_CHGLOG))
 
 # ------------------------------------------------------------------------------
 # clean

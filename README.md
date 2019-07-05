@@ -10,7 +10,8 @@ gsemver is a command line tool developed in go that uses git commit convention t
 
 ## Table of Contents
 
-* [Motivations and Thanks](#motivations-and-thanks)
+* [Motivations](#motivations)
+* [Thanks](#thanks)
 * [Getting Started](#getting-started)
   * [Installation](#installation)
     * [Go users](#go-users)
@@ -82,6 +83,18 @@ I've found some libraries written in [go](https://golang.org/) but they don't de
 I needed a tool to generate the next release semver compatible version based on previous git tag that I could use on every type of application/library and so that is not relying on a specific runtime environment.
 
 That's why I decided to build this tool using [go](https://golang.org/) with inspirations and credits from the tools I've found.
+
+## Thanks
+
+Thank you all for the inspirations!
+
+I'd like also to thanks 2 projects that are used in combination with gsemver to better automate the release of this tool:
+
+* [conventional commits](https://www.conventionalcommits.org) a commit convention I've decided to adopt in all my commits.
+* [git-chglog](https://github.com/git-chglog/git-chglog) is a customizable CHANGELOG generator implemented in go based on commits log.
+* [GoGeleaser](https://goreleaser.com) is a release automation tool for Go projects.
+
+With these 3 tools and `gsemver`, it gets easier to automate the release your projects.
 
 ## Getting Started
 

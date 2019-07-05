@@ -8,14 +8,25 @@ import (
 	"github.com/spf13/cobra/doc"
 )
 
-const docsDesc = `
+const (
+	docsDesc = `
 Generate documentation files for gsemver.
 This command can generate documentation for gsemver in the following formats:
 - Markdown
 - Man pages
-It can also generate bash autocompletions.
-	$ gsemver docs markdown -dir docs/
+It can also generate bash autocompletions.	
 `
+	docsExample = `
+# For Markdown documentation: 
+gsemver docs markdown -dir docs/
+
+# For Man page format:
+gsemver docs man -dir docs/
+
+# For bash completion:
+gsemver docs bash -dir docs/
+`
+)
 
 type docsOptions struct {
 	*globalOptions
@@ -33,6 +44,7 @@ func newDocsCommands(globalOpts *globalOptions) *cobra.Command {
 		Use:       "docs",
 		Short:     "Generate documentation as markdown or man pages",
 		Long:      docsDesc,
+		Example:   docsExample,
 		Hidden:    true,
 		ValidArgs: []string{"markdown", "man", "bash"},
 		Args:      cobra.RangeArgs(0, 1),
