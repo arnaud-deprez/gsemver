@@ -2,6 +2,7 @@ package git
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -72,9 +73,29 @@ func (g *gitRepoCLI) GetLastRelativeTag(rev string) (git.Tag, error) {
 
 // GetCurrentBranch - use git symbolic-ref to retrieve the current branch name
 func (g *gitRepoCLI) GetCurrentBranch() (string, error) {
-	return gitCmd(g).
+	branch, err := gitCmd(g).
 		WithArgs("symbolic-ref", "--short", parseRev("", "HEAD")).
 		Run()
+
+	// Then it is probably because we are in detached mode in CI server.
+	if err != nil {
+		// Most of the time during CI build, the build occurred in a detached HEAD state.
+		// And so we can retrieve the current branch name from environment variable.
+		branchFromEnv := getCurrentBranchFromEnv()
+		if branchFromEnv == "" {
+			return "", fmt.Errorf("Unable to retrieve branch name from `git symbolic-ref HEAD` nor BRANCH_NAME environment variable")
+		}
+		return branchFromEnv, nil
+	}
+
+	return branch, nil
+}
+
+func getCurrentBranchFromEnv() string {
+	// We will use CI GIT_BRANCH environment variable.
+	// This need to be mapped with real environment variable from your CI server.
+	// TODO: eventually add support for most CI environment variable out of the box.
+	return strings.TrimSpace(os.Getenv("GIT_BRANCH"))
 }
 
 func gitCmd(g *gitRepoCLI) *command.Command {

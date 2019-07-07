@@ -1,6 +1,6 @@
 # gsemver
 
-gsemver is a command line tool developed in go that uses git commit convention to automate the generation of your next version compliant with [semver 2.0.0 spec](https://semver.org/spec/v2.0.0.html).
+gsemver is a command line tool developed in [Go (Golang)](https://golang.org/) that uses git commit convention to automate the generation of your next version compliant with [semver 2.0.0 spec](https://semver.org/spec/v2.0.0.html).
 
 [![Build Status](https://travis-ci.com/arnaud-deprez/gsemver.svg?token=uYA1Qbgs8qpfX4ajYZsn&branch=master)](https://travis-ci.com/arnaud-deprez/gsemver)
 [![GoDoc](https://godoc.org/github.com/arnaud-deprez/gsemver?status.svg)](https://godoc.org/github.com/arnaud-deprez/gsemver)
@@ -128,13 +128,14 @@ $ gsemver version
 Most of CI server uses - by default - [shallow git clone](https://git-scm.com/docs/git-clone#Documentation/git-clone.txt---depthltdepthgt) when cloning your git repository.
 
 When performing such a clone, the local copy of your git repository will contain a _truncated history_ and most probably will be _detached from HEAD_.
-As `gsemver` is currently using `git describe` and `git symbolic-ref`, it needs to have access to the whole history and HEAD needs to be attached.
 
-This can cause error like `fatal: ref HEAD is not a symbolic ref` in case you need to google it for your CI server.
+As `gsemver` is currently using `git describe` to compute the next version, it needs to have access to the whole history or at least to the last parent tag.
+For this reason, `gsemver` will execute `git fetch --tags` before computing the next version.
 
-To overcome the situation, you can execute `git fetch --unshallow` before using `gsemver` or use custom options for your CI server: 
-
-* [Travis options](https://docs.travis-ci.com/user/customizing-the-build#git-clone-depth) (which is used in this project)
+As `gsemver` also needs to know the current branch and it tries to retrieve it with `git symbolic-ref HEAD` command.
+However most of CI server execute the build in _detached from HEAD_ state and then it becomes hard in git to retrieve the branch from where the build has been triggered.
+Fortunately, most of CI server injects the branch name in an environment variable.
+That's why `gsemver` allows you to use the `GIT_BRANCH` environment variable as a backup solution.
 
 ### CLI
 

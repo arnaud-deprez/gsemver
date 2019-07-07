@@ -1,11 +1,5 @@
 language: go
 
-# This will allow usage of `git symbolic-ref HEAD`.
-# Otherwise you can do `git fetch --unshallow` in the install step.
-# More info: https://docs.travis-ci.com/user/customizing-the-build#git-clone-depth
-git:
-  depth: false
-
 go:
 - 1.12.x
 stages:
@@ -21,6 +15,7 @@ env:
   - GIT_AUTHOR_EMAIL="arnaudeprez@gmail.com"
   - GIT_COMMITTER_NAME="Arnaud Deprez"
   - GIT_COMMITTER_EMAIL="arnaudeprez@gmail.com"
+  - GIT_BRANCH=${TRAVIS_BRANCH}
 
 jobs:
   include:
@@ -28,7 +23,6 @@ jobs:
     script: make build test 
   - stage: Integration tests
     script: make test-integration
-  - stage: Integration tests
-    script: make test-release
+  - script: make test-release
   - stage: Release
     script: make release
