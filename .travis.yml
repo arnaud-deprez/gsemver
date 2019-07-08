@@ -3,8 +3,10 @@ language: go
 go:
 - 1.12.x
 stages:
-- Build
-- Integration tests
+- name: Build
+  if: tag IS blank # because we create tag from this pipeline
+- name: Integration tests
+  if: tag IS blank # because we create tag from this pipeline
 - name: Release
   if: branch =~ ^master|release/.*$ AND NOT type = pull_request
 

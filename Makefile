@@ -128,7 +128,6 @@ test-release: $(GIT_CHGLOG)
 release: $(GIT_CHGLOG)
 	echo "release $(VERION) on $${GIT_BRANCH}..."
 	git tag -am "Release v$(VERSION) by ci script" v$(VERSION)
-	git push --follow-tags
 	export GIT_DIRTY=$(GIT_DIRTY) && curl -sL https://git.io/goreleaser | bash -s -- release --config=./.goreleaser.yml --rm-dist --release-notes <($(GIT_CHGLOG))
 
 # ------------------------------------------------------------------------------
