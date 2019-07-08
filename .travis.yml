@@ -5,7 +5,7 @@ go:
 stages:
 - name: Build
   if: tag IS blank # because we create tag from this pipeline
-- name: Integration tests
+- name: Tests
   if: tag IS blank # because we create tag from this pipeline
 - name: Release
   if: branch =~ ^master|release/.*$ AND NOT type = pull_request
@@ -22,9 +22,8 @@ env:
 jobs:
   include:
   - stage: Build
-    script: make build test 
-  - stage: Integration tests
+    script: make test-release
+  - stage: Tests
     script: make test-integration
-  - script: make test-release
   - stage: Release
     script: make release
