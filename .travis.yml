@@ -18,12 +18,13 @@ env:
   - GIT_COMMITTER_NAME="Arnaud Deprez"
   - GIT_COMMITTER_EMAIL="arnaudeprez@gmail.com"
   - GIT_BRANCH=${TRAVIS_BRANCH}
+  - GIT_COMMIT=${TRAVIS_COMMIT}
 
 jobs:
   include:
   - stage: Build
-    script: make test-release
+    script: make --environment-overrides test-release
   - stage: Tests
-    script: make test-integration
+    script: make --environment-overrides test-integration
   - stage: Release
-    script: make release
+    script: make --environment-overrides release

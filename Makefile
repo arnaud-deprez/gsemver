@@ -26,10 +26,12 @@ SRC        := $(shell find . -type f -name '*.go' -print)
 SHELL      := /bin/bash
 
 # use gsemver to retrieve version
-VERSION	   = $(shell go run internal/release/main.go)
-GIT_COMMIT = $(shell git rev-parse HEAD)
-GIT_DIRTY  = $(shell test -n "`git status --porcelain`" && echo "dirty" || echo "clean")
-BUILD_DATE = $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
+GIT_BRANCH ?= $(shell git symbolic-ref --short HEAD)
+GIT_COMMIT ?= $(shell git rev-parse HEAD)
+VERSION	   =  $(shell go run internal/release/main.go)
+GIT_DIRTY  =  $(shell test -n "`git status --porcelain`" && echo "dirty" || echo "clean")
+BUILD_DATE =  $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
+LAST_TAG   =  $(shell git describe --tags --abbrev=0 --first-parent --match v[0-9]*.[0-9]*.[0-9]* $(GIT_COMMIT)~ || echo "") 
 
 LDFLAGS += -X github.com/arnaud-deprez/gsemver/internal/version.version=v$(VERSION)
 LDFLAGS += -X github.com/arnaud-deprez/gsemver/internal/version.gitCommit=$(GIT_COMMIT)
@@ -122,13 +124,14 @@ format: $(GOIMPORTS) generate
 
 .PHONY: test-release
 test-release: $(GIT_CHGLOG)
-	export VERION=$(VERSION) GIT_DIRTY=$(GIT_DIRTY) && curl -sL https://git.io/goreleaser | bash -s -- release --config=./.goreleaser.yml --snapshot --skip-publish --rm-dist --debug --release-notes <($(GIT_CHGLOG) --next-tag $(VERSION))
+	@echo "Test release $(VERSION) on $(GIT_BRANCH), last version was $(LAST_TAG)"
+	export VERION=$(VERSION) GIT_DIRTY=$(GIT_DIRTY) && curl -sL https://git.io/goreleaser | bash -s -- release --config=./.goreleaser.yml --snapshot --skip-publish --rm-dist --release-notes <($(GIT_CHGLOG) --next-tag $(VERSION) $(strip $(LAST_TAG))..)
 
 .PHONY: release
 release: $(GIT_CHGLOG)
-	@echo "release $(VERION) on $${GIT_BRANCH}..."
+	@echo "Release $(VERSION) on $(GIT_BRANCH), last version was $(LAST_TAG)"
 	git tag -am "Release v$(VERSION) by ci script" v$(VERSION)
-	export GIT_DIRTY=$(GIT_DIRTY) && curl -sL https://git.io/goreleaser | bash -s -- release --config=./.goreleaser.yml --rm-dist --release-notes <($(GIT_CHGLOG))
+	export GIT_DIRTY=$(GIT_DIRTY) && curl -sL https://git.io/goreleaser | bash -s -- release --config=./.goreleaser.yml --rm-dist --release-notes <($(GIT_CHGLOG) $(strip $(LAST_TAG))..)
 
 # ------------------------------------------------------------------------------
 # clean
