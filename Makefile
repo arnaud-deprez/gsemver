@@ -71,7 +71,7 @@ generate: $(MOCKGEN)
 	go generate ./...
 
 $(BINDIR)/$(BINNAME): generate $(SRC)
-	go build $(GOFLAGS) -tags '$(TAGS)' -ldflags '$(LDFLAGS)' -o $(BINDIR)/$(BINNAME) github.com/arnaud-deprez/gsemver/cmd
+	go build $(GOFLAGS) -tags '$(TAGS)' -ldflags '$(LDFLAGS)' -o $(BINDIR)/$(BINNAME) github.com/arnaud-deprez/gsemver
 
 .PHONY: docs
 docs: $(BINDIR)/$(BINNAME)

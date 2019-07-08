@@ -9,7 +9,7 @@ before:
     - go mod download
     - make generate docs
 builds:
-- main: cmd/gsemver.go
+- main: main.go
   goos:
   - linux
   - windows

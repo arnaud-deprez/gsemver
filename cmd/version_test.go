@@ -1,4 +1,4 @@
-package gsemver
+package cmd
 
 import (
 	"bytes"
