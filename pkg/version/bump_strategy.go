@@ -137,19 +137,7 @@ func (o *BumpStrategyOptions) Bump() (Version, error) {
 		return zeroVersion, err
 	}
 
-	var versionBumper versionBumper
-	switch o.Strategy {
-	case MAJOR:
-		versionBumper = Version.BumpMajor
-	case MINOR:
-		versionBumper = Version.BumpMinor
-	case PATCH:
-		versionBumper = Version.BumpPatch
-	case AUTO:
-		versionBumper = o.detectVersionBumper(currentBranch, &lastVersion, commits)
-	default:
-		return zeroVersion, Error{message: fmt.Sprintf("Unable to create versionBumper with strategy <%v>", o.Strategy)}
-	}
+	versionBumper := o.computeVersionBumper(currentBranch, &lastVersion, commits)
 
 	if o.Strategy != AUTO || len(commits) > 0 {
 		if o.BuildMetadata != "" { // if BuildMetadata
@@ -171,8 +159,24 @@ func (o *BumpStrategyOptions) Bump() (Version, error) {
 	return versionBumper(lastVersion), nil
 }
 
-// detectVersionBumper detects what bump strategy to apply based on commits history
-func (o *BumpStrategyOptions) detectVersionBumper(currentBranch string, v *Version, commits []git.Commit) versionBumper {
+// computeAutoVersionBumper computes what bump strategy to apply
+func (o *BumpStrategyOptions) computeVersionBumper(currentBranch string, v *Version, commits []git.Commit) versionBumper {
+	switch o.Strategy {
+	case MAJOR:
+		return Version.BumpMajor
+	case MINOR:
+		return Version.BumpMinor
+	case PATCH:
+		return Version.BumpPatch
+	case AUTO:
+		return o.computeAutoVersionBumper(currentBranch, v, commits)
+	default:
+		return versionBumperIdentity
+	}
+}
+
+// computeAutoVersionBumper detects what bump strategy to apply based on commits history in auto mode
+func (o *BumpStrategyOptions) computeAutoVersionBumper(currentBranch string, v *Version, commits []git.Commit) versionBumper {
 	if len(commits) == 0 {
 		return versionBumperIdentity
 	}

@@ -2,16 +2,24 @@ run:
   deadline: 2m
 
 linters:
-  disable-all: false
+  disable-all: true # explicit configuration is clearer
   enable:
+    - govet
+    # - errcheck this is a bit too much
+    - staticcheck
+    - unused
+    - gosimple
+    - structcheck
+    - varcheck
+    - ineffassign
+    - deadcode
+    - typecheck
     - gofmt
     - golint
-    - deadcode
+    - gocyclo
     - dupl
     - misspell
     - nakedret
-  disable:
-    - errcheck
 
 linters-settings:
   gofmt:
@@ -20,3 +28,5 @@ linters-settings:
     local-prefixes: github.com/arnaud-deprez/gsemver
   dupl:
     threshold: 400
+  gocyclo:
+    min-complexity: 15

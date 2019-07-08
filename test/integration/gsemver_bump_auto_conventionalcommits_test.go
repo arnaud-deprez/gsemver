@@ -23,11 +23,11 @@ var (
 )
 
 func beforeAll(t *testing.T) {
-	assert.NoError(t, os.RemoveAll(GIT_REPO_PATH))
-	os.MkdirAll(GIT_REPO_PATH, 0755)
+	assert.NoError(t, os.RemoveAll(GitRepoPath))
+	os.MkdirAll(GitRepoPath, 0755)
 	execInGitRepo(t, "git init")
 	execInGitRepo(t, "git status")
-	gitRepo := git.NewVersionGitRepo(GIT_REPO_PATH)
+	gitRepo := git.NewVersionGitRepo(GitRepoPath)
 	bumper = version.NewConventionalCommitBumpStrategyOptions(gitRepo)
 }
 
