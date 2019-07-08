@@ -122,11 +122,11 @@ format: $(GOIMPORTS) generate
 
 .PHONY: test-release
 test-release: $(GIT_CHGLOG)
-	export VERION=$(VERSION) GIT_DIRTY=$(GIT_DIRTY) && curl -sL https://git.io/goreleaser | bash -s -- release --config=./.goreleaser.yml --snapshot --skip-publish --rm-dist --release-notes <($(GIT_CHGLOG) --next-tag $(VERSION))
+	export VERION=$(VERSION) GIT_DIRTY=$(GIT_DIRTY) && curl -sL https://git.io/goreleaser | bash -s -- release --config=./.goreleaser.yml --snapshot --skip-publish --rm-dist --debug --release-notes <($(GIT_CHGLOG) --next-tag $(VERSION))
 
 .PHONY: release
 release: $(GIT_CHGLOG)
-	echo "release $(VERION) on $${GIT_BRANCH}..."
+	@echo "release $(VERION) on $${GIT_BRANCH}..."
 	git tag -am "Release v$(VERSION) by ci script" v$(VERSION)
 	export GIT_DIRTY=$(GIT_DIRTY) && curl -sL https://git.io/goreleaser | bash -s -- release --config=./.goreleaser.yml --rm-dist --release-notes <($(GIT_CHGLOG))
 
@@ -135,4 +135,4 @@ release: $(GIT_CHGLOG)
 
 .PHONY: clean
 clean:
-	rm -rf $(BUILDDIR)
+	@rm -rf $(BUILDDIR)

@@ -22,12 +22,7 @@ builds:
   env:
   - CGO_ENABLED=0
   ldflags:
-  - -w -s
-  - -X github.com/arnaud-deprez/gsemver/internal/version.version={{ .Tag }}
-  - -X github.com/arnaud-deprez/gsemver/internal/version.gitCommit={{ .FullCommit }}
-  - -X github.com/arnaud-deprez/gsemver/internal/version.gitTreeState={{ .Env.GIT_DIRTY }}
-  - -X github.com/arnaud-deprez/gsemver/internal/version.buildDate={{ .Date }}
-  - -extldflags "-static"
+  - -s -w -X "github.com/arnaud-deprez/gsemver/internal/version.version={{ .Tag }}" -X "github.com/arnaud-deprez/gsemver/internal/version.gitCommit={{ .FullCommit }}" -X "github.com/arnaud-deprez/gsemver/internal/version.gitTreeState={{ .Env.GIT_DIRTY }}" -X "github.com/arnaud-deprez/gsemver/internal/version.buildDate={{ .Date }}"
 archives:
 - format_overrides:
   - goos: windows
