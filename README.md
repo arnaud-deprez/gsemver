@@ -5,7 +5,7 @@ gsemver is a command line tool developed in [Go (Golang)](https://golang.org/) t
 [![Build Status](https://travis-ci.com/arnaud-deprez/gsemver.svg?token=uYA1Qbgs8qpfX4ajYZsn&branch=master)](https://travis-ci.com/arnaud-deprez/gsemver)
 [![GoDoc](https://godoc.org/github.com/arnaud-deprez/gsemver?status.svg)](https://godoc.org/github.com/arnaud-deprez/gsemver)
 [![Downloads](https://img.shields.io/github/downloads/arnaud-deprez/gsemver/total.svg)](https://github.com/arnaud-deprez/gsemver/releases)
-[![GoReport](https://goreportcard.com/badge/github.com/arnaud-deprez/gsemver)](https://goreportcard.com/report/github.com/arnaud-deprez/gsemver)
+[![Go Report Card](https://goreportcard.com/badge/github.com/arnaud-deprez/gsemver)](https://goreportcard.com/report/github.com/arnaud-deprez/gsemver)
 [![MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/arnaud-deprez/gsemver/blob/master/LICENSE)
 
 ## Table of Contents
