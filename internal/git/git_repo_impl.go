@@ -66,7 +66,6 @@ func (g *gitRepoCLI) CountCommits(from string, to string) (int, error) {
 
 // GetLastRelativeTag - use git describe to retrieve the last relative tag
 func (g *gitRepoCLI) GetLastRelativeTag(rev string) (git.Tag, error) {
-	rev = parseRev("", rev)
 	cmd := gitCmd(g).WithArgs("describe", "--tags", "--abbrev=0", "--match", "v[0-9]*.[0-9]*.[0-9]*", "--first-parent", rev)
 	out, err := cmd.Run()
 	if err != nil {
@@ -78,7 +77,7 @@ func (g *gitRepoCLI) GetLastRelativeTag(rev string) (git.Tag, error) {
 // GetCurrentBranch - use git symbolic-ref to retrieve the current branch name
 func (g *gitRepoCLI) GetCurrentBranch() (string, error) {
 	branch, err := gitCmd(g).
-		WithArgs("symbolic-ref", "--short", parseRev("", "HEAD")).
+		WithArgs("symbolic-ref", "--short", "HEAD").
 		Run()
 
 	// Then it is probably because we are in detached mode in CI server.
