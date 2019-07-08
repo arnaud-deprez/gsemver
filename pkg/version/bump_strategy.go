@@ -45,25 +45,25 @@ func ParseBumpStrategy(value string) BumpStrategy {
 type BumpStrategyOptions struct {
 	// Strategy defines the strategy to use to bump the version.
 	// It can be automatic (AUTO) or manual (MAJOR, MINOR, PATCH)
-	Strategy             BumpStrategy
+	Strategy BumpStrategy
 	// PreRelease defines the pre-release class (alpha, beta, etc.) for the next version
-	PreRelease           string
+	PreRelease string
 	// PreReleaseOverwrite defines if a pre-release can be overwritten
 	// If true, it will not append an index to the next version
 	// If false, it will append an incremented index based on the previous same version of same class if any and 0 otherwise
-	PreReleaseOverwrite  bool
+	PreReleaseOverwrite bool
 	// BuildMetadata defines the build metadata for the next version
-	BuildMetadata        string
+	BuildMetadata string
 	// RegexReleaseBranches is the regex used to detect if the current branch is a release branch
 	RegexReleaseBranches *regexp.Regexp
 	// RegexMajor is the regex used to detect if a commit contains a breaking/major change
 	// See RegexMinor for more details
-	RegexMajor           *regexp.Regexp
+	RegexMajor *regexp.Regexp
 	// RegexMinor is the regex used to detect if a commit contains a minor change
 	// If no commit match RegexMajor or RegexMinor, the change is considered as a patch
-	RegexMinor           *regexp.Regexp
+	RegexMinor *regexp.Regexp
 	// gitRepo is an implementation of GitRepo
-	gitRepo              GitRepo
+	gitRepo GitRepo
 }
 
 /*
@@ -107,7 +107,7 @@ func (o *BumpStrategyOptions) Bump() (Version, error) {
 		log.Error("Cannot fetch tags caused by %v", err)
 		return zeroVersion, err
 	}
-	
+
 	// This assumes we used annotated tags for the release. Annotated tag are created with: git tag -a -m "<message>" <tag>
 	// Annotated tags adds timestamp, author and message to a tag compared to lightweight tag which does not contain any of these information.
 	// Thanks to that git describe will only show the more recent annotated tag if many annotated tags are on the same commit.
@@ -157,10 +157,10 @@ func (o *BumpStrategyOptions) Bump() (Version, error) {
 		} else if o.PreRelease != "" && // if PreRelease
 			(o.Strategy != AUTO || o.RegexReleaseBranches.MatchString(currentBranch) || !lastVersion.HasSamePreReleaseIdentifiers(o.PreRelease)) {
 			// if AUTO
-			//   if branch = master/release 
+			//   if branch = master/release
 			//     bump
-			//   else if branch != master/release && !HasSamePreReleaseIdentifiers 
-		    //     bump
+			//   else if branch != master/release && !HasSamePreReleaseIdentifiers
+			//     bump
 			// else bump
 			// will automatically suffix the pre-release with an identifier. Eg: *-alpha.0
 			return lastVersion.BumpPreRelease(o.PreRelease, o.PreReleaseOverwrite, versionBumper), nil

@@ -4,6 +4,7 @@ run:
 linters:
   disable-all: false
   enable:
+    - gofmt
     - deadcode
     - dupl
     - misspell

@@ -226,7 +226,7 @@ func TestWithBuildMetadata(t *testing.T) {
 }
 
 func ExampleVersion_WithBuildMetadata() {
-	v := Version{Major: 1} // 1.0.0
+	v := Version{Major: 1}               // 1.0.0
 	v2 := v.WithBuildMetadata("build.1") // this simply set the build metadata to the version
 	fmt.Println(v2.String())
 	// Output: 1.0.0+build.1
