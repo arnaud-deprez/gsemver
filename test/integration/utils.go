@@ -10,7 +10,7 @@ import (
 	"github.com/arnaud-deprez/gsemver/internal/command"
 )
 
-const GIT_REPO_PATH = "./build/git-tmp"
+const gitRepoPath = "./build/git-tmp"
 
 func execInDir(t *testing.T, dir, cmd string) string {
 	out, err := command.New(cmd).InDir(dir).Run()
@@ -19,7 +19,7 @@ func execInDir(t *testing.T, dir, cmd string) string {
 }
 
 func execInGitRepo(t *testing.T, cmd string) string {
-	return execInDir(t, GIT_REPO_PATH, cmd)
+	return execInDir(t, gitRepoPath, cmd)
 }
 
 func createTag(t *testing.T, tag string) {
@@ -42,7 +42,7 @@ func mergePullRequest(t *testing.T, from, to string) {
 }
 
 func appendToFile(t *testing.T, file, content string) {
-	f, err := os.OpenFile(GIT_REPO_PATH+"/"+file, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(gitRepoPath+"/"+file, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	assert.NoError(t, err)
 	defer f.Close()
 	_, err = f.WriteString(content + "\n")

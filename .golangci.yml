@@ -5,6 +5,7 @@ linters:
   disable-all: false
   enable:
     - gofmt
+    - golint
     - deadcode
     - dupl
     - misspell
