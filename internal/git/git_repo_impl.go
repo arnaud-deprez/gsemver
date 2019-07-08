@@ -11,6 +11,10 @@ import (
 	"github.com/arnaud-deprez/gsemver/pkg/version"
 )
 
+const (
+	gitRepoBranchEnv = "GIT_BRANCH"
+)
+
 type gitRepoCLI struct {
 	version.GitRepo
 	dir          string
@@ -63,7 +67,7 @@ func (g *gitRepoCLI) CountCommits(from string, to string) (int, error) {
 // GetLastRelativeTag - use git describe to retrieve the last relative tag
 func (g *gitRepoCLI) GetLastRelativeTag(rev string) (git.Tag, error) {
 	rev = parseRev("", rev)
-	cmd := gitCmd(g).WithArgs("describe", "--abbrev=0", "--match", "v[0-9]*.[0-9]*.[0-9]*", "--first-parent", rev)
+	cmd := gitCmd(g).WithArgs("describe", "--tags", "--abbrev=0", "--match", "v[0-9]*.[0-9]*.[0-9]*", "--first-parent", rev)
 	out, err := cmd.Run()
 	if err != nil {
 		return git.Tag{}, err
@@ -83,7 +87,7 @@ func (g *gitRepoCLI) GetCurrentBranch() (string, error) {
 		// And so we can retrieve the current branch name from environment variable.
 		branchFromEnv := getCurrentBranchFromEnv()
 		if branchFromEnv == "" {
-			return "", fmt.Errorf("Unable to retrieve branch name from `git symbolic-ref HEAD` nor BRANCH_NAME environment variable")
+			return "", fmt.Errorf("Unable to retrieve branch name from `git symbolic-ref HEAD` nor %s environment variable", gitRepoBranchEnv)
 		}
 		return branchFromEnv, nil
 	}
@@ -95,7 +99,7 @@ func getCurrentBranchFromEnv() string {
 	// We will use CI GIT_BRANCH environment variable.
 	// This need to be mapped with real environment variable from your CI server.
 	// TODO: eventually add support for most CI environment variable out of the box.
-	return strings.TrimSpace(os.Getenv("GIT_BRANCH"))
+	return strings.TrimSpace(os.Getenv(gitRepoBranchEnv))
 }
 
 func gitCmd(g *gitRepoCLI) *command.Command {

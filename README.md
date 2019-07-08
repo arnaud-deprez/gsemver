@@ -105,7 +105,7 @@ Please install `gsemver` in a way that matches your environment.
 #### Go users
 
 ```sh
-go get -u github.com/arnaud-deprez/gsemver/cmd
+go get -u github.com/arnaud-deprez/gsemver
 ```
 
 #### Manual
