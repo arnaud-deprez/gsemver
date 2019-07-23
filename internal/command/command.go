@@ -27,6 +27,17 @@ type Command struct {
 	_error  error
 }
 
+// String method returns a string representation of the Command
+func (c Command) String() string {
+	var builder strings.Builder
+	builder.WriteString(c.Name)
+	for _, arg := range c.Args {
+		builder.WriteString(" ")
+		builder.WriteString(arg)
+	}
+	return builder.String()
+}
+
 // Error is the error object encapsulating an error from a Command
 type Error struct {
 	Command Command
@@ -48,9 +59,7 @@ func (c Error) Error() string {
 func New(cmd string) *Command {
 	cmds, err := shellquote.Split(cmd)
 	if err != nil {
-		log.Error("Failed to parse command %s due to %s", cmd, err)
-		// if we cannot parse the command, we should stop here and panic
-		os.Exit(1)
+		log.Fatal("Failed to parse command %s due to %s", cmd, err)
 	}
 
 	return NewWithVarArgs(cmds...)
@@ -59,9 +68,7 @@ func New(cmd string) *Command {
 // NewWithVarArgs construct new command based on a string array
 func NewWithVarArgs(cmd ...string) *Command {
 	if len(cmd) == 0 {
-		log.Error("Cannot instantiate an empty command!")
-		// if we cannot parse the command, we should stop here and panic
-		os.Exit(1)
+		log.Fatal("Cannot instantiate an empty command!")
 	}
 	return &Command{Name: cmd[0], Args: cmd[1:]}
 }
@@ -164,19 +171,9 @@ func (c *Command) Run() (string, error) {
 	return r, e
 }
 
-// String method returns a string representation of the Command
-func (c Command) String() string {
-	var builder strings.Builder
-	builder.WriteString(c.Name)
-	for _, arg := range c.Args {
-		builder.WriteString(" ")
-		builder.WriteString(arg)
-	}
-	return builder.String()
-}
-
 // RunWithContext private method executes the command and wait for the result
 func (c *Command) RunWithContext(ctx *context.Context) (string, error) {
+	log.Trace("Command: run %q", c.String())
 	e := exec.CommandContext(*ctx, c.Name, c.Args...)
 	if c.Dir != "" {
 		e.Dir = c.Dir
