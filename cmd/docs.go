@@ -6,6 +6,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
+
+	"github.com/arnaud-deprez/gsemver/internal/log"
 )
 
 const (
@@ -66,6 +68,8 @@ func newDocsCommands(globalOpts *globalOptions) *cobra.Command {
 }
 
 func (o *docsOptions) run() error {
+	log.Debug("Run docs command with configuration: %#v", o)
+
 	o.topCmd.DisableAutoGenTag = true
 	switch o.docTypeString {
 	case "markdown", "mdown", "md":

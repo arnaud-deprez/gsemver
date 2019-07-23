@@ -92,6 +92,17 @@ func NewConventionalCommitBumpStrategyOptions(gitRepo GitRepo) *BumpStrategyOpti
 	}
 }
 
+// GoString makes BumpStrategyOptions satisfy the GoStringer interface.
+func (o BumpStrategyOptions) GoString() string {
+	sb := &strings.Builder{}
+	sb.WriteString("version.BumpStrategyOptions{")
+	sb.WriteString("Strategy: %q, PreRelease: %q, PreReleaseOverwrite: %v, BuildMetadata: %q, ")
+	sb.WriteString("RegexReleaseBranches: &regexp.Regexp{expr: %q}, RegexMajor: &regexp.Regexp{expr: %q}, RegexMinor: &regexp.Regexp{expr: %q}")
+	sb.WriteString("}")
+	return fmt.Sprintf(sb.String(), o.Strategy, o.PreRelease, o.PreReleaseOverwrite, o.BuildMetadata,
+		o.RegexReleaseBranches, o.RegexMajor, o.RegexMinor)
+}
+
 // WithPreRelease sets the pre-release name
 func (o *BumpStrategyOptions) WithPreRelease(value string, override bool) *BumpStrategyOptions {
 	o.PreRelease = value
@@ -101,11 +112,12 @@ func (o *BumpStrategyOptions) WithPreRelease(value string, override bool) *BumpS
 
 // Bump performs the version bumping based on the strategy
 func (o *BumpStrategyOptions) Bump() (Version, error) {
+	log.Debug("BumpStrategy: bump with configuration: %#v", o)
+
 	// Make sure we have the tags
 	err := o.gitRepo.FetchTags()
 	if err != nil {
-		log.Error("Cannot fetch tags caused by %v", err)
-		return zeroVersion, err
+		return zeroVersion, newErrorC(err, "Cannot fetch tags")
 	}
 
 	// This assumes we used annotated tags for the release. Annotated tag are created with: git tag -a -m "<message>" <tag>
@@ -126,8 +138,7 @@ func (o *BumpStrategyOptions) Bump() (Version, error) {
 
 	currentBranch, err := o.gitRepo.GetCurrentBranch()
 	if err != nil {
-		log.Error("Cannot get current branch name caused by %v", err)
-		return zeroVersion, err
+		return zeroVersion, newErrorC(err, "Cannot get current branch name")
 	}
 
 	// Check if describe is a tag, if so return the version that matches this tag
@@ -137,6 +148,7 @@ func (o *BumpStrategyOptions) Bump() (Version, error) {
 		return zeroVersion, err
 	}
 
+	log.Debug("BumpStrategy: look for appropriate version bumper with %#v, lastVersion=%v, branch=%v", lastTag, lastVersion, currentBranch)
 	versionBumper := o.computeVersionBumper(currentBranch, &lastVersion, commits)
 
 	if o.Strategy != AUTO || len(commits) > 0 {
@@ -161,6 +173,10 @@ func (o *BumpStrategyOptions) Bump() (Version, error) {
 
 // computeAutoVersionBumper computes what bump strategy to apply
 func (o *BumpStrategyOptions) computeVersionBumper(currentBranch string, v *Version, commits []git.Commit) versionBumper {
+	if log.IsLevelEnabled(log.DebugLevel) && o.Strategy != AUTO {
+		log.Debug("BumpStrategy: will use bump %s", strings.ToUpper(o.Strategy.String()))
+	}
+
 	switch o.Strategy {
 	case MAJOR:
 		return Version.BumpMajor
@@ -171,6 +187,7 @@ func (o *BumpStrategyOptions) computeVersionBumper(currentBranch string, v *Vers
 	case AUTO:
 		return o.computeAutoVersionBumper(currentBranch, v, commits)
 	default:
+		log.Debug("BumpStrategy: will not use any bump strategy because the strategy is unknown")
 		return versionBumperIdentity
 	}
 }
@@ -178,10 +195,12 @@ func (o *BumpStrategyOptions) computeVersionBumper(currentBranch string, v *Vers
 // computeAutoVersionBumper detects what bump strategy to apply based on commits history in auto mode
 func (o *BumpStrategyOptions) computeAutoVersionBumper(currentBranch string, v *Version, commits []git.Commit) versionBumper {
 	if len(commits) == 0 {
+		log.Debug("BumpStrategy: will not use any bump strategy because there is not commit")
 		return versionBumperIdentity
 	}
 
 	if !o.RegexReleaseBranches.MatchString(currentBranch) {
+		log.Debug("BumpStrategy: will use build metadata strategy because the branch:%v is not a release branch matching the regex %v", currentBranch, o.RegexReleaseBranches)
 		return func(v Version) Version {
 			lastCommitShortHash := commits[0].Hash.Short()
 			count := len(commits)
@@ -189,16 +208,24 @@ func (o *BumpStrategyOptions) computeAutoVersionBumper(currentBranch string, v *
 		}
 	}
 
+	strategy := PATCH
 	bumper := Version.BumpPatch
 	for _, commit := range commits {
 		if o.RegexMajor.MatchString(commit.Message) {
 			if v.IsUnstable() {
+				strategy = MINOR
+				log.Trace("BumpStrategy: detects a MAJOR change at %#v however the last version is unstable so it will use bump %s strategy", commit, strategy)
 				return Version.BumpMinor
 			}
+			strategy = MAJOR
+			log.Trace("BumpStrategy: detects a MAJOR change at %#v", commit)
 			return Version.BumpMajor
 		} else if o.RegexMinor.MatchString(commit.Message) {
+			strategy = MINOR
+			log.Trace("BumpStrategy: detects a MINOR change at %#v", commit)
 			bumper = Version.BumpMinor
 		}
 	}
+	log.Debug("BumpStrategy: will use bump %s strategy", strategy)
 	return bumper
 }

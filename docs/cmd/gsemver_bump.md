@@ -74,8 +74,8 @@ gsemver bump --build "issue-1.build.1"
 ### Options inherited from parent commands
 
 ```
-      --log-level string   Sets the logging level (panic, fatal, error, warning, info, debug) (default "INFO")
-      --verbose            Enables verbose output
+      --log-level string   Sets the logging level (fatal, error, warning, info, debug, trace) (default "info")
+  -v, --verbose            Enables verbose output by setting log level to debug. This is a shortland to --log-level debug.
 ```
 
 ### SEE ALSO
