@@ -1,6 +1,7 @@
 package git
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -12,4 +13,9 @@ type Signature struct {
 	Email string
 	// When is the timestamp of the signature.
 	When time.Time
+}
+
+// GoString makes Signature satisfy the GoStringer interface.
+func (s Signature) GoString() string {
+	return fmt.Sprintf("git.Signature{Name: %q, Email: %q, When: %q}", s.Name, s.Email, s.When)
 }

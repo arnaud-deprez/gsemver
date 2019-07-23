@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/arnaud-deprez/gsemver/internal/git"
+	"github.com/arnaud-deprez/gsemver/internal/log"
 	"github.com/arnaud-deprez/gsemver/pkg/version"
 )
 
@@ -74,6 +75,8 @@ func newBumpCommands(globalOpts *globalOptions) *cobra.Command {
 		ValidArgs: []string{"auto", "major", "minor", "patch"},
 		Args:      cobra.RangeArgs(0, 1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			options.configureLogger()
+
 			options.Cmd = cmd
 			options.Args = args
 			if len(args) == 0 {
@@ -81,6 +84,7 @@ func newBumpCommands(globalOpts *globalOptions) *cobra.Command {
 			} else {
 				options.Bump = args[0]
 			}
+
 			return options.run()
 		},
 	}
@@ -112,6 +116,17 @@ func (o *bumpOptions) addBumpFlags(cmd *cobra.Command) {
 	o.Cmd = cmd
 }
 
+func (o *bumpOptions) run() error {
+	log.Debug("Run bump command with configuration: %#v", o)
+
+	version, err := o.createBumpStrategy().Bump()
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(o.globalOptions.ioStreams.Out, "%v", version)
+	return nil
+}
+
 func (o *bumpOptions) createBumpStrategy() *version.BumpStrategyOptions {
 	ret := version.NewConventionalCommitBumpStrategyOptions(git.NewVersionGitRepo(o.CurrentDir))
 	ret.Strategy = version.ParseBumpStrategy(o.Bump)
@@ -119,13 +134,4 @@ func (o *bumpOptions) createBumpStrategy() *version.BumpStrategyOptions {
 	ret.PreReleaseOverwrite = o.PreReleaseOverwrite
 	ret.BuildMetadata = o.BuildMetadata
 	return ret
-}
-
-func (o *bumpOptions) run() error {
-	version, err := o.createBumpStrategy().Bump()
-	if err != nil {
-		return err
-	}
-	fmt.Fprintf(o.globalOptions.ioStreams.Out, "%v", version)
-	return nil
 }
