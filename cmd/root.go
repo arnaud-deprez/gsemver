@@ -3,6 +3,7 @@ package cmd
 import (
 	"io"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -50,21 +51,6 @@ type globalOptions struct {
 	ioStreams *ioStreams
 }
 
-// addGlobalFlags adds the common flags to the given command
-func (options *globalOptions) addGlobalFlags(cmd *cobra.Command) {
-	cmd.PersistentFlags().BoolVarP(&options.Verbose, optionVerbose, "", false, "Enables verbose output")
-	cmd.PersistentFlags().StringVarP(&options.LogLevel, optionLogLevel, "", "INFO", "Sets the logging level (panic, fatal, error, warning, info, debug)")
-
-	dir, err := os.Getwd()
-	if err != nil {
-		log.Error("Unable to retrieve working directory: %v", err)
-		os.Exit(1)
-	}
-
-	options.CurrentDir = dir
-	options.Cmd = cmd
-}
-
 var globalUsage = `Simple CLI to manage semver compliant version from your git tags
 `
 
@@ -92,6 +78,28 @@ func newRootCommand(in io.Reader, out, errout io.Writer) *cobra.Command {
 		newDocsCommands(globalOpts),
 	)
 	return cmds
+}
+
+// addGlobalFlags adds the common flags to the given command
+func (o *globalOptions) addGlobalFlags(cmd *cobra.Command) {
+	cmd.PersistentFlags().BoolVarP(&o.Verbose, optionVerbose, "v", false, "Enables verbose output by setting log level to debug. This is a shortland to --log-level debug.")
+	cmd.PersistentFlags().StringVarP(&o.LogLevel, optionLogLevel, "", "info", "Sets the logging level (fatal, error, warning, info, debug, trace)")
+
+	dir, err := os.Getwd()
+	if err != nil {
+		log.Fatal("Unable to retrieve working directory: %v", err)
+	}
+
+	o.CurrentDir = dir
+	o.Cmd = cmd
+}
+
+func (o *globalOptions) configureLogger() {
+	if o.Verbose && strings.ToLower(o.LogLevel) != "trace" {
+		log.SetLevel(log.DebugLevel)
+	} else {
+		log.SetLevelS(o.LogLevel)
+	}
 }
 
 func runHelp(cmd *cobra.Command, args []string) {

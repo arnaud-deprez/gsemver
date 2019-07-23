@@ -8,16 +8,12 @@ import (
 )
 
 var (
-	/* const */ versionRegex *regexp.Regexp
+	/* const */ versionRegex = regexp.MustCompile(`^v?([0-9]+)\.([0-9]+)\.([0-9]+)` +
+		`(?:-([0-9A-Za-z\-]+(?:\.[0-9A-Za-z\-]+)*))?` +
+		`(?:\+([0-9A-Za-z\-]+(?:\.[0-9A-Za-z\-]+)*))?$`)
 	/* const */ zeroVersion = Version{}
 	/* const */ versionBumperIdentity = func(v Version) Version { return v }
 )
-
-func init() {
-	versionRegex = regexp.MustCompile(`^v?([0-9]+)\.([0-9]+)\.([0-9]+)` +
-		`(?:-([0-9A-Za-z\-]+(?:\.[0-9A-Za-z\-]+)*))?` +
-		`(?:\+([0-9A-Za-z\-]+(?:\.[0-9A-Za-z\-]+)*))?$`)
-}
 
 // NewVersion creates a new Version from a string representation
 func NewVersion(value string) (Version, error) {
@@ -27,7 +23,7 @@ func NewVersion(value string) (Version, error) {
 
 	m := versionRegex.FindStringSubmatch(value)
 	if m == nil {
-		return zeroVersion, Error{message: fmt.Sprintf("'%s' is not a semver compatible version", value)}
+		return zeroVersion, newError("'%s' is not a semver compatible version", value)
 	}
 
 	major, _ := strconv.Atoi(m[1])
@@ -186,18 +182,4 @@ func (v Version) WithBuildMetadata(metadata string) Version {
 	next := v
 	next.BuildMetadata = metadata
 	return next
-}
-
-// Error is a typical error representation that can happen during the version process
-type Error struct {
-	message string
-	cause   error
-}
-
-// Error formats VersionError into a string
-func (e Error) Error() string {
-	if e.cause == nil {
-		return e.message
-	}
-	return fmt.Sprintf("%s caused by: '%s'", e.message, e.cause)
 }

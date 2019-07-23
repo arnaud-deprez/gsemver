@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/arnaud-deprez/gsemver/internal/log"
 	"github.com/arnaud-deprez/gsemver/internal/version"
 )
 
@@ -66,6 +67,8 @@ func (o *versionOptions) addVersionFlags(cmd *cobra.Command) {
 }
 
 func (o *versionOptions) run() error {
+	log.Debug("Run version command with configuration: %#v", o)
+
 	fmt.Fprintln(o.globalOptions.ioStreams.Out, formatVersion(o.short))
 	return nil
 }
