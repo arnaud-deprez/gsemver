@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/arnaud-deprez/gsemver/internal/command"
+	"github.com/arnaud-deprez/gsemver/internal/log"
 	"github.com/arnaud-deprez/gsemver/pkg/git"
 	"github.com/arnaud-deprez/gsemver/pkg/version"
 )
@@ -98,6 +99,7 @@ func getCurrentBranchFromEnv() string {
 	// We will use CI GIT_BRANCH environment variable.
 	// This need to be mapped with real environment variable from your CI server.
 	// TODO: eventually add support for most CI environment variable out of the box.
+	log.Trace("GitRepo: retrieve branch name from %s env variable", gitRepoBranchEnv)
 	return strings.TrimSpace(os.Getenv(gitRepoBranchEnv))
 }
 
