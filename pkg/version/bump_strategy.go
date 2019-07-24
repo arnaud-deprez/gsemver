@@ -213,11 +213,9 @@ func (o *BumpStrategyOptions) computeAutoVersionBumper(currentBranch string, v *
 	for _, commit := range commits {
 		if o.RegexMajor.MatchString(commit.Message) {
 			if v.IsUnstable() {
-				strategy = MINOR
-				log.Trace("BumpStrategy: detects a MAJOR change at %#v however the last version is unstable so it will use bump %s strategy", commit, strategy)
+				log.Trace("BumpStrategy: detects a MAJOR change at %#v however the last version is unstable so it will use bump MINOR strategy", commit)
 				return Version.BumpMinor
 			}
-			strategy = MAJOR
 			log.Trace("BumpStrategy: detects a MAJOR change at %#v", commit)
 			return Version.BumpMajor
 		} else if o.RegexMinor.MatchString(commit.Message) {
