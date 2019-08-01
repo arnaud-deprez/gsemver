@@ -19,7 +19,7 @@ const (
 )
 
 var (
-	bumper *version.BumpStrategyOptions
+	bumper *version.BumpStrategy
 )
 
 func beforeAll(t *testing.T) {
@@ -28,7 +28,7 @@ func beforeAll(t *testing.T) {
 	execInGitRepo(t, "git init")
 	execInGitRepo(t, "git status")
 	gitRepo := git.NewVersionGitRepo(GitRepoPath)
-	bumper = version.NewConventionalCommitBumpStrategyOptions(gitRepo)
+	bumper = version.NewConventionalCommitBumpStrategy(gitRepo)
 }
 
 func afterAll(t *testing.T) {

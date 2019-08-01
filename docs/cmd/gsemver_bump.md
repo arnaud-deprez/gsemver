@@ -58,17 +58,22 @@ gsemver bump --pre-release alpha
 gsemver bump minor --pre-release SNAPSHOT --pre-release-overwrite true
 
 # To use version with build metadata
-gsemver bump --build "issue-1.build.1"
+gsemver bump --build-metadata "issue-1.build.1"
+
+# To use bump auto with one or many branch strategies
+gsemver bump --branch-strategy='{"branchPattern":"^miletone-1.1$","preReleaseTemplate":"beta"}' --branch-strategy='{"branchPattern":"^miletone-2.0$","preReleaseTemplate":"alpha"}'
 
 ```
 
 ### Options
 
 ```
-      --build string            Use build metadata which will give something like X.Y.Z+<build>
-  -h, --help                    help for bump
-      --pre-release string      Use pre-release version such as alpha which will give a version like X.Y.Z-alpha.N
-      --pre-release-overwrite   Use pre-release overwrite option to remove the pre-release identifier suffix which will give a version like X.Y.Z-SNAPSHOT if pre-release=SNAPSHOT
+      --branch-strategy stringArray            Use branch-strategy will set a strategy for a set of branches. 
+                                               	The strategy is defined in json and looks like {"branchPattern":"^milestone-.*$", "preReleaseTemplate":"alpha"} to use pre-release alpha version for every milestone-* branches.
+      --build-metadata string                  Use build metadata template which will give something like X.Y.Z+<build>. This flag cannot be used with --pre-release* flags and take precedence over them.
+  -h, --help                                   help for bump
+      --pre-release alpha                      Use pre-release template version such as alpha which will give a version like `X.Y.Z-alpha.N`. This flag is not taken into account if --build-metadata is set.
+      --pre-release-overwrite X.Y.Z-SNAPSHOT   Use pre-release overwrite option to remove the pre-release identifier suffix which will give a version like X.Y.Z-SNAPSHOT if pre-release=SNAPSHOT
 ```
 
 ### Options inherited from parent commands

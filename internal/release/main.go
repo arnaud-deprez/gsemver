@@ -12,7 +12,7 @@ import (
 // Use to compte the next version of gsemver itself
 func main() {
 	gitRepo := git.NewDefaultVersionGitRepo()
-	bumper := version.NewConventionalCommitBumpStrategyOptions(gitRepo)
+	bumper := version.NewConventionalCommitBumpStrategy(gitRepo)
 	version, err := bumper.Bump()
 
 	if err != nil {

@@ -6,9 +6,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/arnaud-deprez/gsemver/internal/version"
 	shellquote "github.com/kballard/go-shellquote"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/arnaud-deprez/gsemver/internal/version"
 )
 
 func TestVersion(t *testing.T) {
