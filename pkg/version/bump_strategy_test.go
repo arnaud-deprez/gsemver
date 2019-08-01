@@ -18,7 +18,7 @@ func TestBumpVersionStrategyWithoutTag(t *testing.T) {
 	defer ctrl.Finish()
 
 	testData := []struct {
-		strategy            BumpStrategy
+		strategy            BumpStrategyType
 		branch              string
 		preRelease          string
 		preReleaseOverwrite bool
@@ -50,11 +50,11 @@ func TestBumpVersionStrategyWithoutTag(t *testing.T) {
 		}, nil)
 		gitRepo.EXPECT().GetCurrentBranch().Times(1).Return(tc.branch, nil)
 
-		strategy := NewConventionalCommitBumpStrategyOptions(gitRepo)
+		strategy := NewConventionalCommitBumpStrategy(gitRepo)
 		strategy.Strategy = tc.strategy
-		strategy.PreRelease = tc.preRelease
-		strategy.PreReleaseOverwrite = tc.preReleaseOverwrite
-		strategy.BuildMetadata = tc.buildMetadata
+		strategy.BumpDefaultStrategy.PreReleaseTemplate = tc.preRelease
+		strategy.BumpDefaultStrategy.PreReleaseOverwrite = tc.preReleaseOverwrite
+		strategy.BumpDefaultStrategy.BuildMetadataTemplate = tc.buildMetadata
 		version, err := strategy.Bump()
 		assert.Nil(err)
 		assert.Equal(tc.expected, version.String())
@@ -70,7 +70,7 @@ func TestBumpVersionStrategyNoDeltaCommit(t *testing.T) {
 
 	testData := []struct {
 		from                string
-		strategy            BumpStrategy
+		strategy            BumpStrategyType
 		branch              string
 		preRelease          string
 		preReleaseOverwrite bool
@@ -101,11 +101,11 @@ func TestBumpVersionStrategyNoDeltaCommit(t *testing.T) {
 		gitRepo.EXPECT().GetCommits(tc.from, "HEAD").Times(1).Return([]git.Commit{}, nil)
 		gitRepo.EXPECT().GetCurrentBranch().Times(1).Return(tc.branch, nil)
 
-		strategy := NewConventionalCommitBumpStrategyOptions(gitRepo)
+		strategy := NewConventionalCommitBumpStrategy(gitRepo)
 		strategy.Strategy = tc.strategy
-		strategy.PreRelease = tc.preRelease
-		strategy.PreReleaseOverwrite = tc.preReleaseOverwrite
-		strategy.BuildMetadata = tc.buildMetadata
+		strategy.BumpDefaultStrategy.PreReleaseTemplate = tc.preRelease
+		strategy.BumpDefaultStrategy.PreReleaseOverwrite = tc.preReleaseOverwrite
+		strategy.BumpDefaultStrategy.BuildMetadataTemplate = tc.buildMetadata
 		version, err := strategy.Bump()
 
 		assert.Nil(err)
@@ -134,7 +134,7 @@ func TestBumpVersionStrategyMajor(t *testing.T) {
 	}, nil)
 	gitRepo.EXPECT().GetCurrentBranch().Times(1).Return("dummy", nil)
 
-	strategy := &BumpStrategyOptions{Strategy: MAJOR, gitRepo: gitRepo}
+	strategy := &BumpStrategy{Strategy: MAJOR, gitRepo: gitRepo}
 	version, err := strategy.Bump()
 
 	assert.Nil(err)
@@ -162,7 +162,7 @@ func TestBumpVersionStrategyMinor(t *testing.T) {
 	}, nil)
 	gitRepo.EXPECT().GetCurrentBranch().Times(1).Return("dummy", nil)
 
-	strategy := &BumpStrategyOptions{Strategy: MINOR, gitRepo: gitRepo}
+	strategy := &BumpStrategy{Strategy: MINOR, gitRepo: gitRepo}
 	version, err := strategy.Bump()
 
 	assert.Nil(err)
@@ -190,14 +190,14 @@ func TestBumpVersionStrategyPatch(t *testing.T) {
 	}, nil)
 	gitRepo.EXPECT().GetCurrentBranch().Times(1).Return("dummy", nil)
 
-	strategy := &BumpStrategyOptions{Strategy: PATCH, gitRepo: gitRepo}
+	strategy := &BumpStrategy{Strategy: PATCH, gitRepo: gitRepo}
 	version, err := strategy.Bump()
 
 	assert.Nil(err)
 	assert.Equal("0.1.1", version.String())
 }
 
-func TestBumpVersionStrategyAutoBreakingShouldBumpMinorOnInitialDevelopmentRelease(t *testing.T) {
+func TestBumpVersionStrategyAutoBreakingChangeOnInitialDevelopmentRelease(t *testing.T) {
 	assert := assert.New(t)
 
 	// mock
@@ -230,7 +230,7 @@ BREAKING CHANGE: replace next option by bump for more convenience
 		}, nil)
 		gitRepo.EXPECT().GetCurrentBranch().Times(1).Return(tc.branch, nil)
 
-		strategy := NewConventionalCommitBumpStrategyOptions(gitRepo)
+		strategy := NewConventionalCommitBumpStrategy(gitRepo)
 		version, err := strategy.Bump()
 
 		assert.Nil(err)
@@ -238,7 +238,7 @@ BREAKING CHANGE: replace next option by bump for more convenience
 	}
 }
 
-func TestBumpVersionStrategyAutoBreakingShouldBumpMajor(t *testing.T) {
+func TestBumpVersionStrategyAutoBreakingChange(t *testing.T) {
 	assert := assert.New(t)
 
 	// mock
@@ -277,7 +277,7 @@ BREAKING CHANGE: replace next option by bump for more convenience
 		}, nil)
 		gitRepo.EXPECT().GetCurrentBranch().Times(1).Return(tc.branch, nil)
 
-		strategy := NewConventionalCommitBumpStrategyOptions(gitRepo)
+		strategy := NewConventionalCommitBumpStrategy(gitRepo)
 		version, err := strategy.Bump()
 
 		assert.Nil(err)
@@ -285,7 +285,7 @@ BREAKING CHANGE: replace next option by bump for more convenience
 	}
 }
 
-func TestBumpVersionStrategyAutoShouldBumpMinor(t *testing.T) {
+func TestBumpVersionStrategyAutoWithNewFeature(t *testing.T) {
 	assert := assert.New(t)
 
 	// mock
@@ -315,7 +315,7 @@ func TestBumpVersionStrategyAutoShouldBumpMinor(t *testing.T) {
 		}, nil)
 		gitRepo.EXPECT().GetCurrentBranch().Times(1).Return(tc.branch, nil)
 
-		strategy := NewConventionalCommitBumpStrategyOptions(gitRepo)
+		strategy := NewConventionalCommitBumpStrategy(gitRepo)
 		version, err := strategy.Bump()
 
 		assert.Nil(err)
@@ -323,7 +323,7 @@ func TestBumpVersionStrategyAutoShouldBumpMinor(t *testing.T) {
 	}
 }
 
-func TestBumpVersionStrategyAutoShouldBumpPatch(t *testing.T) {
+func TestBumpVersionStrategyAutoWithPatch(t *testing.T) {
 	assert := assert.New(t)
 
 	// mock
@@ -349,12 +349,12 @@ func TestBumpVersionStrategyAutoShouldBumpPatch(t *testing.T) {
 				Author:    git.Signature{Name: "Arnaud Deprez", Email: "xxx@example.com"},
 				Committer: git.Signature{Name: "Arnaud Deprez", Email: "xxx@example.com"},
 				Hash:      git.Hash("1234567890"),
-				Message:   `doc: add FAQ`,
+				Message:   `fix: typo error`,
 			},
 		}, nil)
 		gitRepo.EXPECT().GetCurrentBranch().Times(1).Return(tc.branch, nil)
 
-		strategy := NewConventionalCommitBumpStrategyOptions(gitRepo)
+		strategy := NewConventionalCommitBumpStrategy(gitRepo)
 		version, err := strategy.Bump()
 
 		assert.Nil(err)
@@ -362,7 +362,7 @@ func TestBumpVersionStrategyAutoShouldBumpPatch(t *testing.T) {
 	}
 }
 
-func TestBumpVersionStrategyAutoShouldBumpWithPreRelease(t *testing.T) {
+func TestBumpVersionStrategyAutoWithPreReleaseStrategyAndNewFeature(t *testing.T) {
 	assert := assert.New(t)
 
 	// mock
@@ -370,17 +370,16 @@ func TestBumpVersionStrategyAutoShouldBumpWithPreRelease(t *testing.T) {
 	defer ctrl.Finish()
 
 	testData := []struct {
-		from                string
-		branch              string
-		preRelease          string
-		preReleaseOverwrite bool
-		expected            string
+		from       string
+		branch     string
+		preRelease string
+		expected   string
 	}{
-		{"v1.1.0", "master", "alpha", false, "1.2.0-alpha.0"},
-		{"v1.2.0-alpha.0", "master", "alpha", false, "1.2.0-alpha.1"},
-		// Does preRelease and build metadata should be both present ?
-		{"v1.1.0", "feature/test", "alpha", false, "1.1.0-alpha.0+1.1234567"},
-		{"v1.1.0-alpha.0", "feature/test", "alpha", false, "1.1.0-alpha.0+1.1234567"},
+		{"v1.1.0", "master", "alpha", "1.2.0"},
+		{"v1.1.0", "milestone-1.2", "alpha", "1.2.0-alpha.0"},
+		{"v1.2.0-alpha.0", "milestone-1.2", "alpha", "1.2.0-alpha.1"},
+		{"v1.1.0", "feature/test", "alpha", "1.1.0+1.1234567"},
+		{"v1.1.0-alpha.0", "feature/test", "alpha", "1.1.0+1.1234567"},
 	}
 
 	for _, tc := range testData {
@@ -397,7 +396,7 @@ func TestBumpVersionStrategyAutoShouldBumpWithPreRelease(t *testing.T) {
 		}, nil)
 		gitRepo.EXPECT().GetCurrentBranch().Times(1).Return(tc.branch, nil)
 
-		strategy := NewConventionalCommitBumpStrategyOptions(gitRepo).WithPreRelease(tc.preRelease, tc.preReleaseOverwrite)
+		strategy := NewConventionalCommitBumpStrategy(gitRepo).AddBumpReleaseStrategy("milestone-1.2", tc.preRelease)
 		version, err := strategy.Bump()
 
 		assert.Nil(err)
@@ -405,7 +404,7 @@ func TestBumpVersionStrategyAutoShouldBumpWithPreRelease(t *testing.T) {
 	}
 }
 
-func TestBumpVersionStrategyAutoShouldBumpPreReleaseMavenLike(t *testing.T) {
+func TestBumpVersionStrategyAutoWithPreReleaseMavenLike(t *testing.T) {
 	assert := assert.New(t)
 
 	// mock
@@ -424,9 +423,11 @@ func TestBumpVersionStrategyAutoShouldBumpPreReleaseMavenLike(t *testing.T) {
 			Message:   `feat(version): add pre-release option`,
 		},
 	}, nil)
-	gitRepo.EXPECT().GetCurrentBranch().Times(1).Return("master", nil)
+	gitRepo.EXPECT().GetCurrentBranch().Times(1).Return("feature/xyz", nil)
 
-	strategy := NewConventionalCommitBumpStrategyOptions(gitRepo).WithPreRelease("SNAPSHOT", true)
+	strategy := NewConventionalCommitBumpStrategy(gitRepo)
+	strategy.BumpDefaultStrategy.PreReleaseTemplate = "SNAPSHOT"
+	strategy.BumpDefaultStrategy.PreReleaseOverwrite = true
 	version, err := strategy.Bump()
 
 	assert.Nil(err)

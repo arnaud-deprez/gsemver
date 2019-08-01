@@ -39,9 +39,6 @@ func NewVersion(value string) (Version, error) {
 	}, nil
 }
 
-// versionBumper type helper for the bump process
-type versionBumper func(Version) Version
-
 // Version object to represent a SemVer version
 type Version struct {
 	// Major represents the major (aka X) number in a semver version
@@ -124,7 +121,7 @@ func (v Version) BumpPatch() Version {
 }
 
 // BumpPreRelease bumps the pre-release identifiers
-func (v Version) BumpPreRelease(preRelease string, overwrite bool, semverBumper versionBumper) Version {
+func (v Version) BumpPreRelease(preRelease string, overwrite bool, semverBumper func(Version) Version) Version {
 	// if no pre-release is define, just return the current version
 	if preRelease == "" {
 		return v
