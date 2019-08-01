@@ -67,7 +67,7 @@ func (g *gitRepoCLI) CountCommits(from string, to string) (int, error) {
 
 // GetLastRelativeTag - use git describe to retrieve the last relative tag
 func (g *gitRepoCLI) GetLastRelativeTag(rev string) (git.Tag, error) {
-	cmd := gitCmd(g).WithArgs("describe", "--tags", "--abbrev=0", "--match", "v[0-9]*.[0-9]*.[0-9]*", "--first-parent", rev)
+	cmd := gitCmd(g).WithArgs("describe", "--tags", "--abbrev=0", "--match", "*[0-9]*.[0-9]*.[0-9]*", "--first-parent", rev)
 	out, err := cmd.Run()
 	if err != nil {
 		return git.Tag{}, err

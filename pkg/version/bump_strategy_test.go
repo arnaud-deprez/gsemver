@@ -78,19 +78,21 @@ func TestBumpVersionStrategyNoDeltaCommit(t *testing.T) {
 		expected            string
 	}{
 		{"v1.1.0-alpha.0", MAJOR, "dummy", "", false, "", "2.0.0"},
-		{"1.1.0", PATCH, "dummy", "", false, "", "1.1.1"},
-		{"1.2.0", MINOR, "dummy", "", false, "", "1.3.0"},
-		{"1.2.0", MINOR, "dummy", "alpha", false, "", "1.3.0-alpha.0"},
+		{"v1.1.0", PATCH, "dummy", "", false, "", "1.1.1"},
+		{"v1.2.0", MINOR, "dummy", "", false, "", "1.3.0"},
+		{"v1.2.0", MINOR, "dummy", "alpha", false, "", "1.3.0-alpha.0"},
 		{"1.2.0", MAJOR, "dummy", "SNAPSHOT", true, "", "2.0.0-SNAPSHOT"},
+		{"v1.2.0", MAJOR, "dummy", "SNAPSHOT", true, "", "2.0.0-SNAPSHOT"},
 		// in AUTO the version should not change
 		{"1.2.0", AUTO, "master", "", false, "", "1.2.0"},
-		{"1.2.0", AUTO, "feature/test", "", false, "", "1.2.0"},
-		{"1.2.0", AUTO, "master", "alpha", false, "", "1.2.0"},
-		{"1.2.0", AUTO, "feature/test", "alpha", false, "", "1.2.0"},
-		{"1.2.0", AUTO, "master", "SNAPSHOT", true, "", "1.2.0"},
-		{"1.2.0", AUTO, "feature/test", "SNAPSHOT", true, "", "1.2.0"},
-		{"1.2.0", AUTO, "master", "", false, "build.1", "1.2.0"},
-		{"1.2.0", AUTO, "feature/test", "", false, "build.1", "1.2.0"},
+		{"v1.2.0", AUTO, "master", "", false, "", "1.2.0"},
+		{"v1.2.0", AUTO, "feature/test", "", false, "", "1.2.0"},
+		{"v1.2.0", AUTO, "master", "alpha", false, "", "1.2.0"},
+		{"v1.2.0", AUTO, "feature/test", "alpha", false, "", "1.2.0"},
+		{"v1.2.0", AUTO, "master", "SNAPSHOT", true, "", "1.2.0"},
+		{"v1.2.0", AUTO, "feature/test", "SNAPSHOT", true, "", "1.2.0"},
+		{"v1.2.0", AUTO, "master", "", false, "build.1", "1.2.0"},
+		{"v1.2.0", AUTO, "feature/test", "", false, "build.1", "1.2.0"},
 	}
 
 	for _, tc := range testData {
