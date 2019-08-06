@@ -1,6 +1,6 @@
-package version
+package utils
 
-func arrayStringEqual(a, b []string) bool {
+func ArrayStringEqual(a, b []string) bool {
 	if len(a) != len(b) {
 		return false
 	}

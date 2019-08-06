@@ -29,7 +29,7 @@ func TestBumpVersionStrategyWithoutTag(t *testing.T) {
 		{MINOR, "dummy", "", false, "", "0.1.0"},
 		{PATCH, "dummy", "", false, "", "0.0.1"},
 		{AUTO, "master", "", false, "", "0.1.0"},
-		{AUTO, "feature/test", "", false, "", "0.0.0+1.1234567"},
+		{AUTO, "feature/test", "", false, "{{ .Commits | len }}.{{ (.Commits | first).Hash.Short }}", "0.0.0+1.1234567"},
 		{MAJOR, "dummy", "alpha", false, "", "1.0.0-alpha.0"},
 		{MINOR, "dummy", "SNAPSHOT", true, "", "0.1.0-SNAPSHOT"},
 		{0, "dummy", "", false, "build.8", "0.0.0+build.8"},
@@ -52,9 +52,9 @@ func TestBumpVersionStrategyWithoutTag(t *testing.T) {
 
 		strategy := NewConventionalCommitBumpStrategy(gitRepo)
 		strategy.Strategy = tc.strategy
-		strategy.BumpDefaultStrategy.PreReleaseTemplate = tc.preRelease
+		strategy.BumpDefaultStrategy.PreReleaseTemplate = NewTemplate(tc.preRelease)
 		strategy.BumpDefaultStrategy.PreReleaseOverwrite = tc.preReleaseOverwrite
-		strategy.BumpDefaultStrategy.BuildMetadataTemplate = tc.buildMetadata
+		strategy.BumpDefaultStrategy.BuildMetadataTemplate = NewTemplate(tc.buildMetadata)
 		version, err := strategy.Bump()
 		assert.Nil(err)
 		assert.Equal(tc.expected, version.String())
@@ -105,9 +105,9 @@ func TestBumpVersionStrategyNoDeltaCommit(t *testing.T) {
 
 		strategy := NewConventionalCommitBumpStrategy(gitRepo)
 		strategy.Strategy = tc.strategy
-		strategy.BumpDefaultStrategy.PreReleaseTemplate = tc.preRelease
+		strategy.BumpDefaultStrategy.PreReleaseTemplate = NewTemplate(tc.preRelease)
 		strategy.BumpDefaultStrategy.PreReleaseOverwrite = tc.preReleaseOverwrite
-		strategy.BumpDefaultStrategy.BuildMetadataTemplate = tc.buildMetadata
+		strategy.BumpDefaultStrategy.BuildMetadataTemplate = NewTemplate(tc.buildMetadata)
 		version, err := strategy.Bump()
 
 		assert.Nil(err)
@@ -398,7 +398,7 @@ func TestBumpVersionStrategyAutoWithPreReleaseStrategyAndNewFeature(t *testing.T
 		}, nil)
 		gitRepo.EXPECT().GetCurrentBranch().Times(1).Return(tc.branch, nil)
 
-		strategy := NewConventionalCommitBumpStrategy(gitRepo).AddBumpReleaseStrategy("milestone-1.2", tc.preRelease)
+		strategy := NewConventionalCommitBumpStrategy(gitRepo).AddBumpBranchesStrategy("milestone-1.2", tc.preRelease, false, "")
 		version, err := strategy.Bump()
 
 		assert.Nil(err)
@@ -428,8 +428,9 @@ func TestBumpVersionStrategyAutoWithPreReleaseMavenLike(t *testing.T) {
 	gitRepo.EXPECT().GetCurrentBranch().Times(1).Return("feature/xyz", nil)
 
 	strategy := NewConventionalCommitBumpStrategy(gitRepo)
-	strategy.BumpDefaultStrategy.PreReleaseTemplate = "SNAPSHOT"
+	strategy.BumpDefaultStrategy.PreReleaseTemplate = NewTemplate("SNAPSHOT")
 	strategy.BumpDefaultStrategy.PreReleaseOverwrite = true
+	strategy.BumpDefaultStrategy.BuildMetadataTemplate = nil
 	version, err := strategy.Bump()
 
 	assert.Nil(err)
