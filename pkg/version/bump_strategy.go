@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/arnaud-deprez/gsemver/internal/log"
-	"github.com/arnaud-deprez/gsemver/pkg/git"
 )
 
 // versionBumper type helper for the bump process
@@ -23,65 +22,12 @@ type BumpStrategy struct {
 	// RegexMinor is the regex used to detect if a commit contains a minor change
 	// If no commit match RegexMajor or RegexMinor, the change is considered as a patch
 	PatternMinor *regexp.Regexp `json:"patternMinor,omitempty"`
-	// BumpReleaseStrategies is a list of bump strategies for matching release branches
-	BumpReleaseStrategies []BumpReleaseStrategy `json:"bumpReleaseStrategies,omitempty"`
+	// BumpBranchesStrategies is a list of bump strategies for matching branches
+	BumpBranchesStrategies []BumpBranchesStrategy `json:"bumpBranchesStrategies,omitempty"`
 	// BumpDefaultStrategy is a default bump strategy to apply when BumpReleaseStrategies matched.
-	BumpDefaultStrategy *BumpDefaultStrategy `json:"bumpDefaultStrategy,omitempty"`
+	BumpDefaultStrategy *BumpBranchesStrategy `json:"bumpDefaultStrategy,omitempty"`
 	// gitRepo is an implementation of GitRepo
 	gitRepo GitRepo
-}
-
-// BumpBranchStrategy defines a method to create a versionBumper from another one
-type BumpBranchStrategy interface {
-	// createVersionBumperFrom create a new version bumper for the strategy based on another one (usually MAJOR, MINOR or PATCH bumpers)
-	createVersionBumperFrom(bumper versionBumper) versionBumper
-}
-
-// BumpReleaseStrategy allows you to configure the bump strategy option for a matching release branch.
-type BumpReleaseStrategy struct {
-	BumpBranchStrategy
-	// PatternReleaseBranches is the regex used to detect if the current branch is a release branch
-	PatternReleaseBranches *regexp.Regexp `json:"patternReleaseBranches,omitempty"`
-	// PreReleaseTemplate defines the pre-release template for the next version
-	// It can be alpha, beta, or a go-template expression
-	PreReleaseTemplate string `json:"preReleaseTemplate,omitempty"`
-}
-
-// createVersionBumperFrom is an implementation for BumpBranchStrategy
-func (o *BumpReleaseStrategy) createVersionBumperFrom(bumper versionBumper) versionBumper {
-	return func(v Version) Version {
-		if o != nil && o.PreReleaseTemplate != "" {
-			return v.BumpPreRelease(o.PreReleaseTemplate, false, bumper)
-		}
-		return bumper(v)
-	}
-}
-
-// BumpDefaultStrategy allows you to configure the bump  default strategy option when no BumpReleaseStrategy matched.
-type BumpDefaultStrategy struct {
-	BumpBranchStrategy
-	// PreReleaseTemplate defines the pre-release template for the next version
-	// It can be alpha, beta, or a go-template expression
-	PreReleaseTemplate string `json:"preReleaseTemplate,omitempty"`
-	// PreReleaseOverwrite defines if a pre-release can be overwritten
-	// If true, it will not append an index to the next version
-	// If false, it will append an incremented index based on the previous same version of same class if any and 0 otherwise
-	PreReleaseOverwrite bool `json:"preReleaseOverwrite"`
-	// BuildMetadataTemplate defines the build metadata for the next version.
-	// It can be a static value but it will usually be a go-template expression to guarantee uniqueness of each built version.
-	BuildMetadataTemplate string `json:"buildMetadataTemplate,omitempty"`
-}
-
-// createVersionBumperFrom is an implementation for BumpBranchStrategy
-func (o *BumpDefaultStrategy) createVersionBumperFrom(bumper versionBumper) versionBumper {
-	return func(v Version) Version {
-		if o != nil && o.BuildMetadataTemplate != "" { // if BuildMetadataTemplate
-			return v.WithBuildMetadata(o.BuildMetadataTemplate)
-		} else if o != nil && o.PreReleaseTemplate != "" {
-			return v.BumpPreRelease(o.PreReleaseTemplate, o.PreReleaseOverwrite, bumper)
-		}
-		return bumper(v)
-	}
 }
 
 /*
@@ -107,21 +53,14 @@ The strategy configuration is:
 func NewConventionalCommitBumpStrategy(gitRepo GitRepo) *BumpStrategy {
 	return &BumpStrategy{
 		Strategy: AUTO,
-		BumpReleaseStrategies: []BumpReleaseStrategy{
-			{
-				PatternReleaseBranches: regexp.MustCompile(`^(master|release/.*)$`),
-				PreReleaseTemplate:     "",
-			},
+		BumpBranchesStrategies: []BumpBranchesStrategy{
+			*NewBumpBranchesStrategy(`^(master|release/.*)$`, "", false, ""),
 		},
-		BumpDefaultStrategy: &BumpDefaultStrategy{
-			PreReleaseTemplate:  "",
-			PreReleaseOverwrite: false,
-			//TODO: we should have a default value here
-			BuildMetadataTemplate: "",
-		},
-		PatternMajor: regexp.MustCompile(`(?m)^BREAKING CHANGE:.*$`),
-		PatternMinor: regexp.MustCompile(`^feat(?:\(.+\))?:.*`),
-		gitRepo:      gitRepo,
+		//TODO: we should have a default value for buildMetadataTemplate
+		BumpDefaultStrategy: NewDefaultBumpBranchesStrategy("", false, "{{ .Commits | len }}.{{ (.Commits | first).Hash.Short }}"),
+		PatternMajor:        regexp.MustCompile(`(?m)^BREAKING CHANGE:.*$`),
+		PatternMinor:        regexp.MustCompile(`^feat(?:\(.+\))?:.*`),
+		gitRepo:             gitRepo,
 	}
 }
 
@@ -135,23 +74,16 @@ func (o BumpStrategy) GoString() string {
 	return sb.String()
 }
 
-// AddBumpReleaseStrategy add a bump release strategy for a branch pattern
-func (o *BumpStrategy) AddBumpReleaseStrategy(pattern string, preReleaseTemplate string) *BumpStrategy {
-	s := BumpReleaseStrategy{
-		PatternReleaseBranches: regexp.MustCompile(pattern),
-		PreReleaseTemplate:     preReleaseTemplate,
-	}
-	o.BumpReleaseStrategies = append(o.BumpReleaseStrategies, s)
+// AddBumpBranchesStrategy add a bump strategy for a matching set of branches
+func (o *BumpStrategy) AddBumpBranchesStrategy(pattern string, preReleaseTemplate string, preReleaseOverwrite bool, buildMetadataTemplate string) *BumpStrategy {
+	s := NewBumpBranchesStrategy(pattern, preReleaseTemplate, preReleaseOverwrite, buildMetadataTemplate)
+	o.BumpBranchesStrategies = append(o.BumpBranchesStrategies, *s)
 	return o
 }
 
 // WithBumpDevelopmentStrategy set a bump development strategy
 func (o *BumpStrategy) WithBumpDevelopmentStrategy(preReleaseTemplate string, preReleaseOverwrite bool, buildMetadataTemplate string) *BumpStrategy {
-	s := &BumpDefaultStrategy{
-		PreReleaseTemplate:    preReleaseTemplate,
-		PreReleaseOverwrite:   preReleaseOverwrite,
-		BuildMetadataTemplate: buildMetadataTemplate,
-	}
+	s := NewDefaultBumpBranchesStrategy(preReleaseTemplate, preReleaseOverwrite, buildMetadataTemplate)
 	o.BumpDefaultStrategy = s
 	return o
 }
@@ -194,28 +126,30 @@ func (o *BumpStrategy) Bump() (Version, error) {
 		return zeroVersion, err
 	}
 
+	context := NewContext(currentBranch, &lastVersion, &lastTag, commits)
+
 	log.Debug("BumpStrategy: look for appropriate version bumper with %#v, lastVersion=%v, branch=%v", lastTag, lastVersion, currentBranch)
-	versionBumper := o.computeVersionBumper(currentBranch, &lastVersion, commits)
+	versionBumper := o.computeVersionBumper(context)
 
 	// Bump the version
 	return versionBumper(lastVersion), nil
 }
 
 // computeAutoVersionBumper computes what bump strategy to apply
-func (o *BumpStrategy) computeVersionBumper(currentBranch string, v *Version, commits []git.Commit) versionBumper {
+func (o *BumpStrategy) computeVersionBumper(context *Context) versionBumper {
 	if log.IsLevelEnabled(log.DebugLevel) && o.Strategy != AUTO {
 		log.Debug("BumpStrategy: will use bump %s", strings.ToUpper(o.Strategy.String()))
 	}
 
 	switch o.Strategy {
 	case MAJOR:
-		return o.BumpDefaultStrategy.createVersionBumperFrom(Version.BumpMajor)
+		return o.BumpDefaultStrategy.createVersionBumperFrom(Version.BumpMajor, context)
 	case MINOR:
-		return o.BumpDefaultStrategy.createVersionBumperFrom(Version.BumpMinor)
+		return o.BumpDefaultStrategy.createVersionBumperFrom(Version.BumpMinor, context)
 	case PATCH:
-		return o.BumpDefaultStrategy.createVersionBumperFrom(Version.BumpPatch)
+		return o.BumpDefaultStrategy.createVersionBumperFrom(Version.BumpPatch, context)
 	case AUTO:
-		return o.computeAutoVersionBumper(currentBranch, v, commits)
+		return o.computeAutoVersionBumper(context)
 	default:
 		log.Debug("BumpStrategy: will not use any bump strategy because the strategy is unknown")
 		return versionBumperIdentity
@@ -223,28 +157,28 @@ func (o *BumpStrategy) computeVersionBumper(currentBranch string, v *Version, co
 }
 
 // computeAutoVersionBumper detects what bump strategy to apply based on commits history in auto mode
-func (o *BumpStrategy) computeAutoVersionBumper(currentBranch string, v *Version, commits []git.Commit) versionBumper {
-	if len(commits) == 0 {
+func (o *BumpStrategy) computeAutoVersionBumper(context *Context) versionBumper {
+	if len(context.Commits) == 0 {
 		log.Debug("BumpStrategy: will not use identity bump strategy because there is not commit")
 		return versionBumperIdentity
 	}
 
-	semverBumper := o.computeSemverBumperFromCommits(currentBranch, v, commits)
+	semverBumper := o.computeSemverBumperFromCommits(context)
 
-	for _, it := range o.BumpReleaseStrategies {
-		if it.PatternReleaseBranches.MatchString(currentBranch) {
-			return it.createVersionBumperFrom(semverBumper)
+	for _, it := range o.BumpBranchesStrategies {
+		if it.BranchesPattern.MatchString(context.Branch) {
+			return it.createVersionBumperFrom(semverBumper, context)
 		}
 	}
-	return o.BumpDefaultStrategy.createVersionBumperFrom(semverBumper)
+	return o.BumpDefaultStrategy.createVersionBumperFrom(semverBumper, context)
 }
 
-func (o *BumpStrategy) computeSemverBumperFromCommits(currentBranch string, v *Version, commits []git.Commit) versionBumper {
+func (o *BumpStrategy) computeSemverBumperFromCommits(context *Context) versionBumper {
 	strategy := PATCH
 	bumper := Version.BumpPatch
-	for _, commit := range commits {
+	for _, commit := range context.Commits {
 		if o.PatternMajor.MatchString(commit.Message) {
-			if v.IsUnstable() {
+			if context.LastVersion.IsUnstable() {
 				log.Trace("BumpStrategy: detects a MAJOR change at %#v however the last version is unstable so it will use bump MINOR strategy", commit)
 				return Version.BumpMinor
 			}
