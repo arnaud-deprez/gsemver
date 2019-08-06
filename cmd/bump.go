@@ -137,15 +137,14 @@ func (o *bumpOptions) run() error {
 func (o *bumpOptions) createBumpStrategy() *version.BumpStrategy {
 	ret := version.NewConventionalCommitBumpStrategy(git.NewVersionGitRepo(o.CurrentDir))
 	ret.Strategy = version.ParseBumpStrategyType(o.Bump)
-	ret.BumpDefaultStrategy.PreReleaseTemplate = o.PreReleaseTemplate
-	ret.BumpDefaultStrategy.PreReleaseOverwrite = o.PreReleaseOverwrite
-	ret.BumpDefaultStrategy.BuildMetadataTemplate = o.BuildMetadataTemplate
 
 	for _, s := range o.
 		BranchStrategies {
-		var b version.BumpReleaseStrategy
+		var b version.BumpBranchesStrategy
 		json.Unmarshal([]byte(s), &b)
-		ret.BumpReleaseStrategies = append(ret.BumpReleaseStrategies, b)
+		ret.BumpBranchesStrategies = append(ret.BumpBranchesStrategies, b)
 	}
+	// configure default BumpBranchesStrategy
+	ret.BumpDefaultStrategy = version.NewDefaultBumpBranchesStrategy(o.PreReleaseTemplate, o.PreReleaseOverwrite, o.BuildMetadataTemplate)
 	return ret
 }

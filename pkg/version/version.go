@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/arnaud-deprez/gsemver/internal/utils"
 )
 
 var (
@@ -148,8 +150,8 @@ func (v Version) BumpPreRelease(preRelease string, overwrite bool, semverBumper 
 	if v.IsPreRelease() {
 		currentIdentifiers := strings.Split(v.PreRelease, ".")
 		id, err := strconv.Atoi(currentIdentifiers[len(currentIdentifiers)-1])
-		if arrayStringEqual(currentIdentifiers, desiredIdentifiers) ||
-			(err == nil && arrayStringEqual(currentIdentifiers[:len(currentIdentifiers)-1], desiredIdentifiers)) {
+		if utils.ArrayStringEqual(currentIdentifiers, desiredIdentifiers) ||
+			(err == nil && utils.ArrayStringEqual(currentIdentifiers[:len(currentIdentifiers)-1], desiredIdentifiers)) {
 			next.PreRelease = strings.Join(append(desiredIdentifiers, strconv.Itoa(id+1)), ".")
 			return next
 		}
@@ -177,6 +179,8 @@ func (v Version) HasSamePreReleaseIdentifiers(identifiers string) bool {
 // WithBuildMetadata return a new Version with build metadata
 func (v Version) WithBuildMetadata(metadata string) Version {
 	next := v
+	// make sure pre-release is empty
+	next.PreRelease = ""
 	next.BuildMetadata = metadata
 	return next
 }
