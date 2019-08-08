@@ -52,17 +52,29 @@ gsemver bump minor
 gsemver bump patch
 
 # To use a pre-release version
-gsemver bump --pre-release alpha
+gsemver bump --pre-release-template alpha
 
 # To use a pre-release version without indexation (maven like SNAPSHOT)
-gsemver bump minor --pre-release SNAPSHOT --pre-release-overwrite true
+gsemver bump minor --pre-release-template SNAPSHOT --pre-release-overwrite true
 
 # To use version with build metadata
-gsemver bump --build-metadata "issue-1.build.1"
+gsemver bump --build-metadata-template "issue-1.build.1"
 
-# To use bump auto with one or many branch strategies
-gsemver bump --branch-strategy='{"branchPattern":"^miletone-1.1$","preReleaseTemplate":"beta"}' --branch-strategy='{"branchPattern":"^miletone-2.0$","preReleaseTemplate":"alpha"}'
+# To use bump auto with one or many branch strategies (you can use same parameters in camelCase in json)
+gsemver bump --branch-strategy='{"branchesPattern":"^miletone-1.1$","preReleaseTemplate":"beta"}' --branch-strategy='{"branchesPattern":"^miletone-2.0$","preReleaseTemplate":"alpha"}'
 `
+	preReleaseTemplateDesc = `Use pre-release template version such as 'alpha' which will give a version like 'X.Y.Z-alpha.N'. 
+You can also use go-template expression with context https://godoc.org/github.com/arnaud-deprez/gsemver/pkg/version#Context and http://masterminds.github.io/sprig functions.
+This flag is not taken into account if --build-metadata is set.`
+
+	buildMetadataTemplateDesc = `Use build metadata template which will give something like X.Y.Z+<build>.
+You can also use go-template expression with context https://godoc.org/github.com/arnaud-deprez/gsemver/pkg/version#Context and http://masterminds.github.io/sprig functions.
+This flag cannot be used with --pre-release* flags and take precedence over them.`
+
+	branchStrategyDesc = `Use branch-strategy will set a strategy for a set of branches. 
+The strategy is defined in json and looks like {"branchesPattern":"^milestone-.*$", "preReleaseTemplate":"alpha"} for example.
+This will use pre-release alpha version for every milestone-* branches. 
+You can find all available options https://godoc.org/github.com/arnaud-deprez/gsemver/pkg/version#BumpBranchesStrategy`
 )
 
 // NewBumpCommands create the bump command with its subcommands
@@ -114,11 +126,10 @@ type bumpOptions struct {
 }
 
 func (o *bumpOptions) addBumpFlags(cmd *cobra.Command) {
-	cmd.Flags().StringVarP(&o.PreReleaseTemplate, "pre-release", "", "", "Use pre-release template version such as `alpha` which will give a version like `X.Y.Z-alpha.N`. This flag is not taken into account if --build-metadata is set.")
+	cmd.Flags().StringVarP(&o.PreReleaseTemplate, "pre-release-template", "", "", preReleaseTemplateDesc)
 	cmd.Flags().BoolVarP(&o.PreReleaseOverwrite, "pre-release-overwrite", "", false, "Use pre-release overwrite option to remove the pre-release identifier suffix which will give a version like `X.Y.Z-SNAPSHOT` if pre-release=SNAPSHOT")
-	cmd.Flags().StringVarP(&o.BuildMetadataTemplate, "build-metadata", "", "", "Use build metadata template which will give something like X.Y.Z+<build>. This flag cannot be used with --pre-release* flags and take precedence over them.")
-	cmd.Flags().StringArrayVarP(&o.BranchStrategies, "branch-strategy", "", []string{}, `Use branch-strategy will set a strategy for a set of branches. 
-	The strategy is defined in json and looks like {"branchPattern":"^milestone-.*$", "preReleaseTemplate":"alpha"} to use pre-release alpha version for every milestone-* branches.`)
+	cmd.Flags().StringVarP(&o.BuildMetadataTemplate, "build-metadata-template", "", "", buildMetadataTemplateDesc)
+	cmd.Flags().StringArrayVarP(&o.BranchStrategies, "branch-strategy", "", []string{}, branchStrategyDesc)
 
 	o.Cmd = cmd
 }
