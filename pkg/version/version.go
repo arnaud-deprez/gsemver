@@ -179,8 +179,6 @@ func (v Version) HasSamePreReleaseIdentifiers(identifiers string) bool {
 // WithBuildMetadata return a new Version with build metadata
 func (v Version) WithBuildMetadata(metadata string) Version {
 	next := v
-	// make sure pre-release is empty
-	next.PreRelease = ""
 	next.BuildMetadata = metadata
 	return next
 }
