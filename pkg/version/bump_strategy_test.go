@@ -381,7 +381,7 @@ func TestBumpVersionStrategyAutoWithPreReleaseStrategyAndNewFeature(t *testing.T
 		{"v1.1.0", "milestone-1.2", "alpha", "1.2.0-alpha.0"},
 		{"v1.2.0-alpha.0", "milestone-1.2", "alpha", "1.2.0-alpha.1"},
 		{"v1.1.0", "feature/test", "alpha", "1.1.0+1.1234567"},
-		{"v1.1.0-alpha.0", "feature/test", "alpha", "1.1.0+1.1234567"},
+		{"v1.1.0-alpha.0", "feature/test", "alpha", "1.1.0-alpha.0+1.1234567"},
 	}
 
 	for _, tc := range testData {
