@@ -52,15 +52,15 @@ gsemver bump minor
 gsemver bump patch
 
 # To use a pre-release version
-gsemver bump --pre-release-template alpha
+gsemver bump --pre-release alpha
 
 # To use a pre-release version without indexation (maven like SNAPSHOT)
-gsemver bump minor --pre-release-template SNAPSHOT --pre-release-overwrite true
+gsemver bump minor --pre-release SNAPSHOT --pre-release-overwrite true
 
 # To use version with build metadata
-gsemver bump --build-metadata-template "issue-1.build.1"
+gsemver bump --build "issue-1.build.1"
 
-# To use bump auto with one or many branch strategies (you can use same parameters in camelCase in json)
+# To use bump auto with one or many branch strategies
 gsemver bump --branch-strategy='{"branchesPattern":"^miletone-1.1$","preReleaseTemplate":"beta"}' --branch-strategy='{"branchesPattern":"^miletone-2.0$","preReleaseTemplate":"alpha"}'
 `
 	preReleaseTemplateDesc = `Use pre-release template version such as 'alpha' which will give a version like 'X.Y.Z-alpha.N'. 
@@ -126,9 +126,9 @@ type bumpOptions struct {
 }
 
 func (o *bumpOptions) addBumpFlags(cmd *cobra.Command) {
-	cmd.Flags().StringVarP(&o.PreReleaseTemplate, "pre-release-template", "", "", preReleaseTemplateDesc)
+	cmd.Flags().StringVarP(&o.PreReleaseTemplate, "pre-release", "", "", preReleaseTemplateDesc)
 	cmd.Flags().BoolVarP(&o.PreReleaseOverwrite, "pre-release-overwrite", "", false, "Use pre-release overwrite option to remove the pre-release identifier suffix which will give a version like `X.Y.Z-SNAPSHOT` if pre-release=SNAPSHOT")
-	cmd.Flags().StringVarP(&o.BuildMetadataTemplate, "build-metadata-template", "", "", buildMetadataTemplateDesc)
+	cmd.Flags().StringVarP(&o.BuildMetadataTemplate, "build", "", "", buildMetadataTemplateDesc)
 	cmd.Flags().StringArrayVarP(&o.BranchStrategies, "branch-strategy", "", []string{}, branchStrategyDesc)
 
 	o.Cmd = cmd
