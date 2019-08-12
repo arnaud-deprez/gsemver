@@ -15,12 +15,12 @@ func TestBumpBranchesStrategyEncodingJson(t *testing.T) {
 		objVal  *BumpBranchesStrategy
 	}{
 		{
-			`{"branchesPattern":".*","preReleaseTemplate":"{{.Branch}}-foo","preReleaseOverwrite":false}`,
-			NewBumpBranchesStrategy(".*", "{{.Branch}}-foo", false, ""),
+			`{"branchesPattern":".*","preRelease":true,"preReleaseTemplate":"{{.Branch}}-foo","preReleaseOverwrite":false}`,
+			NewBumpBranchesStrategy(".*", true, "{{.Branch}}-foo", false, ""),
 		},
 		{
-			`{"branchesPattern":".*","preReleaseOverwrite":true,"buildMetadataTemplate":"{{.Branch}}.{{.Commits | len}}"}`,
-			NewBumpBranchesStrategy(".*", "", true, "{{.Branch}}.{{.Commits | len}}"),
+			`{"branchesPattern":".*","preRelease":true,"preReleaseOverwrite":true,"buildMetadataTemplate":"{{.Branch}}.{{.Commits | len}}"}`,
+			NewBumpBranchesStrategy(".*", true, "", true, "{{.Branch}}.{{.Commits | len}}"),
 		},
 	}
 

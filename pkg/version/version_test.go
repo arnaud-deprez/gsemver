@@ -147,7 +147,8 @@ func TestBumpPreRelease(t *testing.T) {
 		overridePreRelease bool
 		expected           string
 	}{
-		{"1.0.0", "", false, "1.0.0"},
+		{"1.0.0", "", false, "1.1.0-0"},
+		{"1.0.0-0", "", false, "1.0.0-1"},
 		{"1.0.0", "alpha", false, "1.1.0-alpha.0"},
 		{"1.1.0-alpha.0", "alpha", false, "1.1.0-alpha.1"},
 		{"1.1.0-alpha.1", "beta", false, "1.1.0-beta.0"},

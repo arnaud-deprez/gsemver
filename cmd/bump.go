@@ -63,7 +63,8 @@ gsemver bump --build "issue-1.build.1"
 # To use bump auto with one or many branch strategies
 gsemver bump --branch-strategy='{"branchesPattern":"^miletone-1.1$","preReleaseTemplate":"beta"}' --branch-strategy='{"branchesPattern":"^miletone-2.0$","preReleaseTemplate":"alpha"}'
 `
-	preReleaseTemplateDesc = `Use pre-release template version such as 'alpha' which will give a version like 'X.Y.Z-alpha.N'. 
+	preReleaseTemplateDesc = `Use pre-release template version such as 'alpha' which will give a version like 'X.Y.Z-alpha.N'.
+If pre-release flag is present but does not contain template value, it will give a version like 'X.Y.Z-N' where 'N' is the next pre-release increment for the version 'X.Y.Z'.
 You can also use go-template expression with context https://godoc.org/github.com/arnaud-deprez/gsemver/pkg/version#Context and http://masterminds.github.io/sprig functions.
 This flag is not taken into account if --build-metadata is set.`
 
@@ -100,6 +101,7 @@ func newBumpCommands(globalOpts *globalOptions) *cobra.Command {
 			} else {
 				options.Bump = args[0]
 			}
+			options.PreRelease = cmd.Flag("pre-release") != nil
 
 			return options.run()
 		},
@@ -116,11 +118,13 @@ type bumpOptions struct {
 	*globalOptions
 	// Bump is mapped to pkg/version/BumpStrategyOptions#Strategy
 	Bump string
-	// PreReleaseTemplate is mapped to pkg/version/BumpStrategyOptions#PreRelease
+	// PreRelease is mapped to pkg/version/BumpStrategyOptions#PreRelease
+	PreRelease bool
+	// PreReleaseTemplate is mapped to pkg/version/BumpStrategyOptions#PreReleaseTemplate
 	PreReleaseTemplate string
 	// PreReleaseOverwrite is mapped to pkg/version/BumpStrategyOptions#PreReleaseOverwrite
 	PreReleaseOverwrite bool
-	// BuildMetadataTemplate is mapped to pkg/version/BumpStrategyOptions#BuildMetadata
+	// BuildMetadataTemplate is mapped to pkg/version/BumpStrategyOptions#BuildMetadataTemplate
 	BuildMetadataTemplate string
 	BranchStrategies      []string
 }
@@ -156,6 +160,6 @@ func (o *bumpOptions) createBumpStrategy() *version.BumpStrategy {
 		ret.BumpBranchesStrategies = append(ret.BumpBranchesStrategies, b)
 	}
 	// configure default BumpBranchesStrategy
-	ret.BumpDefaultStrategy = version.NewDefaultBumpBranchesStrategy(o.PreReleaseTemplate, o.PreReleaseOverwrite, o.BuildMetadataTemplate)
+	ret.BumpDefaultStrategy = version.NewFallbackBumpBranchesStrategy(o.PreRelease, o.PreReleaseTemplate, o.PreReleaseOverwrite, o.BuildMetadataTemplate)
 	return ret
 }

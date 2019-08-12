@@ -124,8 +124,8 @@ func (v Version) BumpPatch() Version {
 
 // BumpPreRelease bumps the pre-release identifiers
 func (v Version) BumpPreRelease(preRelease string, overwrite bool, semverBumper func(Version) Version) Version {
-	// if no pre-release is define, just return the current version
-	if preRelease == "" {
+	// if no preRelease and overwrite, then it should return the current version.
+	if preRelease == "" && overwrite {
 		return v
 	}
 
@@ -136,7 +136,8 @@ func (v Version) BumpPreRelease(preRelease string, overwrite bool, semverBumper 
 		semverBumper = Version.BumpMinor
 	}
 	// extract desired identifiers
-	desiredIdentifiers := strings.Split(preRelease, ".")
+	desiredIdentifiers := extractIdentifiers(preRelease)
+
 	if !v.IsPreRelease() {
 		// bump MAJOR, MINOR or PATCH if it's not yet a pre-release
 		next = semverBumper(v)
@@ -148,11 +149,8 @@ func (v Version) BumpPreRelease(preRelease string, overwrite bool, semverBumper 
 	}
 
 	if v.IsPreRelease() {
-		currentIdentifiers := strings.Split(v.PreRelease, ".")
-		id, err := strconv.Atoi(currentIdentifiers[len(currentIdentifiers)-1])
-		if utils.ArrayStringEqual(currentIdentifiers, desiredIdentifiers) ||
-			(err == nil && utils.ArrayStringEqual(currentIdentifiers[:len(currentIdentifiers)-1], desiredIdentifiers)) {
-			next.PreRelease = strings.Join(append(desiredIdentifiers, strconv.Itoa(id+1)), ".")
+		if inc, err := v.GetPreReleaseIncrement(); err == nil && v.PreReleaseIdentifiersEqual(preRelease) {
+			next.PreRelease = strings.Join(append(desiredIdentifiers, strconv.Itoa(inc+1)), ".")
 			return next
 		}
 		// TODO: eventually compare if pre-release name is >= v.PreRelease
@@ -166,14 +164,26 @@ func (v Version) IsPreRelease() bool {
 	return v.PreRelease != ""
 }
 
-// HasSamePreReleaseIdentifiers returns true if the version has the same pre-release identifiers.
-// The parameter identifiers is a string where identifiers are separated by .
-func (v Version) HasSamePreReleaseIdentifiers(identifiers string) bool {
-	if v.PreRelease == "" {
-		return false
+// GetPreReleaseIncrement returns the current pre-release increment or an error if there is not.
+func (v Version) GetPreReleaseIncrement() (int, error) {
+	if !v.IsPreRelease() {
+		return -1, newError("%#v is not a pre-release version", v)
 	}
-	idx := strings.LastIndexByte(v.PreRelease, '.')
-	return idx == -1 || v.PreRelease[:idx] == identifiers
+	currentIdentifiers := extractIdentifiers(v.PreRelease)
+	return strconv.Atoi(currentIdentifiers[len(currentIdentifiers)-1])
+}
+
+// PreReleaseIdentifiersEqual returns true if the version has the same pre-release identifiers.
+// The parameter identifiers is a string where identifiers are separated by .
+func (v Version) PreReleaseIdentifiersEqual(identifiers string) bool {
+	if v.PreRelease == identifiers {
+		return true
+	}
+	currentIdentifiers := extractIdentifiers(v.PreRelease)
+	desiredIdentifiers := extractIdentifiers(identifiers)
+
+	return utils.ArrayStringEqual(currentIdentifiers, desiredIdentifiers) ||
+		(len(currentIdentifiers) > 0 && utils.ArrayStringEqual(currentIdentifiers[:len(currentIdentifiers)-1], desiredIdentifiers))
 }
 
 // WithBuildMetadata return a new Version with build metadata
@@ -181,4 +191,12 @@ func (v Version) WithBuildMetadata(metadata string) Version {
 	next := v
 	next.BuildMetadata = metadata
 	return next
+}
+
+func extractIdentifiers(value string) []string {
+	if value == "" {
+		// set empty array if preRelease is empty
+		return []string{}
+	}
+	return strings.Split(value, ".")
 }

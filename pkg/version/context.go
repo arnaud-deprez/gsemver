@@ -33,7 +33,7 @@ type Context struct {
 
 // EvalTemplate evaluates the given template against the current context
 func (c *Context) EvalTemplate(template *template.Template) string {
-	if template == nil || c == nil {
+	if c == nil || template == nil {
 		return ""
 	}
 	var sb strings.Builder

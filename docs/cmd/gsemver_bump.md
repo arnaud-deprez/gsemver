@@ -76,7 +76,8 @@ gsemver bump --branch-strategy='{"branchesPattern":"^miletone-1.1$","preReleaseT
                                                You can also use go-template expression with context https://godoc.org/github.com/arnaud-deprez/gsemver/pkg/version#Context and http://masterminds.github.io/sprig functions.
                                                This flag cannot be used with --pre-release* flags and take precedence over them.
   -h, --help                                   help for bump
-      --pre-release string                     Use pre-release template version such as 'alpha' which will give a version like 'X.Y.Z-alpha.N'. 
+      --pre-release string                     Use pre-release template version such as 'alpha' which will give a version like 'X.Y.Z-alpha.N'.
+                                               If pre-release flag is present but does not contain template value, it will give a version like 'X.Y.Z-N' where 'N' is the next pre-release increment for the version 'X.Y.Z'.
                                                You can also use go-template expression with context https://godoc.org/github.com/arnaud-deprez/gsemver/pkg/version#Context and http://masterminds.github.io/sprig functions.
                                                This flag is not taken into account if --build-metadata is set.
       --pre-release-overwrite X.Y.Z-SNAPSHOT   Use pre-release overwrite option to remove the pre-release identifier suffix which will give a version like X.Y.Z-SNAPSHOT if pre-release=SNAPSHOT
