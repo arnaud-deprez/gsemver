@@ -89,12 +89,6 @@ test: TESTFLAGS += -race -v
 test: test-style
 test: test-coverage
 
-.PHONY: test-unit
-test-unit:
-	@echo
-	@echo "==> Running unit tests <=="
-	go test $(GOFLAGS) -run $(TESTS) $(PKG) -short $(TESTFLAGS)
-
 .PHONY: test-coverage
 test-coverage:
 	@echo
@@ -105,8 +99,14 @@ test-coverage:
 test-style: $(GOLANGCI_LINT)
 	$(GOLANGCI_LINT) run
 
+.PHONY: test-unit
+test-unit: test
+	@echo
+	@echo "==> Running unit tests <=="
+	go test $(GOFLAGS) -run $(TESTS) $(PKG) -short $(TESTFLAGS)
+
 .PHONY: test-integration
-test-integration:
+test-integration: test
 	@echo
 	@echo "==> Running integration tests <=="
 	go test $(GOFLAGS) -run $(TESTS) $(PKG) $(TESTFLAGS)

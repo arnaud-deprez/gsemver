@@ -25,6 +25,8 @@ jobs:
   - stage: Build
     script: make --environment-overrides test-release
   - stage: Tests
-    script: make --environment-overrides test-integration
+    script: 
+      - make --environment-overrides test-integration
+      - bash <(curl -s https://codecov.io/bash)
   - stage: Release
     script: make --environment-overrides release

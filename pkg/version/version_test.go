@@ -7,6 +7,51 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestPreReleaseIdentifiersEqual(t *testing.T) {
+	assert := assert.New(t)
+
+	testData := []struct {
+		version     string
+		identifiers string
+		expected    bool
+	}{
+		{"0.1.0", "", true},
+		{"v1.0.0-alpha.0", "alpha", true},
+		{"v1.0.0-alpha.0", "alpha.0", true},
+		{"v1.0.0-SNAPSHOT", "SNAPSHOT", true},
+	}
+
+	for _, tc := range testData {
+		v, _ := NewVersion(tc.version)
+		assert.Equal(tc.expected, v.PreReleaseIdentifiersEqual(tc.identifiers))
+	}
+}
+
+func TestGetPreReleaseIncrement(t *testing.T) {
+	assert := assert.New(t)
+
+	testData := []struct {
+		version       string
+		expected      int
+		expectedError bool
+	}{
+		{"0.1.0", -1, true},
+		{"v1.0.0-alpha.0", 0, false},
+		{"v1.0.0-alpha.1", 1, false},
+	}
+
+	for _, tc := range testData {
+		v, _ := NewVersion(tc.version)
+		inc, err := v.GetPreReleaseIncrement()
+		if tc.expectedError {
+			assert.Error(err)
+		} else {
+			assert.NoError(err)
+			assert.Equal(tc.expected, inc)
+		}
+	}
+}
+
 func TestVersionBumpMajor(t *testing.T) {
 	assert := assert.New(t)
 	testData := []struct {
@@ -147,7 +192,8 @@ func TestBumpPreRelease(t *testing.T) {
 		overridePreRelease bool
 		expected           string
 	}{
-		{"1.0.0", "", false, "1.0.0"},
+		{"1.0.0", "", false, "1.1.0-0"},
+		{"1.0.0-0", "", false, "1.0.0-1"},
 		{"1.0.0", "alpha", false, "1.1.0-alpha.0"},
 		{"1.1.0-alpha.0", "alpha", false, "1.1.0-alpha.1"},
 		{"1.1.0-alpha.1", "beta", false, "1.1.0-beta.0"},

@@ -1,4 +1,4 @@
-package version
+package utils
 
 import (
 	"text/template"
@@ -12,4 +12,12 @@ func NewTemplate(value string) *template.Template {
 		return nil
 	}
 	return template.Must(template.New("").Funcs(sprig.TxtFuncMap()).Parse(value))
+}
+
+// TemplateToString	converts *template.Template instance to string
+func TemplateToString(t *template.Template) string {
+	if t != nil {
+		return t.Root.String()
+	}
+	return ""
 }

@@ -1,8 +1,10 @@
 package command
 
 import (
+	"bytes"
 	"fmt"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -40,21 +42,25 @@ func TestWithArgs(t *testing.T) {
 
 func TestWithEnvVariable(t *testing.T) {
 	assert := assert.New(t)
-	execCmd := New("git")
+	execCmd := New("echo foo")
 	execCmd.WithEnvVariable("FOO", "BAR")
-	assert.Equal("git", execCmd.Name)
+	assert.Equal("echo", execCmd.Name)
+	execCmd.Run()
+	assert.False(execCmd.DidError())
 	assert.Contains(execCmd.Env, "FOO")
 	assert.Equal("BAR", execCmd.Env["FOO"])
 }
 
 func TestWithEnv(t *testing.T) {
 	assert := assert.New(t)
-	execCmd := New("git")
+	execCmd := New("echo foo")
 	env := map[string]string{}
 	env["TEST"] = "POC"
 	//WithEnv reset the map
 	execCmd.WithEnvVariable("FOO", "BAR").WithEnv(env)
-	assert.Equal("git", execCmd.Name)
+	assert.Equal("echo", execCmd.Name)
+	execCmd.Run()
+	assert.False(execCmd.DidError())
 	assert.Equal(env, execCmd.Env)
 }
 
@@ -66,6 +72,19 @@ func TestEcho(t *testing.T) {
 	assert.Nil(err)
 	assert.False(cmd.DidError())
 	assert.Equal("foo", out)
+}
+
+func TestEchoWithStream(t *testing.T) {
+	t.Parallel()
+	assert := assert.New(t)
+	cmd := New("echo foo")
+	var out, err bytes.Buffer
+	cmd.Out = &out
+	cmd.Err = &err
+	cmd.Run()
+	assert.False(cmd.DidError())
+	assert.Equal("", strings.TrimSpace(err.String()))
+	assert.Equal("foo", strings.TrimSpace(out.String()))
 }
 
 func TestUnknownCommand(t *testing.T) {

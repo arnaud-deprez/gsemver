@@ -2,6 +2,7 @@ package version
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -15,12 +16,16 @@ func TestBumpBranchesStrategyEncodingJson(t *testing.T) {
 		objVal  *BumpBranchesStrategy
 	}{
 		{
-			`{"branchesPattern":".*","preReleaseTemplate":"{{.Branch}}-foo","preReleaseOverwrite":false}`,
-			NewBumpBranchesStrategy(".*", "{{.Branch}}-foo", false, ""),
+			`{"branchesPattern":"master","preRelease":false,"preReleaseOverwrite":false}`,
+			NewDefaultBumpBranchesStrategy("master"),
 		},
 		{
-			`{"branchesPattern":".*","preReleaseOverwrite":true,"buildMetadataTemplate":"{{.Branch}}.{{.Commits | len}}"}`,
-			NewBumpBranchesStrategy(".*", "", true, "{{.Branch}}.{{.Commits | len}}"),
+			`{"branchesPattern":"milestone-1.2","preRelease":true,"preReleaseTemplate":"{{.Branch}}-foo","preReleaseOverwrite":false}`,
+			NewPreReleaseBumpBranchesStrategy("milestone-1.2", "{{.Branch}}-foo", false),
+		},
+		{
+			`{"branchesPattern":".*","preRelease":true,"preReleaseOverwrite":true,"buildMetadataTemplate":"{{.Branch}}.{{.Commits | len}}"}`,
+			NewFallbackBumpBranchesStrategy(true, "", true, "{{.Branch}}.{{.Commits | len}}"),
 		},
 	}
 
@@ -48,4 +53,10 @@ func TestBumpBranchesStrategyEncodingJson(t *testing.T) {
 			}
 		})
 	}
+}
+
+func ExampleBumpBranchesStrategy_GoString() {
+	s := NewBumpBranchesStrategy(".*", true, "foo", true, "bar")
+	fmt.Printf("%#v\n", s)
+	// Output: version.BumpBranchesStrategy{BranchesPattern: &regexp.Regexp{expr: ".*"}, PreRelease: true, PreReleaseTemplate: &template.Template{text: "foo"}, PreReleaseOverwrite: true, BuildMetadataTemplate: &template.Template{text: "bar"}}
 }

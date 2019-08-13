@@ -8,6 +8,23 @@ import (
 	"github.com/arnaud-deprez/gsemver/internal/log"
 )
 
+const (
+	// DefaultMajorPattern defines default regular expression to match a commit message with a major change.
+	DefaultMajorPattern = `(?m)^BREAKING CHANGE:.*$`
+	// DefaultMinorPattern defines default regular expression to match a commit message with a minor change.
+	DefaultMinorPattern = `^feat(?:\(.+\))?:.*`
+	// DefaultReleaseBranchesPattern defines default regular expression to match release branches
+	DefaultReleaseBranchesPattern = `^(master|release/.*)$`
+	// DefaultPreRelease defines default pre-release activation for non release branches
+	DefaultPreRelease = false
+	// DefaultPreReleaseTemplate defines default pre-release go template for non release branches
+	DefaultPreReleaseTemplate = ""
+	// DefaultPreReleaseOverwrite defines default pre-release overwrite activation for non release branches
+	DefaultPreReleaseOverwrite = false
+	// DefaultBuildMetadataTemplate defines default go template used for non release branches strategy
+	DefaultBuildMetadataTemplate = `{{.Commits | len}}.{{(.Commits | first).Hash.Short}}`
+)
+
 // versionBumper type helper for the bump process
 type versionBumper func(Version) Version
 
@@ -16,12 +33,12 @@ type BumpStrategy struct {
 	// Strategy defines the strategy to use to bump the version.
 	// It can be automatic (AUTO) or manual (MAJOR, MINOR, PATCH)
 	Strategy BumpStrategyType `json:"strategy"`
-	// RegexMajor is the regex used to detect if a commit contains a breaking/major change
+	// MajorPattern is the regex used to detect if a commit contains a breaking/major change
 	// See RegexMinor for more details
-	PatternMajor *regexp.Regexp `json:"patternMajor,omitempty"`
-	// RegexMinor is the regex used to detect if a commit contains a minor change
+	MajorPattern *regexp.Regexp `json:"majorPattern,omitempty"`
+	// MinorPattern is the regex used to detect if a commit contains a minor change
 	// If no commit match RegexMajor or RegexMinor, the change is considered as a patch
-	PatternMinor *regexp.Regexp `json:"patternMinor,omitempty"`
+	MinorPattern *regexp.Regexp `json:"minorPattern,omitempty"`
 	// BumpBranchesStrategies is a list of bump strategies for matching branches
 	BumpBranchesStrategies []BumpBranchesStrategy `json:"bumpBranchesStrategies,omitempty"`
 	// BumpDefaultStrategy is a default bump strategy to apply when BumpReleaseStrategies matched.
@@ -36,30 +53,34 @@ NewConventionalCommitBumpStrategy create a BumpStrategy following https://www.co
 The strategy configuration is:
 
 	Strategy: AUTO
-	BumpReleaseStrategies: [
+	BumpBranchesStrategies: [
 		{
 			PatternReleaseBranches: ^(master|release/.*)$
+			PreRelease:             false
 			PreReleaseTemplate:     ""
+			PreReleaseOverwrite:    false
+			BuildMetadataTemplate:  ""
 		}
 	]
 	BumpDefaultStrategy: {
-		PreReleaseTemplate:    ""
-		PreReleaseOverwrite:   false
-		BuildMetadataTemplate: ""
+		PatternReleaseBranches: .*
+		PreRelease:    		    false
+		PreReleaseTemplate:     ""
+		PreReleaseOverwrite:    false
+		BuildMetadataTemplate:  ""
 	}
-	PatternMajor: (?m)^BREAKING CHANGE:.*$
-	PatternMinor: ^feat(?:\(.+\))?:.*
+	MajorPattern: (?m)^BREAKING CHANGE:.*$
+	MinorPattern: ^feat(?:\(.+\))?:.*
 */
 func NewConventionalCommitBumpStrategy(gitRepo GitRepo) *BumpStrategy {
 	return &BumpStrategy{
 		Strategy: AUTO,
 		BumpBranchesStrategies: []BumpBranchesStrategy{
-			*NewBumpBranchesStrategy(`^(master|release/.*)$`, "", false, ""),
+			*NewDefaultBumpBranchesStrategy(DefaultReleaseBranchesPattern),
 		},
-		//TODO: we should have a default value for buildMetadataTemplate
-		BumpDefaultStrategy: NewDefaultBumpBranchesStrategy("", false, "{{ .Commits | len }}.{{ (.Commits | first).Hash.Short }}"),
-		PatternMajor:        regexp.MustCompile(`(?m)^BREAKING CHANGE:.*$`),
-		PatternMinor:        regexp.MustCompile(`^feat(?:\(.+\))?:.*`),
+		BumpDefaultStrategy: NewFallbackBumpBranchesStrategy(DefaultPreRelease, DefaultPreReleaseTemplate, DefaultPreReleaseOverwrite, DefaultBuildMetadataTemplate),
+		MajorPattern:        regexp.MustCompile(DefaultMajorPattern),
+		MinorPattern:        regexp.MustCompile(DefaultMinorPattern),
 		gitRepo:             gitRepo,
 	}
 }
@@ -68,23 +89,16 @@ func NewConventionalCommitBumpStrategy(gitRepo GitRepo) *BumpStrategy {
 func (o BumpStrategy) GoString() string {
 	var sb strings.Builder
 	sb.WriteString("version.BumpStrategy{")
-	sb.WriteString(fmt.Sprintf("Strategy: %q, PatternMajor: &regexp.Regexp{expr: %q}, PatternMinor: &regexp.Regexp{expr: %q}", o.Strategy, o.PatternMajor, o.PatternMajor))
-	// TODO: implements the rest of GoString()
+	sb.WriteString(fmt.Sprintf("Strategy: %q, MajorPattern: &regexp.Regexp{expr: %q}, MinorPattern: &regexp.Regexp{expr: %q}, ", o.Strategy, o.MajorPattern, o.MinorPattern))
+	sb.WriteString(fmt.Sprintf("BumpBranchesStrategies: %#v", o.BumpBranchesStrategies))
+	sb.WriteString(fmt.Sprintf("BumpDefaultStrategy: %#v", o.BumpDefaultStrategy))
 	sb.WriteString("}")
 	return sb.String()
 }
 
 // AddBumpBranchesStrategy add a bump strategy for a matching set of branches
-func (o *BumpStrategy) AddBumpBranchesStrategy(pattern string, preReleaseTemplate string, preReleaseOverwrite bool, buildMetadataTemplate string) *BumpStrategy {
-	s := NewBumpBranchesStrategy(pattern, preReleaseTemplate, preReleaseOverwrite, buildMetadataTemplate)
+func (o *BumpStrategy) AddBumpBranchesStrategy(s *BumpBranchesStrategy) *BumpStrategy {
 	o.BumpBranchesStrategies = append(o.BumpBranchesStrategies, *s)
-	return o
-}
-
-// WithBumpDevelopmentStrategy set a bump development strategy
-func (o *BumpStrategy) WithBumpDevelopmentStrategy(preReleaseTemplate string, preReleaseOverwrite bool, buildMetadataTemplate string) *BumpStrategy {
-	s := NewDefaultBumpBranchesStrategy(preReleaseTemplate, preReleaseOverwrite, buildMetadataTemplate)
-	o.BumpDefaultStrategy = s
 	return o
 }
 
@@ -105,7 +119,7 @@ func (o *BumpStrategy) Bump() (Version, error) {
 	lastTag, err := o.gitRepo.GetLastRelativeTag("HEAD")
 	if err != nil {
 		// just log for debug but the program can continue
-		log.Debug("Unable to get last relative tag because '%s'", err)
+		log.Debug("%v", newErrorC(err, "Unable to get last relative tag"))
 	}
 
 	// Parse the last version from the tag name
@@ -177,14 +191,15 @@ func (o *BumpStrategy) computeSemverBumperFromCommits(context *Context) versionB
 	strategy := PATCH
 	bumper := Version.BumpPatch
 	for _, commit := range context.Commits {
-		if o.PatternMajor.MatchString(commit.Message) {
+		if o.MajorPattern.MatchString(commit.Message) {
 			if context.LastVersion.IsUnstable() {
 				log.Trace("BumpStrategy: detects a MAJOR change at %#v however the last version is unstable so it will use bump MINOR strategy", commit)
 				return Version.BumpMinor
 			}
 			log.Trace("BumpStrategy: detects a MAJOR change at %#v", commit)
 			return Version.BumpMajor
-		} else if o.PatternMinor.MatchString(commit.Message) {
+		}
+		if o.MinorPattern.MatchString(commit.Message) {
 			strategy = MINOR
 			log.Trace("BumpStrategy: detects a MINOR change at %#v", commit)
 			bumper = Version.BumpMinor

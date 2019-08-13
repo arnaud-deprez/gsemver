@@ -14,7 +14,7 @@ generate_cover_data() {
     (
       local output="${coverdir}/${d//\//-}.cover"
       echo "$coverdir -> $output"
-      go test -short -coverprofile="${output}" -covermode="$covermode" "$d"
+      go test -race -coverprofile="${output}" -covermode="$covermode" "$d"
     )
   done
 
@@ -23,7 +23,11 @@ generate_cover_data() {
 }
 
 push_to_coveralls() {
-  goveralls -coverprofile="${profile}" -service=circle-ci
+  goveralls -coverprofile="${profile}" -service=travis-ci
+}
+
+push_to_codecov() {
+  bash <(curl -s https://codecov.io/bash)
 }
 
 mkdir -p $coverdir
@@ -34,6 +38,9 @@ go tool cover -func "${profile}"
 case "${1-}" in
   --html)
     go tool cover -html "${profile}"
+    ;;
+  --codecov)
+    push_to_codecov
     ;;
   --coveralls)
     push_to_coveralls

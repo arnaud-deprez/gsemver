@@ -1,6 +1,7 @@
 package version
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -18,21 +19,26 @@ func TestBumpVersionStrategyWithoutTag(t *testing.T) {
 	defer ctrl.Finish()
 
 	testData := []struct {
-		strategy            BumpStrategyType
-		branch              string
-		preRelease          string
-		preReleaseOverwrite bool
-		buildMetadata       string
-		expected            string
+		strategy              BumpStrategyType
+		branch                string
+		preRelease            bool
+		preReleaseTemplate    string
+		preReleaseOverwrite   bool
+		buildMetadataTemplate string
+		expected              string
 	}{
-		{MAJOR, "dummy", "", false, "", "1.0.0"},
-		{MINOR, "dummy", "", false, "", "0.1.0"},
-		{PATCH, "dummy", "", false, "", "0.0.1"},
-		{AUTO, "master", "", false, "", "0.1.0"},
-		{AUTO, "feature/test", "", false, "{{ .Commits | len }}.{{ (.Commits | first).Hash.Short }}", "0.0.0+1.1234567"},
-		{MAJOR, "dummy", "alpha", false, "", "1.0.0-alpha.0"},
-		{MINOR, "dummy", "SNAPSHOT", true, "", "0.1.0-SNAPSHOT"},
-		{0, "dummy", "", false, "build.8", "0.0.0+build.8"},
+		{MAJOR, "dummy", false, "", false, "", "1.0.0"},
+		{MINOR, "dummy", false, "", false, "", "0.1.0"},
+		{PATCH, "dummy", false, "", false, "", "0.0.1"},
+		{MAJOR, "dummy", true, "", false, "", "1.0.0-0"},
+		{MAJOR, "dummy", true, "alpha", false, "", "1.0.0-alpha.0"},
+		{MINOR, "dummy", true, "SNAPSHOT", true, "", "0.1.0-SNAPSHOT"},
+		{0, "dummy", false, "", false, "build.8", "0.0.0+build.8"},
+		{AUTO, "master", false, "", false, "", "0.1.0"},
+		{AUTO, "master", true, "", false, "", "0.1.0-0"},
+		{AUTO, "master", true, "alpha", false, "", "0.1.0-alpha.0"},
+		{AUTO, "master", false, "", false, "build.1", "0.0.0+build.1"},
+		{AUTO, "feature/test", false, "", false, "{{ .Commits | len }}.{{ (.Commits | first).Hash.Short }}", "0.0.0+1.1234567"},
 	}
 
 	for _, tc := range testData {
@@ -52,9 +58,8 @@ func TestBumpVersionStrategyWithoutTag(t *testing.T) {
 
 		strategy := NewConventionalCommitBumpStrategy(gitRepo)
 		strategy.Strategy = tc.strategy
-		strategy.BumpDefaultStrategy.PreReleaseTemplate = NewTemplate(tc.preRelease)
-		strategy.BumpDefaultStrategy.PreReleaseOverwrite = tc.preReleaseOverwrite
-		strategy.BumpDefaultStrategy.BuildMetadataTemplate = NewTemplate(tc.buildMetadata)
+		strategy.BumpBranchesStrategies = []BumpBranchesStrategy{}
+		strategy.BumpDefaultStrategy = NewFallbackBumpBranchesStrategy(tc.preRelease, tc.preReleaseTemplate, tc.preReleaseOverwrite, tc.buildMetadataTemplate)
 		version, err := strategy.Bump()
 		assert.Nil(err)
 		assert.Equal(tc.expected, version.String())
@@ -72,27 +77,29 @@ func TestBumpVersionStrategyNoDeltaCommit(t *testing.T) {
 		from                string
 		strategy            BumpStrategyType
 		branch              string
-		preRelease          string
+		preRelease          bool
+		preReleaseTemplate  string
 		preReleaseOverwrite bool
 		buildMetadata       string
 		expected            string
 	}{
-		{"v1.1.0-alpha.0", MAJOR, "dummy", "", false, "", "2.0.0"},
-		{"v1.1.0", PATCH, "dummy", "", false, "", "1.1.1"},
-		{"v1.2.0", MINOR, "dummy", "", false, "", "1.3.0"},
-		{"v1.2.0", MINOR, "dummy", "alpha", false, "", "1.3.0-alpha.0"},
-		{"1.2.0", MAJOR, "dummy", "SNAPSHOT", true, "", "2.0.0-SNAPSHOT"},
-		{"v1.2.0", MAJOR, "dummy", "SNAPSHOT", true, "", "2.0.0-SNAPSHOT"},
+		{"v1.1.0-alpha.0", MAJOR, "dummy", false, "", false, "", "2.0.0"},
+		{"v1.1.0", PATCH, "dummy", false, "", false, "", "1.1.1"},
+		{"v1.2.0", MINOR, "dummy", false, "", false, "", "1.3.0"},
+		{"v1.2.0", MINOR, "dummy", true, "alpha", false, "", "1.3.0-alpha.0"},
+		{"1.2.0", MAJOR, "dummy", true, "SNAPSHOT", true, "", "2.0.0-SNAPSHOT"},
+		{"v1.2.0", MAJOR, "dummy", true, "SNAPSHOT", true, "", "2.0.0-SNAPSHOT"},
 		// in AUTO the version should not change
-		{"1.2.0", AUTO, "master", "", false, "", "1.2.0"},
-		{"v1.2.0", AUTO, "master", "", false, "", "1.2.0"},
-		{"v1.2.0", AUTO, "feature/test", "", false, "", "1.2.0"},
-		{"v1.2.0", AUTO, "master", "alpha", false, "", "1.2.0"},
-		{"v1.2.0", AUTO, "feature/test", "alpha", false, "", "1.2.0"},
-		{"v1.2.0", AUTO, "master", "SNAPSHOT", true, "", "1.2.0"},
-		{"v1.2.0", AUTO, "feature/test", "SNAPSHOT", true, "", "1.2.0"},
-		{"v1.2.0", AUTO, "master", "", false, "build.1", "1.2.0"},
-		{"v1.2.0", AUTO, "feature/test", "", false, "build.1", "1.2.0"},
+		{"1.2.0", AUTO, "master", false, "", false, "", "1.2.0"},
+		{"v1.2.0", AUTO, "master", false, "", false, "", "1.2.0"},
+		{"v1.2.0", AUTO, "feature/test", false, "", false, "", "1.2.0"},
+		{"v1.2.0", AUTO, "master", true, "", false, "", "1.2.0"},
+		{"v1.2.0", AUTO, "master", true, "alpha", false, "", "1.2.0"},
+		{"v1.2.0", AUTO, "feature/test", true, "alpha", false, "", "1.2.0"},
+		{"v1.2.0", AUTO, "master", true, "SNAPSHOT", true, "", "1.2.0"},
+		{"v1.2.0", AUTO, "feature/test", true, "SNAPSHOT", true, "", "1.2.0"},
+		{"v1.2.0", AUTO, "master", false, "", false, "build.1", "1.2.0"},
+		{"v1.2.0", AUTO, "feature/test", false, "", false, "build.1", "1.2.0"},
 	}
 
 	for _, tc := range testData {
@@ -105,9 +112,7 @@ func TestBumpVersionStrategyNoDeltaCommit(t *testing.T) {
 
 		strategy := NewConventionalCommitBumpStrategy(gitRepo)
 		strategy.Strategy = tc.strategy
-		strategy.BumpDefaultStrategy.PreReleaseTemplate = NewTemplate(tc.preRelease)
-		strategy.BumpDefaultStrategy.PreReleaseOverwrite = tc.preReleaseOverwrite
-		strategy.BumpDefaultStrategy.BuildMetadataTemplate = NewTemplate(tc.buildMetadata)
+		strategy.BumpDefaultStrategy = NewFallbackBumpBranchesStrategy(tc.preRelease, tc.preReleaseTemplate, tc.preReleaseOverwrite, tc.buildMetadata)
 		version, err := strategy.Bump()
 
 		assert.Nil(err)
@@ -372,16 +377,17 @@ func TestBumpVersionStrategyAutoWithPreReleaseStrategyAndNewFeature(t *testing.T
 	defer ctrl.Finish()
 
 	testData := []struct {
-		from       string
-		branch     string
-		preRelease string
-		expected   string
+		from               string
+		branch             string
+		preRelease         bool
+		preReleaseTemplate string
+		expected           string
 	}{
-		{"v1.1.0", "master", "alpha", "1.2.0"},
-		{"v1.1.0", "milestone-1.2", "alpha", "1.2.0-alpha.0"},
-		{"v1.2.0-alpha.0", "milestone-1.2", "alpha", "1.2.0-alpha.1"},
-		{"v1.1.0", "feature/test", "alpha", "1.1.0+1.1234567"},
-		{"v1.1.0-alpha.0", "feature/test", "alpha", "1.1.0-alpha.0+1.1234567"},
+		{"v1.1.0", "master", true, "alpha", "1.2.0"},
+		{"v1.1.0", "milestone-1.2", true, "alpha", "1.2.0-alpha.0"},
+		{"v1.2.0-alpha.0", "milestone-1.2", true, "alpha", "1.2.0-alpha.1"},
+		{"v1.1.0", "feature/test", true, "alpha", "1.1.0+1.1234567"},
+		{"v1.1.0-alpha.0", "feature/test", true, "alpha", "1.1.0-alpha.0+1.1234567"},
 	}
 
 	for _, tc := range testData {
@@ -398,7 +404,7 @@ func TestBumpVersionStrategyAutoWithPreReleaseStrategyAndNewFeature(t *testing.T
 		}, nil)
 		gitRepo.EXPECT().GetCurrentBranch().Times(1).Return(tc.branch, nil)
 
-		strategy := NewConventionalCommitBumpStrategy(gitRepo).AddBumpBranchesStrategy("milestone-1.2", tc.preRelease, false, "")
+		strategy := NewConventionalCommitBumpStrategy(gitRepo).AddBumpBranchesStrategy(NewBumpBranchesStrategy("milestone-1.2", tc.preRelease, tc.preReleaseTemplate, false, ""))
 		version, err := strategy.Bump()
 
 		assert.Nil(err)
@@ -428,11 +434,16 @@ func TestBumpVersionStrategyAutoWithPreReleaseMavenLike(t *testing.T) {
 	gitRepo.EXPECT().GetCurrentBranch().Times(1).Return("feature/xyz", nil)
 
 	strategy := NewConventionalCommitBumpStrategy(gitRepo)
-	strategy.BumpDefaultStrategy.PreReleaseTemplate = NewTemplate("SNAPSHOT")
-	strategy.BumpDefaultStrategy.PreReleaseOverwrite = true
-	strategy.BumpDefaultStrategy.BuildMetadataTemplate = nil
+	strategy.BumpDefaultStrategy = NewFallbackBumpBranchesStrategy(true, "SNAPSHOT", true, "")
 	version, err := strategy.Bump()
 
 	assert.Nil(err)
 	assert.Equal("1.1.0-SNAPSHOT", version.String())
+}
+
+func ExampleBumpStrategy_GoString() {
+	gitRepo := mock_version.NewMockGitRepo(nil)
+	s := NewConventionalCommitBumpStrategy(gitRepo)
+	fmt.Printf("%#v\n", s)
+	// Output: version.BumpStrategy{Strategy: "AUTO", MajorPattern: &regexp.Regexp{expr: "(?m)^BREAKING CHANGE:.*$"}, MinorPattern: &regexp.Regexp{expr: "^feat(?:\\(.+\\))?:.*"}, BumpBranchesStrategies: []version.BumpBranchesStrategy{version.BumpBranchesStrategy{BranchesPattern: &regexp.Regexp{expr: "^(master|release/.*)$"}, PreRelease: false, PreReleaseTemplate: &template.Template{text: ""}, PreReleaseOverwrite: false, BuildMetadataTemplate: &template.Template{text: ""}}}BumpDefaultStrategy: version.BumpBranchesStrategy{BranchesPattern: &regexp.Regexp{expr: ".*"}, PreRelease: false, PreReleaseTemplate: &template.Template{text: ""}, PreReleaseOverwrite: false, BuildMetadataTemplate: &template.Template{text: "{{.Commits | len}}.{{(.Commits | first).Hash.Short}}"}}}
 }

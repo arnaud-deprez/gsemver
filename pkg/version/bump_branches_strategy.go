@@ -2,39 +2,51 @@ package version
 
 import (
 	"encoding/json"
+	"fmt"
 	"regexp"
+	"strings"
 	"text/template"
+
+	"github.com/arnaud-deprez/gsemver/internal/utils"
 )
 
 // NewBumpBranchesStrategy creates a new BumpBranchesStrategy
-func NewBumpBranchesStrategy(pattern string, preReleaseTemplate string, preReleaseOverwrite bool, buildMetadataTemplate string) *BumpBranchesStrategy {
+func NewBumpBranchesStrategy(pattern string, preRelease bool, preReleaseTemplate string, preReleaseOverwrite bool, buildMetadataTemplate string) *BumpBranchesStrategy {
 	return &BumpBranchesStrategy{
 		BranchesPattern:       regexp.MustCompile(pattern),
-		PreReleaseTemplate:    NewTemplate(preReleaseTemplate),
+		PreRelease:            preRelease,
+		PreReleaseTemplate:    utils.NewTemplate(preReleaseTemplate),
 		PreReleaseOverwrite:   preReleaseOverwrite,
-		BuildMetadataTemplate: NewTemplate(buildMetadataTemplate),
+		BuildMetadataTemplate: utils.NewTemplate(buildMetadataTemplate),
 	}
 }
 
-// NewDefaultBumpBranchesStrategy creates a new BumpBranchesStrategy that matches all non matching branches.
-func NewDefaultBumpBranchesStrategy(preReleaseTemplate string, preReleaseOverwrite bool, buildMetadataTemplate string) *BumpBranchesStrategy {
-	return NewBumpBranchesStrategy(".*", preReleaseTemplate, preReleaseOverwrite, buildMetadataTemplate)
+// NewFallbackBumpBranchesStrategy creates a new BumpBranchesStrategy that matches all non matching branches.
+func NewFallbackBumpBranchesStrategy(preRelease bool, preReleaseTemplate string, preReleaseOverwrite bool, buildMetadataTemplate string) *BumpBranchesStrategy {
+	return NewBumpBranchesStrategy(".*", preRelease, preReleaseTemplate, preReleaseOverwrite, buildMetadataTemplate)
 }
 
-// NewBumpBranchesPreReleaseStrategy creates a new BumpBranchesStrategy for pre-release version strategy.
-func NewBumpBranchesPreReleaseStrategy(pattern string, preReleaseTemplate string, preReleaseOverwrite bool) *BumpBranchesStrategy {
-	return NewBumpBranchesStrategy(pattern, preReleaseTemplate, preReleaseOverwrite, "")
+// NewDefaultBumpBranchesStrategy creates a new BumpBranchesStrategy for pre-release version strategy.
+func NewDefaultBumpBranchesStrategy(pattern string) *BumpBranchesStrategy {
+	return NewBumpBranchesStrategy(pattern, false, "", false, "")
 }
 
-// NewBumpBranchesBuildStrategy creates a new BumpBranchesStrategy for build version strategy.
-func NewBumpBranchesBuildStrategy(pattern string, buildMetadataTemplate string) *BumpBranchesStrategy {
-	return NewBumpBranchesStrategy(pattern, "", false, buildMetadataTemplate)
+// NewPreReleaseBumpBranchesStrategy creates a new BumpBranchesStrategy for pre-release version strategy.
+func NewPreReleaseBumpBranchesStrategy(pattern string, preReleaseTemplate string, preReleaseOverwrite bool) *BumpBranchesStrategy {
+	return NewBumpBranchesStrategy(pattern, true, preReleaseTemplate, preReleaseOverwrite, "")
+}
+
+// NewBuildBumpBranchesStrategy creates a new BumpBranchesStrategy for build version strategy.
+func NewBuildBumpBranchesStrategy(pattern string, buildMetadataTemplate string) *BumpBranchesStrategy {
+	return NewBumpBranchesStrategy(pattern, false, "", false, buildMetadataTemplate)
 }
 
 // BumpBranchesStrategy allows you to configure the bump strategy option for a matching set of branches.
 type BumpBranchesStrategy struct {
 	// BranchesPattern is the regex used to match against the current branch
 	BranchesPattern *regexp.Regexp `json:"branchesPattern,omitempty"`
+	// PreRelease defines if the bump strategy should generate a pre-release version
+	PreRelease bool `json:"preRelease"`
 	// PreReleaseTemplate defines the pre-release template for the next version
 	// It can be alpha, beta, or a go-template expression
 	PreReleaseTemplate *template.Template `json:"preReleaseTemplate,omitempty"`
@@ -53,11 +65,23 @@ func (s *BumpBranchesStrategy) createVersionBumperFrom(bumper versionBumper, ctx
 		// build-metadata and pre-release are exclusives
 		if s != nil && s.BuildMetadataTemplate != nil {
 			return v.WithBuildMetadata(ctx.EvalTemplate(s.BuildMetadataTemplate))
-		} else if s != nil && s.PreReleaseTemplate != nil {
+		}
+		if s != nil && s.PreRelease {
 			return v.BumpPreRelease(ctx.EvalTemplate(s.PreReleaseTemplate), s.PreReleaseOverwrite, bumper)
 		}
 		return bumper(v)
 	}
+}
+
+// GoString makes BumpBranchesStrategy satisfy the GoStringer interface.
+func (s BumpBranchesStrategy) GoString() string {
+	var sb strings.Builder
+	sb.WriteString("version.BumpBranchesStrategy{")
+	sb.WriteString(fmt.Sprintf("BranchesPattern: &regexp.Regexp{expr: %q}, ", s.BranchesPattern))
+	sb.WriteString(fmt.Sprintf("PreRelease: %v, PreReleaseTemplate: &template.Template{text: %q}, PreReleaseOverwrite: %v, ", s.PreRelease, utils.TemplateToString(s.PreReleaseTemplate), s.PreReleaseOverwrite))
+	sb.WriteString(fmt.Sprintf("BuildMetadataTemplate: &template.Template{text: %q}", utils.TemplateToString(s.BuildMetadataTemplate)))
+	sb.WriteString("}")
+	return sb.String()
 }
 
 // MarshalJSON implements json encoding
@@ -69,25 +93,11 @@ func (s *BumpBranchesStrategy) MarshalJSON() ([]byte, error) {
 		BuildMetadataTemplate string `json:"buildMetadataTemplate,omitempty"`
 		*Alias
 	}{
-		BranchesPattern:       regexpToString(s.BranchesPattern),
-		PreReleaseTemplate:    templateToString(s.PreReleaseTemplate),
-		BuildMetadataTemplate: templateToString(s.BuildMetadataTemplate),
+		BranchesPattern:       utils.RegexpToString(s.BranchesPattern),
+		PreReleaseTemplate:    utils.TemplateToString(s.PreReleaseTemplate),
+		BuildMetadataTemplate: utils.TemplateToString(s.BuildMetadataTemplate),
 		Alias:                 (*Alias)(s),
 	})
-}
-
-func regexpToString(r *regexp.Regexp) string {
-	if r != nil {
-		return r.String()
-	}
-	return ""
-}
-
-func templateToString(t *template.Template) string {
-	if t != nil {
-		return t.Root.String()
-	}
-	return ""
 }
 
 // UnmarshalJSON implements json decoding
@@ -105,7 +115,7 @@ func (s *BumpBranchesStrategy) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	s.BranchesPattern = regexp.MustCompile(aux.BranchesPattern)
-	s.PreReleaseTemplate = NewTemplate(aux.PreReleaseTemplate)
-	s.BuildMetadataTemplate = NewTemplate(aux.BuildMetadataTemplate)
+	s.PreReleaseTemplate = utils.NewTemplate(aux.PreReleaseTemplate)
+	s.BuildMetadataTemplate = utils.NewTemplate(aux.BuildMetadataTemplate)
 	return nil
 }
