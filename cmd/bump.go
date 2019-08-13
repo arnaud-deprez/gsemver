@@ -78,8 +78,14 @@ This will use pre-release alpha version for every milestone-* branches.
 You can find all available options https://godoc.org/github.com/arnaud-deprez/gsemver/pkg/version#BumpBranchesStrategy`
 )
 
-// NewBumpCommands create the bump command with its subcommands
+// newBumpCommands create the bump command with its subcommands
 func newBumpCommands(globalOpts *globalOptions) *cobra.Command {
+	return newBumpCommandsWithRun(globalOpts, run)
+}
+
+// newBumpCommandsWithRun create the bump commands from bumpOptions with run function.
+// it is used for internal usage only and for test purpose.
+func newBumpCommandsWithRun(globalOpts *globalOptions, run func(o *bumpOptions) error) *cobra.Command {
 	options := &bumpOptions{
 		globalOptions: globalOpts,
 	}
@@ -101,9 +107,10 @@ func newBumpCommands(globalOpts *globalOptions) *cobra.Command {
 			} else {
 				options.Bump = args[0]
 			}
-			options.PreRelease = cmd.Flag("pre-release") != nil
 
-			return options.run()
+			options.PreRelease = cmd.Flags().Changed("pre-release")
+
+			return run(options)
 		},
 	}
 
@@ -119,6 +126,7 @@ type bumpOptions struct {
 	// Bump is mapped to pkg/version/BumpStrategyOptions#Strategy
 	Bump string
 	// PreRelease is mapped to pkg/version/BumpStrategyOptions#PreRelease
+	// It is set to true only if explicitly set by the user
 	PreRelease bool
 	// PreReleaseTemplate is mapped to pkg/version/BumpStrategyOptions#PreReleaseTemplate
 	PreReleaseTemplate string
@@ -132,13 +140,31 @@ type bumpOptions struct {
 func (o *bumpOptions) addBumpFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&o.PreReleaseTemplate, "pre-release", "", "", preReleaseTemplateDesc)
 	cmd.Flags().BoolVarP(&o.PreReleaseOverwrite, "pre-release-overwrite", "", false, "Use pre-release overwrite option to remove the pre-release identifier suffix which will give a version like `X.Y.Z-SNAPSHOT` if pre-release=SNAPSHOT")
-	cmd.Flags().StringVarP(&o.BuildMetadataTemplate, "build", "", "", buildMetadataTemplateDesc)
+	cmd.Flags().StringVarP(&o.BuildMetadataTemplate, "build", "", "{{ .Commits | len }}.{{ (.Commits | first).Hash.Short }}", buildMetadataTemplateDesc)
 	cmd.Flags().StringArrayVarP(&o.BranchStrategies, "branch-strategy", "", []string{}, branchStrategyDesc)
 
 	o.Cmd = cmd
 }
 
-func (o *bumpOptions) run() error {
+func (o *bumpOptions) createBumpStrategy() *version.BumpStrategy {
+	ret := version.NewConventionalCommitBumpStrategy(git.NewVersionGitRepo(o.CurrentDir))
+	ret.Strategy = version.ParseBumpStrategyType(o.Bump)
+
+	for id, s := range o.BranchStrategies {
+		if id == 0 {
+			// reset branch strategy
+			ret.BumpBranchesStrategies = []version.BumpBranchesStrategy{}
+		}
+		var b version.BumpBranchesStrategy
+		json.Unmarshal([]byte(s), &b)
+		ret.BumpBranchesStrategies = append(ret.BumpBranchesStrategies, b)
+	}
+	// configure default BumpBranchesStrategy
+	ret.BumpDefaultStrategy = version.NewFallbackBumpBranchesStrategy(o.PreRelease, o.PreReleaseTemplate, o.PreReleaseOverwrite, o.BuildMetadataTemplate)
+	return ret
+}
+
+func run(o *bumpOptions) error {
 	log.Debug("Run bump command with configuration: %#v", o)
 
 	version, err := o.createBumpStrategy().Bump()
@@ -147,19 +173,4 @@ func (o *bumpOptions) run() error {
 	}
 	fmt.Fprintf(o.globalOptions.ioStreams.Out, "%v", version)
 	return nil
-}
-
-func (o *bumpOptions) createBumpStrategy() *version.BumpStrategy {
-	ret := version.NewConventionalCommitBumpStrategy(git.NewVersionGitRepo(o.CurrentDir))
-	ret.Strategy = version.ParseBumpStrategyType(o.Bump)
-
-	for _, s := range o.
-		BranchStrategies {
-		var b version.BumpBranchesStrategy
-		json.Unmarshal([]byte(s), &b)
-		ret.BumpBranchesStrategies = append(ret.BumpBranchesStrategies, b)
-	}
-	// configure default BumpBranchesStrategy
-	ret.BumpDefaultStrategy = version.NewFallbackBumpBranchesStrategy(o.PreRelease, o.PreReleaseTemplate, o.PreReleaseOverwrite, o.BuildMetadataTemplate)
-	return ret
 }

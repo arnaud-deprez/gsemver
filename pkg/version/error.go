@@ -13,7 +13,7 @@ func (e Error) Error() string {
 	if e.cause == nil {
 		return e.message
 	}
-	return fmt.Sprintf("%s caused by: '%v'", e.message, e.cause)
+	return fmt.Sprintf("%s caused by: %v", e.message, e.cause)
 }
 
 // NewError create an error based on a format error message

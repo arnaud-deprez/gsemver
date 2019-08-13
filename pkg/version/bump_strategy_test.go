@@ -1,6 +1,7 @@
 package version
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -438,4 +439,11 @@ func TestBumpVersionStrategyAutoWithPreReleaseMavenLike(t *testing.T) {
 
 	assert.Nil(err)
 	assert.Equal("1.1.0-SNAPSHOT", version.String())
+}
+
+func ExampleBumpStrategy_GoString() {
+	gitRepo := mock_version.NewMockGitRepo(nil)
+	s := NewConventionalCommitBumpStrategy(gitRepo)
+	fmt.Printf("%#v\n", s)
+	// Output: version.BumpStrategy{Strategy: "AUTO", MajorPattern: &regexp.Regexp{expr: "(?m)^BREAKING CHANGE:.*$"}, MinorPattern: &regexp.Regexp{expr: "^feat(?:\\(.+\\))?:.*"}, BumpBranchesStrategies: []version.BumpBranchesStrategy{version.BumpBranchesStrategy{BranchesPattern: &regexp.Regexp{expr: "^(master|release/.*)$"}, PreRelease: false, PreReleaseTemplate: &template.Template{text: ""}, PreReleaseOverwrite: false, BuildMetadataTemplate: &template.Template{text: ""}}}BumpDefaultStrategy: version.BumpBranchesStrategy{BranchesPattern: &regexp.Regexp{expr: ".*"}, PreRelease: false, PreReleaseTemplate: &template.Template{text: ""}, PreReleaseOverwrite: false, BuildMetadataTemplate: &template.Template{text: "{{.Commits | len}}.{{(.Commits | first).Hash.Short}}"}}}
 }

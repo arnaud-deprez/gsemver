@@ -85,12 +85,6 @@ func (o *BumpStrategy) AddBumpBranchesStrategy(s *BumpBranchesStrategy) *BumpStr
 	return o
 }
 
-// WithBumpDevelopmentStrategy set a bump development strategy
-func (o *BumpStrategy) WithBumpDevelopmentStrategy(s *BumpBranchesStrategy) *BumpStrategy {
-	o.BumpDefaultStrategy = s
-	return o
-}
-
 // Bump performs the version bumping based on the strategy
 func (o *BumpStrategy) Bump() (Version, error) {
 	log.Debug("BumpStrategy: bump with configuration: %#v", o)
@@ -108,7 +102,7 @@ func (o *BumpStrategy) Bump() (Version, error) {
 	lastTag, err := o.gitRepo.GetLastRelativeTag("HEAD")
 	if err != nil {
 		// just log for debug but the program can continue
-		log.Debug("Unable to get last relative tag because '%s'", err)
+		log.Debug("%v", newErrorC(err, "Unable to get last relative tag"))
 	}
 
 	// Parse the last version from the tag name
@@ -187,7 +181,8 @@ func (o *BumpStrategy) computeSemverBumperFromCommits(context *Context) versionB
 			}
 			log.Trace("BumpStrategy: detects a MAJOR change at %#v", commit)
 			return Version.BumpMajor
-		} else if o.MinorPattern.MatchString(commit.Message) {
+		}
+		if o.MinorPattern.MatchString(commit.Message) {
 			strategy = MINOR
 			log.Trace("BumpStrategy: detects a MINOR change at %#v", commit)
 			bumper = Version.BumpMinor
