@@ -74,8 +74,10 @@ gsemver bump --branch-strategy='{"branchesPattern":"^miletone-1.1$","preReleaseT
                                                You can find all available options https://godoc.org/github.com/arnaud-deprez/gsemver/pkg/version#BumpBranchesStrategy
       --build string                           Use build metadata template which will give something like X.Y.Z+<build>.
                                                You can also use go-template expression with context https://godoc.org/github.com/arnaud-deprez/gsemver/pkg/version#Context and http://masterminds.github.io/sprig functions.
-                                               This flag cannot be used with --pre-release* flags and take precedence over them.
+                                               This flag cannot be used with --pre-release* flags and take precedence over them. (default "{{.Commits | len}}.{{(.Commits | first).Hash.Short}}")
   -h, --help                                   help for bump
+      --major-pattern string                   Use major-pattern option to define your regular expression to match a breaking change commit message (default "(?m)^BREAKING CHANGE:.*$")
+      --minor-pattern string                   Use major-pattern option to define your regular expression to match a minor change commit message (default "^feat(?:\\(.+\\))?:.*")
       --pre-release string                     Use pre-release template version such as 'alpha' which will give a version like 'X.Y.Z-alpha.N'.
                                                If pre-release flag is present but does not contain template value, it will give a version like 'X.Y.Z-N' where 'N' is the next pre-release increment for the version 'X.Y.Z'.
                                                You can also use go-template expression with context https://godoc.org/github.com/arnaud-deprez/gsemver/pkg/version#Context and http://masterminds.github.io/sprig functions.

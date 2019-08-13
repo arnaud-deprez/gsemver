@@ -8,6 +8,23 @@ import (
 	"github.com/arnaud-deprez/gsemver/internal/log"
 )
 
+const (
+	// DefaultMajorPattern defines default regular expression to match a commit message with a major change.
+	DefaultMajorPattern = `(?m)^BREAKING CHANGE:.*$`
+	// DefaultMinorPattern defines default regular expression to match a commit message with a minor change.
+	DefaultMinorPattern = `^feat(?:\(.+\))?:.*`
+	// DefaultReleaseBranchesPattern defines default regular expression to match release branches
+	DefaultReleaseBranchesPattern = `^(master|release/.*)$`
+	// DefaultPreRelease defines default pre-release activation for non release branches
+	DefaultPreRelease = false
+	// DefaultPreReleaseTemplate defines default pre-release go template for non release branches
+	DefaultPreReleaseTemplate = ""
+	// DefaultPreReleaseOverwrite defines default pre-release overwrite activation for non release branches
+	DefaultPreReleaseOverwrite = false
+	// DefaultBuildMetadataTemplate defines default go template used for non release branches strategy
+	DefaultBuildMetadataTemplate = `{{.Commits | len}}.{{(.Commits | first).Hash.Short}}`
+)
+
 // versionBumper type helper for the bump process
 type versionBumper func(Version) Version
 
@@ -59,11 +76,11 @@ func NewConventionalCommitBumpStrategy(gitRepo GitRepo) *BumpStrategy {
 	return &BumpStrategy{
 		Strategy: AUTO,
 		BumpBranchesStrategies: []BumpBranchesStrategy{
-			*NewDefaultBumpBranchesStrategy(`^(master|release/.*)$`),
+			*NewDefaultBumpBranchesStrategy(DefaultReleaseBranchesPattern),
 		},
-		BumpDefaultStrategy: NewFallbackBumpBranchesStrategy(false, "", false, "{{ .Commits | len }}.{{ (.Commits | first).Hash.Short }}"),
-		MajorPattern:        regexp.MustCompile(`(?m)^BREAKING CHANGE:.*$`),
-		MinorPattern:        regexp.MustCompile(`^feat(?:\(.+\))?:.*`),
+		BumpDefaultStrategy: NewFallbackBumpBranchesStrategy(DefaultPreRelease, DefaultPreReleaseTemplate, DefaultPreReleaseOverwrite, DefaultBuildMetadataTemplate),
+		MajorPattern:        regexp.MustCompile(DefaultMajorPattern),
+		MinorPattern:        regexp.MustCompile(DefaultMinorPattern),
 		gitRepo:             gitRepo,
 	}
 }

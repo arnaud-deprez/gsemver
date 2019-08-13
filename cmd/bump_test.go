@@ -38,11 +38,11 @@ func TestBumpNoFlag(t *testing.T) {
 				s := o.createBumpStrategy()
 
 				assert.Equal(tc.expectedStrategy, s.Strategy)
-				assert.Equal(`(?m)^BREAKING CHANGE:.*$`, utils.RegexpToString(s.MajorPattern))
-				assert.Equal(`^feat(?:\(.+\))?:.*`, utils.RegexpToString(s.MinorPattern))
+				assert.Equal(version.DefaultMajorPattern, utils.RegexpToString(s.MajorPattern))
+				assert.Equal(version.DefaultMinorPattern, utils.RegexpToString(s.MinorPattern))
 
 				assert.Len(s.BumpBranchesStrategies, 1)
-				assert.Equal(`^(master|release/.*)$`, utils.RegexpToString(s.BumpBranchesStrategies[0].BranchesPattern))
+				assert.Equal(version.DefaultReleaseBranchesPattern, utils.RegexpToString(s.BumpBranchesStrategies[0].BranchesPattern))
 				assert.False(s.BumpBranchesStrategies[0].PreRelease)
 				assert.Equal("", utils.TemplateToString(s.BumpBranchesStrategies[0].PreReleaseTemplate))
 				assert.False(s.BumpBranchesStrategies[0].PreReleaseOverwrite)
@@ -50,11 +50,47 @@ func TestBumpNoFlag(t *testing.T) {
 
 				assert.NotNil(s.BumpDefaultStrategy)
 				assert.Equal(".*", utils.RegexpToString(s.BumpDefaultStrategy.BranchesPattern))
-				assert.False(s.BumpDefaultStrategy.PreRelease)
-				assert.Equal("", utils.TemplateToString(s.BumpDefaultStrategy.PreReleaseTemplate))
-				assert.False(s.BumpDefaultStrategy.PreReleaseOverwrite)
-				assert.Equal("{{.Commits | len}}.{{(.Commits | first).Hash.Short}}", utils.TemplateToString(s.BumpDefaultStrategy.BuildMetadataTemplate))
+				assert.Equal(version.DefaultPreRelease, s.BumpDefaultStrategy.PreRelease)
+				assert.Equal(version.DefaultPreReleaseTemplate, utils.TemplateToString(s.BumpDefaultStrategy.PreReleaseTemplate))
+				assert.Equal(version.DefaultPreReleaseOverwrite, s.BumpDefaultStrategy.PreReleaseOverwrite)
+				assert.Equal(version.DefaultBuildMetadataTemplate, utils.TemplateToString(s.BumpDefaultStrategy.BuildMetadataTemplate))
 
+				return nil
+			})
+			globalOpts.addGlobalFlags(root)
+
+			_, err = executeCommand(root, args...)
+			assert.NoError(err)
+		})
+	}
+}
+
+func TestBumpChangePattern(t *testing.T) {
+	testData := []struct {
+		args                 string
+		expectedMajorPattern string
+		expectedMinorPattern string
+	}{
+		{`--major-pattern 'foo'`, "foo", version.DefaultMinorPattern},
+		{`--minor-pattern 'bar'`, version.DefaultMajorPattern, "bar"},
+		{`--major-pattern 'foo' --minor-pattern 'bar'`, "foo", "bar"},
+	}
+
+	for _, tc := range testData {
+		t.Run(tc.args, func(t *testing.T) {
+			assert := assert.New(t)
+			out, errOut := new(bytes.Buffer), new(bytes.Buffer)
+			globalOpts := &globalOptions{
+				ioStreams: newIOStreams(os.Stdin, out, errOut),
+			}
+
+			args, err := shellquote.Split(tc.args)
+			assert.NoError(err)
+			root := newBumpCommandsWithRun(globalOpts, func(o *bumpOptions) error {
+				s := o.createBumpStrategy()
+
+				assert.Equal(tc.expectedMajorPattern, utils.RegexpToString(s.MajorPattern))
+				assert.Equal(tc.expectedMinorPattern, utils.RegexpToString(s.MinorPattern))
 				return nil
 			})
 			globalOpts.addGlobalFlags(root)

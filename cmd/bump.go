@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 
 	"github.com/spf13/cobra"
 
@@ -125,6 +126,10 @@ type bumpOptions struct {
 	*globalOptions
 	// Bump is mapped to pkg/version/BumpStrategyOptions#Strategy
 	Bump string
+	// MajorPattern is mapped to pkg/version/BumpStrategyOptions#MajorPattern
+	MajorPattern string
+	// MinorPattern is mapped to pkg/version/BumpStrategyOptions#MinorPattern
+	MinorPattern string
 	// PreRelease is mapped to pkg/version/BumpStrategyOptions#PreRelease
 	// It is set to true only if explicitly set by the user
 	PreRelease bool
@@ -134,13 +139,16 @@ type bumpOptions struct {
 	PreReleaseOverwrite bool
 	// BuildMetadataTemplate is mapped to pkg/version/BumpStrategyOptions#BuildMetadataTemplate
 	BuildMetadataTemplate string
-	BranchStrategies      []string
+	// BranchStrategies is mapped to pkg/version/BumpStrategyOptions#BranchStrategies
+	BranchStrategies []string
 }
 
 func (o *bumpOptions) addBumpFlags(cmd *cobra.Command) {
-	cmd.Flags().StringVarP(&o.PreReleaseTemplate, "pre-release", "", "", preReleaseTemplateDesc)
-	cmd.Flags().BoolVarP(&o.PreReleaseOverwrite, "pre-release-overwrite", "", false, "Use pre-release overwrite option to remove the pre-release identifier suffix which will give a version like `X.Y.Z-SNAPSHOT` if pre-release=SNAPSHOT")
-	cmd.Flags().StringVarP(&o.BuildMetadataTemplate, "build", "", "{{ .Commits | len }}.{{ (.Commits | first).Hash.Short }}", buildMetadataTemplateDesc)
+	cmd.Flags().StringVarP(&o.MajorPattern, "major-pattern", "", version.DefaultMajorPattern, "Use major-pattern option to define your regular expression to match a breaking change commit message")
+	cmd.Flags().StringVarP(&o.MinorPattern, "minor-pattern", "", version.DefaultMinorPattern, "Use major-pattern option to define your regular expression to match a minor change commit message")
+	cmd.Flags().StringVarP(&o.PreReleaseTemplate, "pre-release", "", version.DefaultPreReleaseTemplate, preReleaseTemplateDesc)
+	cmd.Flags().BoolVarP(&o.PreReleaseOverwrite, "pre-release-overwrite", "", version.DefaultPreReleaseOverwrite, "Use pre-release overwrite option to remove the pre-release identifier suffix which will give a version like `X.Y.Z-SNAPSHOT` if pre-release=SNAPSHOT")
+	cmd.Flags().StringVarP(&o.BuildMetadataTemplate, "build", "", version.DefaultBuildMetadataTemplate, buildMetadataTemplateDesc)
 	cmd.Flags().StringArrayVarP(&o.BranchStrategies, "branch-strategy", "", []string{}, branchStrategyDesc)
 
 	o.Cmd = cmd
@@ -149,6 +157,8 @@ func (o *bumpOptions) addBumpFlags(cmd *cobra.Command) {
 func (o *bumpOptions) createBumpStrategy() *version.BumpStrategy {
 	ret := version.NewConventionalCommitBumpStrategy(git.NewVersionGitRepo(o.CurrentDir))
 	ret.Strategy = version.ParseBumpStrategyType(o.Bump)
+	ret.MajorPattern = regexp.MustCompile(o.MajorPattern)
+	ret.MinorPattern = regexp.MustCompile(o.MinorPattern)
 
 	for id, s := range o.BranchStrategies {
 		if id == 0 {
