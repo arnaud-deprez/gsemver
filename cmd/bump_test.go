@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	shellquote "github.com/kballard/go-shellquote"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/arnaud-deprez/gsemver/internal/utils"
@@ -37,23 +38,24 @@ func TestBumpNoFlag(t *testing.T) {
 			root := newBumpCommandsWithRun(globalOpts, func(o *bumpOptions) error {
 				s := o.createBumpStrategy()
 
-				assert.Equal(tc.expectedStrategy, s.Strategy)
 				assert.Equal(version.DefaultMajorPattern, utils.RegexpToString(s.MajorPattern))
 				assert.Equal(version.DefaultMinorPattern, utils.RegexpToString(s.MinorPattern))
 
-				assert.Len(s.BumpBranchesStrategies, 1)
-				assert.Equal(version.DefaultReleaseBranchesPattern, utils.RegexpToString(s.BumpBranchesStrategies[0].BranchesPattern))
-				assert.False(s.BumpBranchesStrategies[0].PreRelease)
-				assert.Equal("", utils.TemplateToString(s.BumpBranchesStrategies[0].PreReleaseTemplate))
-				assert.False(s.BumpBranchesStrategies[0].PreReleaseOverwrite)
-				assert.Equal("", utils.TemplateToString(s.BumpBranchesStrategies[0].BuildMetadataTemplate))
+				assert.Len(s.BumpStrategies, 2)
 
-				assert.NotNil(s.BumpDefaultStrategy)
-				assert.Equal(".*", utils.RegexpToString(s.BumpDefaultStrategy.BranchesPattern))
-				assert.Equal(version.DefaultPreRelease, s.BumpDefaultStrategy.PreRelease)
-				assert.Equal(version.DefaultPreReleaseTemplate, utils.TemplateToString(s.BumpDefaultStrategy.PreReleaseTemplate))
-				assert.Equal(version.DefaultPreReleaseOverwrite, s.BumpDefaultStrategy.PreReleaseOverwrite)
-				assert.Equal(version.DefaultBuildMetadataTemplate, utils.TemplateToString(s.BumpDefaultStrategy.BuildMetadataTemplate))
+				assert.Equal(version.AUTO, s.BumpStrategies[0].Strategy)
+				assert.Equal(version.DefaultReleaseBranchesPattern, utils.RegexpToString(s.BumpStrategies[0].BranchesPattern))
+				assert.False(s.BumpStrategies[0].PreRelease)
+				assert.Equal("", utils.TemplateToString(s.BumpStrategies[0].PreReleaseTemplate))
+				assert.False(s.BumpStrategies[0].PreReleaseOverwrite)
+				assert.Equal("", utils.TemplateToString(s.BumpStrategies[0].BuildMetadataTemplate))
+
+				assert.Equal(tc.expectedStrategy, s.BumpStrategies[1].Strategy)
+				assert.Equal(".*", utils.RegexpToString(s.BumpStrategies[1].BranchesPattern))
+				assert.Equal(version.DefaultPreRelease, s.BumpStrategies[1].PreRelease)
+				assert.Equal(version.DefaultPreReleaseTemplate, utils.TemplateToString(s.BumpStrategies[1].PreReleaseTemplate))
+				assert.Equal(version.DefaultPreReleaseOverwrite, s.BumpStrategies[1].PreReleaseOverwrite)
+				assert.Equal(version.DefaultBuildMetadataTemplate, utils.TemplateToString(s.BumpStrategies[1].BuildMetadataTemplate))
 
 				return nil
 			})
@@ -129,12 +131,12 @@ func TestBumpPreRelease(t *testing.T) {
 			root := newBumpCommandsWithRun(globalOpts, func(o *bumpOptions) error {
 				s := o.createBumpStrategy()
 
-				assert.NotNil(s.BumpDefaultStrategy)
-				assert.Equal(".*", utils.RegexpToString(s.BumpDefaultStrategy.BranchesPattern))
-				assert.Equal(tc.expectedPreRelease, s.BumpDefaultStrategy.PreRelease)
-				assert.Equal(tc.expectedPreReleaseTemplate, utils.TemplateToString(s.BumpDefaultStrategy.PreReleaseTemplate))
-				assert.Equal(tc.expectedPreReleaseOverwrite, s.BumpDefaultStrategy.PreReleaseOverwrite)
-				assert.Equal("{{.Commits | len}}.{{(.Commits | first).Hash.Short}}", utils.TemplateToString(s.BumpDefaultStrategy.BuildMetadataTemplate))
+				assert.Len(s.BumpStrategies, 2)
+				assert.Equal(".*", utils.RegexpToString(s.BumpStrategies[1].BranchesPattern))
+				assert.Equal(tc.expectedPreRelease, s.BumpStrategies[1].PreRelease)
+				assert.Equal(tc.expectedPreReleaseTemplate, utils.TemplateToString(s.BumpStrategies[1].PreReleaseTemplate))
+				assert.Equal(tc.expectedPreReleaseOverwrite, s.BumpStrategies[1].PreReleaseOverwrite)
+				assert.Equal("{{.Commits | len}}.{{(.Commits | first).Hash.Short}}", utils.TemplateToString(s.BumpStrategies[1].BuildMetadataTemplate))
 
 				return nil
 			})
@@ -169,12 +171,12 @@ func TestBumpBuildMetadata(t *testing.T) {
 			root := newBumpCommandsWithRun(globalOpts, func(o *bumpOptions) error {
 				s := o.createBumpStrategy()
 
-				assert.NotNil(s.BumpDefaultStrategy)
-				assert.Equal(".*", utils.RegexpToString(s.BumpDefaultStrategy.BranchesPattern))
-				assert.False(s.BumpDefaultStrategy.PreRelease)
-				assert.Equal("", utils.TemplateToString(s.BumpDefaultStrategy.PreReleaseTemplate))
-				assert.False(s.BumpDefaultStrategy.PreReleaseOverwrite)
-				assert.Equal(tc.expectedBuildMetadata, utils.TemplateToString(s.BumpDefaultStrategy.BuildMetadataTemplate))
+				assert.Len(s.BumpStrategies, 2)
+				assert.Equal(".*", utils.RegexpToString(s.BumpStrategies[1].BranchesPattern))
+				assert.False(s.BumpStrategies[1].PreRelease)
+				assert.Equal("", utils.TemplateToString(s.BumpStrategies[1].PreReleaseTemplate))
+				assert.False(s.BumpStrategies[1].PreReleaseOverwrite)
+				assert.Equal(tc.expectedBuildMetadata, utils.TemplateToString(s.BumpStrategies[1].BuildMetadataTemplate))
 
 				return nil
 			})
@@ -212,12 +214,12 @@ func TestBumpBranchStrategy(t *testing.T) {
 			root := newBumpCommandsWithRun(globalOpts, func(o *bumpOptions) error {
 				s := o.createBumpStrategy()
 
-				assert.Len(s.BumpBranchesStrategies, 1)
-				assert.Equal(tc.expectedBranchPattern, utils.RegexpToString(s.BumpBranchesStrategies[0].BranchesPattern))
-				assert.Equal(tc.expectedPreRelease, s.BumpBranchesStrategies[0].PreRelease)
-				assert.Equal(tc.expectedPreReleaseTemplate, utils.TemplateToString(s.BumpBranchesStrategies[0].PreReleaseTemplate))
-				assert.Equal(tc.expectedPreReleaseOverwrite, s.BumpBranchesStrategies[0].PreReleaseOverwrite)
-				assert.Equal(tc.expectedBuildMetadata, utils.TemplateToString(s.BumpBranchesStrategies[0].BuildMetadataTemplate))
+				assert.Len(s.BumpStrategies, 2)
+				assert.Equal(tc.expectedBranchPattern, utils.RegexpToString(s.BumpStrategies[0].BranchesPattern))
+				assert.Equal(tc.expectedPreRelease, s.BumpStrategies[0].PreRelease)
+				assert.Equal(tc.expectedPreReleaseTemplate, utils.TemplateToString(s.BumpStrategies[0].PreReleaseTemplate))
+				assert.Equal(tc.expectedPreReleaseOverwrite, s.BumpStrategies[0].PreReleaseOverwrite)
+				assert.Equal(tc.expectedBuildMetadata, utils.TemplateToString(s.BumpStrategies[0].BuildMetadataTemplate))
 
 				return nil
 			})
@@ -227,4 +229,47 @@ func TestBumpBranchStrategy(t *testing.T) {
 			assert.NoError(err)
 		})
 	}
+}
+
+func TestWithConfiguration(t *testing.T) {
+	assert := assert.New(t)
+
+	viper.SetConfigType("yaml")
+
+	var yamlConfig = []byte(`
+major-pattern: "majorPatternConfig"
+minor-pattern: "minorPatternConfig"
+`)
+	/*
+		bumpStrategies:
+		- branchesPattern: "^(master|release/.*)$"
+			strategy: "AUTO"
+			preRelease: false
+			preReleaseTemplate: ""
+			preReleaseOverwrite: false
+			buildMetadataTemplate: ""
+	*/
+
+	err := viper.ReadConfig(bytes.NewBuffer(yamlConfig))
+	assert.NoError(err, "Cannot read configuration")
+
+	out, errOut := new(bytes.Buffer), new(bytes.Buffer)
+	globalOpts := &globalOptions{
+		ioStreams: newIOStreams(os.Stdin, out, errOut),
+	}
+
+	//args, err := shellquote.Split(tc.args)
+	// assert.NoError(err)
+	root := newBumpCommandsWithRun(globalOpts, func(o *bumpOptions) error {
+		s := o.createBumpStrategy()
+
+		assert.Equal("majorPatternConfig", viper.GetString("major-pattern"), "majorPattern does not match")
+		assert.Equal("majorPatternConfig", s.MajorPattern.String(), "majorPattern does not match")
+
+		return nil
+	})
+	globalOpts.addGlobalFlags(root)
+
+	_, err = executeCommand(root)
+	assert.NoError(err)
 }

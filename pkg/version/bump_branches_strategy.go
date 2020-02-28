@@ -11,8 +11,9 @@ import (
 )
 
 // NewBumpBranchesStrategy creates a new BumpBranchesStrategy
-func NewBumpBranchesStrategy(pattern string, preRelease bool, preReleaseTemplate string, preReleaseOverwrite bool, buildMetadataTemplate string) *BumpBranchesStrategy {
+func NewBumpBranchesStrategy(strategy BumpStrategyType, pattern string, preRelease bool, preReleaseTemplate string, preReleaseOverwrite bool, buildMetadataTemplate string) *BumpBranchesStrategy {
 	return &BumpBranchesStrategy{
+		Strategy:              strategy,
 		BranchesPattern:       regexp.MustCompile(pattern),
 		PreRelease:            preRelease,
 		PreReleaseTemplate:    utils.NewTemplate(preReleaseTemplate),
@@ -21,28 +22,31 @@ func NewBumpBranchesStrategy(pattern string, preRelease bool, preReleaseTemplate
 	}
 }
 
-// NewFallbackBumpBranchesStrategy creates a new BumpBranchesStrategy that matches all non matching branches.
-func NewFallbackBumpBranchesStrategy(preRelease bool, preReleaseTemplate string, preReleaseOverwrite bool, buildMetadataTemplate string) *BumpBranchesStrategy {
-	return NewBumpBranchesStrategy(".*", preRelease, preReleaseTemplate, preReleaseOverwrite, buildMetadataTemplate)
+// NewBumpAllBranchesStrategy creates a new BumpBranchesStrategy that matches all branches.
+func NewBumpAllBranchesStrategy(strategy BumpStrategyType, preRelease bool, preReleaseTemplate string, preReleaseOverwrite bool, buildMetadataTemplate string) *BumpBranchesStrategy {
+	return NewBumpBranchesStrategy(strategy, ".*", preRelease, preReleaseTemplate, preReleaseOverwrite, buildMetadataTemplate)
 }
 
 // NewDefaultBumpBranchesStrategy creates a new BumpBranchesStrategy for pre-release version strategy.
 func NewDefaultBumpBranchesStrategy(pattern string) *BumpBranchesStrategy {
-	return NewBumpBranchesStrategy(pattern, false, "", false, "")
+	return NewBumpBranchesStrategy(AUTO, pattern, false, "", false, "")
 }
 
 // NewPreReleaseBumpBranchesStrategy creates a new BumpBranchesStrategy for pre-release version strategy.
 func NewPreReleaseBumpBranchesStrategy(pattern string, preReleaseTemplate string, preReleaseOverwrite bool) *BumpBranchesStrategy {
-	return NewBumpBranchesStrategy(pattern, true, preReleaseTemplate, preReleaseOverwrite, "")
+	return NewBumpBranchesStrategy(AUTO, pattern, true, preReleaseTemplate, preReleaseOverwrite, "")
 }
 
 // NewBuildBumpBranchesStrategy creates a new BumpBranchesStrategy for build version strategy.
 func NewBuildBumpBranchesStrategy(pattern string, buildMetadataTemplate string) *BumpBranchesStrategy {
-	return NewBumpBranchesStrategy(pattern, false, "", false, buildMetadataTemplate)
+	return NewBumpBranchesStrategy(AUTO, pattern, false, "", false, buildMetadataTemplate)
 }
 
 // BumpBranchesStrategy allows you to configure the bump strategy option for a matching set of branches.
 type BumpBranchesStrategy struct {
+	// Strategy defines the strategy to use to bump the version.
+	// It can be automatic (AUTO) or manual (MAJOR, MINOR, PATCH)
+	Strategy BumpStrategyType `json:"strategy"`
 	// BranchesPattern is the regex used to match against the current branch
 	BranchesPattern *regexp.Regexp `json:"branchesPattern,omitempty"`
 	// PreRelease defines if the bump strategy should generate a pre-release version
@@ -77,6 +81,7 @@ func (s *BumpBranchesStrategy) createVersionBumperFrom(bumper versionBumper, ctx
 func (s BumpBranchesStrategy) GoString() string {
 	var sb strings.Builder
 	sb.WriteString("version.BumpBranchesStrategy{")
+	sb.WriteString(fmt.Sprintf("Strategy: %v, ", s.Strategy))
 	sb.WriteString(fmt.Sprintf("BranchesPattern: &regexp.Regexp{expr: %q}, ", s.BranchesPattern))
 	sb.WriteString(fmt.Sprintf("PreRelease: %v, PreReleaseTemplate: &template.Template{text: %q}, PreReleaseOverwrite: %v, ", s.PreRelease, utils.TemplateToString(s.PreReleaseTemplate), s.PreReleaseOverwrite))
 	sb.WriteString(fmt.Sprintf("BuildMetadataTemplate: &template.Template{text: %q}", utils.TemplateToString(s.BuildMetadataTemplate)))

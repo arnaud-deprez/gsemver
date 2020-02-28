@@ -16,27 +16,27 @@ func TestBumpBranchesStrategyEncodingJson(t *testing.T) {
 		objVal  *BumpBranchesStrategy
 	}{
 		{
-			`{"branchesPattern":"master","preRelease":false,"preReleaseOverwrite":false}`,
+			`{"branchesPattern":"master","preRelease":false,"preReleaseOverwrite":false,"strategy":"AUTO"}`,
 			NewDefaultBumpBranchesStrategy("master"),
 		},
 		{
-			`{"branchesPattern":"milestone-1.2","preRelease":true,"preReleaseTemplate":"{{.Branch}}-foo","preReleaseOverwrite":false}`,
+			`{"branchesPattern":"milestone-1.2","preRelease":true,"preReleaseTemplate":"{{.Branch}}-foo","preReleaseOverwrite":false,"strategy":"AUTO"}`,
 			NewPreReleaseBumpBranchesStrategy("milestone-1.2", "{{.Branch}}-foo", false),
 		},
 		{
-			`{"branchesPattern":".*","preRelease":true,"preReleaseOverwrite":true,"buildMetadataTemplate":"{{.Branch}}.{{.Commits | len}}"}`,
-			NewFallbackBumpBranchesStrategy(true, "", true, "{{.Branch}}.{{.Commits | len}}"),
+			`{"branchesPattern":".*","preRelease":true,"preReleaseOverwrite":true,"buildMetadataTemplate":"{{.Branch}}.{{.Commits | len}}","strategy":"AUTO"}`,
+			NewBumpAllBranchesStrategy(AUTO, true, "", true, "{{.Branch}}.{{.Commits | len}}"),
 		},
 	}
 
-	for _, tc := range testData {
-		t.Run("Marshal", func(t *testing.T) {
+	for idx, tc := range testData {
+		t.Run(fmt.Sprintf("Case %d Marshal", idx), func(t *testing.T) {
 			out, err := json.Marshal(tc.objVal)
 			assert.NoError(err)
 			assert.JSONEq(tc.jsonVal, string(out))
 		})
 
-		t.Run("Unmarshal", func(t *testing.T) {
+		t.Run(fmt.Sprintf("Case %d Unmarshal", idx), func(t *testing.T) {
 			var out BumpBranchesStrategy
 			err := json.Unmarshal([]byte(tc.jsonVal), &out)
 			assert.NoError(err)
@@ -56,7 +56,7 @@ func TestBumpBranchesStrategyEncodingJson(t *testing.T) {
 }
 
 func ExampleBumpBranchesStrategy_GoString() {
-	s := NewBumpBranchesStrategy(".*", true, "foo", true, "bar")
+	s := NewBumpBranchesStrategy(AUTO, ".*", true, "foo", true, "bar")
 	fmt.Printf("%#v\n", s)
 	// Output: version.BumpBranchesStrategy{BranchesPattern: &regexp.Regexp{expr: ".*"}, PreRelease: true, PreReleaseTemplate: &template.Template{text: "foo"}, PreReleaseOverwrite: true, BuildMetadataTemplate: &template.Template{text: "bar"}}
 }

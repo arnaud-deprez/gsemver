@@ -6,6 +6,7 @@ import (
 	"regexp"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/arnaud-deprez/gsemver/internal/git"
 	"github.com/arnaud-deprez/gsemver/internal/log"
@@ -151,26 +152,35 @@ func (o *bumpOptions) addBumpFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&o.BuildMetadataTemplate, "build", "", version.DefaultBuildMetadataTemplate, buildMetadataTemplateDesc)
 	cmd.Flags().StringArrayVarP(&o.BranchStrategies, "branch-strategy", "", []string{}, branchStrategyDesc)
 
+	viper.BindPFlag("major-pattern", cmd.Flags().Lookup("major-pattern"))
+	viper.SetDefault("major-pattern", version.DefaultMajorPattern)
+	viper.BindPFlag("minor-pattern", cmd.Flags().Lookup("minor-pattern"))
+	viper.SetDefault("minor-pattern", version.DefaultMinorPattern)
+
 	o.Cmd = cmd
 }
 
 func (o *bumpOptions) createBumpStrategy() *version.BumpStrategy {
 	ret := version.NewConventionalCommitBumpStrategy(git.NewVersionGitRepo(o.CurrentDir))
-	ret.Strategy = version.ParseBumpStrategyType(o.Bump)
 	ret.MajorPattern = regexp.MustCompile(o.MajorPattern)
 	ret.MinorPattern = regexp.MustCompile(o.MinorPattern)
 
 	for id, s := range o.BranchStrategies {
 		if id == 0 {
 			// reset branch strategy
-			ret.BumpBranchesStrategies = []version.BumpBranchesStrategy{}
+			ret.BumpStrategies = []version.BumpBranchesStrategy{}
 		}
 		var b version.BumpBranchesStrategy
 		json.Unmarshal([]byte(s), &b)
-		ret.BumpBranchesStrategies = append(ret.BumpBranchesStrategies, b)
+		ret.BumpStrategies = append(ret.BumpStrategies, b)
 	}
 	// configure default BumpBranchesStrategy
-	ret.BumpDefaultStrategy = version.NewFallbackBumpBranchesStrategy(o.PreRelease, o.PreReleaseTemplate, o.PreReleaseOverwrite, o.BuildMetadataTemplate)
+	defaultStrategy := *version.NewBumpAllBranchesStrategy(version.ParseBumpStrategyType(o.Bump), o.PreRelease, o.PreReleaseTemplate, o.PreReleaseOverwrite, o.BuildMetadataTemplate)
+	if len(o.BranchStrategies) == 0 {
+		ret.BumpStrategies[1] = defaultStrategy
+	} else {
+		ret.BumpStrategies = append(ret.BumpStrategies, defaultStrategy)
+	}
 	return ret
 }
 
