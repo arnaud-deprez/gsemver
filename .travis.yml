@@ -1,7 +1,7 @@
 language: go
 
 go:
-- 1.12.x
+- 1.14.x
 stages:
 - name: Build
   if: tag IS blank # because we create tag from this pipeline
@@ -12,7 +12,6 @@ stages:
 
 env:
   global:
-  - GO111MODULE=on
   - GIT_AUTHOR_NAME="Arnaud Deprez"
   - GIT_AUTHOR_EMAIL="arnaudeprez@gmail.com"
   - GIT_COMMITTER_NAME="Arnaud Deprez"
