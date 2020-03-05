@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	shellquote "github.com/kballard/go-shellquote"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 
@@ -234,24 +235,23 @@ func TestBumpBranchStrategy(t *testing.T) {
 func TestWithConfiguration(t *testing.T) {
 	assert := assert.New(t)
 
-	viper.SetConfigType("yaml")
+	cobra.OnInitialize(func() {
+		viper.SetConfigType("yaml")
 
-	var yamlConfig = []byte(`
-major-pattern: "majorPatternConfig"
-minor-pattern: "minorPatternConfig"
+		var yamlConfig = []byte(`
+majorPattern: "majorPatternConfig"
+minorPattern: "minorPatternConfig"
+bumpStrategies:
+- branchesPattern: "^(master|release/.*)$"
+  strategy: "AUTO"
+  preRelease: false
+  preReleaseTemplate: ""
+  preReleaseOverwrite: false
+  buildMetadataTemplate: ""
 `)
-	/*
-		bumpStrategies:
-		- branchesPattern: "^(master|release/.*)$"
-			strategy: "AUTO"
-			preRelease: false
-			preReleaseTemplate: ""
-			preReleaseOverwrite: false
-			buildMetadataTemplate: ""
-	*/
-
-	err := viper.ReadConfig(bytes.NewBuffer(yamlConfig))
-	assert.NoError(err, "Cannot read configuration")
+		err := viper.ReadConfig(bytes.NewBuffer(yamlConfig))
+		assert.NoError(err, "Cannot read configuration")
+	})
 
 	out, errOut := new(bytes.Buffer), new(bytes.Buffer)
 	globalOpts := &globalOptions{
@@ -260,16 +260,16 @@ minor-pattern: "minorPatternConfig"
 
 	//args, err := shellquote.Split(tc.args)
 	// assert.NoError(err)
-	root := newBumpCommandsWithRun(globalOpts, func(o *bumpOptions) error {
+	cmd := newBumpCommandsWithRun(globalOpts, func(o *bumpOptions) error {
 		s := o.createBumpStrategy()
 
-		assert.Equal("majorPatternConfig", viper.GetString("major-pattern"), "majorPattern does not match")
 		assert.Equal("majorPatternConfig", s.MajorPattern.String(), "majorPattern does not match")
+		assert.Equal("minorPatternConfig", s.MinorPattern.String(), "minorPattern does not match")
 
 		return nil
 	})
-	globalOpts.addGlobalFlags(root)
+	globalOpts.addGlobalFlags(cmd)
 
-	_, err = executeCommand(root)
+	_, err := executeCommand(cmd)
 	assert.NoError(err)
 }

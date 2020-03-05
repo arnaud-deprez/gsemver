@@ -145,25 +145,23 @@ type bumpOptions struct {
 }
 
 func (o *bumpOptions) addBumpFlags(cmd *cobra.Command) {
-	cmd.Flags().StringVarP(&o.MajorPattern, "major-pattern", "", version.DefaultMajorPattern, "Use major-pattern option to define your regular expression to match a breaking change commit message")
-	cmd.Flags().StringVarP(&o.MinorPattern, "minor-pattern", "", version.DefaultMinorPattern, "Use major-pattern option to define your regular expression to match a minor change commit message")
-	cmd.Flags().StringVarP(&o.PreReleaseTemplate, "pre-release", "", version.DefaultPreReleaseTemplate, preReleaseTemplateDesc)
-	cmd.Flags().BoolVarP(&o.PreReleaseOverwrite, "pre-release-overwrite", "", version.DefaultPreReleaseOverwrite, "Use pre-release overwrite option to remove the pre-release identifier suffix which will give a version like `X.Y.Z-SNAPSHOT` if pre-release=SNAPSHOT")
-	cmd.Flags().StringVarP(&o.BuildMetadataTemplate, "build", "", version.DefaultBuildMetadataTemplate, buildMetadataTemplateDesc)
-	cmd.Flags().StringArrayVarP(&o.BranchStrategies, "branch-strategy", "", []string{}, branchStrategyDesc)
+	cmd.Flags().String("major-pattern", version.DefaultMajorPattern, "Use major-pattern option to define your regular expression to match a breaking change commit message")
+	cmd.Flags().String("minor-pattern", version.DefaultMinorPattern, "Use major-pattern option to define your regular expression to match a minor change commit message")
+	cmd.Flags().StringVar(&o.PreReleaseTemplate, "pre-release", version.DefaultPreReleaseTemplate, preReleaseTemplateDesc)
+	cmd.Flags().BoolVar(&o.PreReleaseOverwrite, "pre-release-overwrite", version.DefaultPreReleaseOverwrite, "Use pre-release overwrite option to remove the pre-release identifier suffix which will give a version like `X.Y.Z-SNAPSHOT` if pre-release=SNAPSHOT")
+	cmd.Flags().StringVar(&o.BuildMetadataTemplate, "build-metadata", version.DefaultBuildMetadataTemplate, buildMetadataTemplateDesc)
+	cmd.Flags().StringArrayVar(&o.BranchStrategies, "branch-strategy", []string{}, branchStrategyDesc)
 
-	viper.BindPFlag("major-pattern", cmd.Flags().Lookup("major-pattern"))
-	viper.SetDefault("major-pattern", version.DefaultMajorPattern)
-	viper.BindPFlag("minor-pattern", cmd.Flags().Lookup("minor-pattern"))
-	viper.SetDefault("minor-pattern", version.DefaultMinorPattern)
+	viper.BindPFlag("majorPattern", cmd.Flags().Lookup("major-pattern"))
+	viper.BindPFlag("minorPattern", cmd.Flags().Lookup("minor-pattern"))
 
 	o.Cmd = cmd
 }
 
 func (o *bumpOptions) createBumpStrategy() *version.BumpStrategy {
 	ret := version.NewConventionalCommitBumpStrategy(git.NewVersionGitRepo(o.CurrentDir))
-	ret.MajorPattern = regexp.MustCompile(o.MajorPattern)
-	ret.MinorPattern = regexp.MustCompile(o.MinorPattern)
+	ret.MajorPattern = regexp.MustCompile(viper.GetString("majorPattern"))
+	ret.MinorPattern = regexp.MustCompile(viper.GetString("minorPattern"))
 
 	for id, s := range o.BranchStrategies {
 		if id == 0 {
