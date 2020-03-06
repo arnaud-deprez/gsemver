@@ -3,6 +3,7 @@ package cmd
 import (
 	"bytes"
 	"os"
+	"regexp"
 	"testing"
 
 	shellquote "github.com/kballard/go-shellquote"
@@ -155,8 +156,8 @@ func TestBumpBuildMetadata(t *testing.T) {
 		expectedBuildMetadata string
 	}{
 		{``, "{{.Commits | len}}.{{(.Commits | first).Hash.Short}}"},
-		{`--build ""`, ""},
-		{`--build "{{.Branch}}.{{(.Commits | first).Hash.Short}}"`, "{{.Branch}}.{{(.Commits | first).Hash.Short}}"},
+		{`--build-metadata ""`, ""},
+		{`--build-metadata "{{.Branch}}.{{(.Commits | first).Hash.Short}}"`, "{{.Branch}}.{{(.Commits | first).Hash.Short}}"},
 	}
 
 	for _, tc := range testData {
@@ -235,24 +236,6 @@ func TestBumpBranchStrategy(t *testing.T) {
 func TestWithConfiguration(t *testing.T) {
 	assert := assert.New(t)
 
-	cobra.OnInitialize(func() {
-		viper.SetConfigType("yaml")
-
-		var yamlConfig = []byte(`
-majorPattern: "majorPatternConfig"
-minorPattern: "minorPatternConfig"
-bumpStrategies:
-- branchesPattern: "^(master|release/.*)$"
-  strategy: "AUTO"
-  preRelease: false
-  preReleaseTemplate: ""
-  preReleaseOverwrite: false
-  buildMetadataTemplate: ""
-`)
-		err := viper.ReadConfig(bytes.NewBuffer(yamlConfig))
-		assert.NoError(err, "Cannot read configuration")
-	})
-
 	out, errOut := new(bytes.Buffer), new(bytes.Buffer)
 	globalOpts := &globalOptions{
 		ioStreams: newIOStreams(os.Stdin, out, errOut),
@@ -265,10 +248,38 @@ bumpStrategies:
 
 		assert.Equal("majorPatternConfig", s.MajorPattern.String(), "majorPattern does not match")
 		assert.Equal("minorPatternConfig", s.MinorPattern.String(), "minorPattern does not match")
+		assert.Exactly([]version.BumpBranchesStrategy{
+			{
+				Strategy:        version.AUTO,
+				BranchesPattern: regexp.MustCompile("releaseBranchesPattern"),
+			},
+			{
+				Strategy:              version.AUTO,
+				BranchesPattern:       regexp.MustCompile("all"),
+				BuildMetadataTemplate: utils.NewTemplate("myBuildMetadataTemplate"),
+			},
+		}, s.BumpStrategies)
 
 		return nil
 	})
 	globalOpts.addGlobalFlags(cmd)
+
+	cobra.OnInitialize(func() {
+		viper.SetConfigType("yaml")
+
+		var yamlConfig = []byte(`
+majorPattern: "majorPatternConfig"
+minorPattern: "minorPatternConfig"
+bumpStrategies:
+- branchesPattern: "releaseBranchesPattern"
+  strategy: "AUTO"
+- branchesPattern: "all"
+  strategy: "AUTO"
+  buildMetadataTemplate: "myBuildMetadataTemplate",
+`)
+		err := viper.ReadConfig(bytes.NewBuffer(yamlConfig))
+		assert.NoError(err, "Cannot read configuration")
+	})
 
 	_, err := executeCommand(cmd)
 	assert.NoError(err)

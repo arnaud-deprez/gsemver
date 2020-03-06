@@ -58,5 +58,5 @@ func TestBumpBranchesStrategyEncodingJson(t *testing.T) {
 func ExampleBumpBranchesStrategy_GoString() {
 	s := NewBumpBranchesStrategy(AUTO, ".*", true, "foo", true, "bar")
 	fmt.Printf("%#v\n", s)
-	// Output: version.BumpBranchesStrategy{BranchesPattern: &regexp.Regexp{expr: ".*"}, PreRelease: true, PreReleaseTemplate: &template.Template{text: "foo"}, PreReleaseOverwrite: true, BuildMetadataTemplate: &template.Template{text: "bar"}}
+	// Output: version.BumpBranchesStrategy{Strategy: AUTO, BranchesPattern: &regexp.Regexp{expr: ".*"}, PreRelease: true, PreReleaseTemplate: &template.Template{text: "foo"}, PreReleaseOverwrite: true, BuildMetadataTemplate: &template.Template{text: "bar"}}
 }
