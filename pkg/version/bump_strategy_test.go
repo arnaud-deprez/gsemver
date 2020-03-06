@@ -2,6 +2,7 @@ package version
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -414,7 +415,16 @@ func TestBumpVersionStrategyAutoWithPreReleaseStrategyAndNewFeature(t *testing.T
 			}, nil)
 			gitRepo.EXPECT().GetCurrentBranch().Times(1).Return(tc.branch, nil)
 
-			strategy := NewConventionalCommitBumpStrategy(gitRepo).AddBumpBranchesStrategy(NewBumpBranchesStrategy(AUTO, "milestone-1.2", tc.preRelease, tc.preReleaseTemplate, false, ""))
+			strategy := &BumpStrategy{
+				gitRepo: gitRepo,
+				BumpStrategies: []BumpBranchesStrategy{
+					*NewDefaultBumpBranchesStrategy(DefaultReleaseBranchesPattern),
+					*NewBumpBranchesStrategy(AUTO, "milestone-1.2", tc.preRelease, tc.preReleaseTemplate, false, ""),
+					*NewBumpAllBranchesStrategy(AUTO, DefaultPreRelease, DefaultPreReleaseTemplate, DefaultPreReleaseOverwrite, DefaultBuildMetadataTemplate),
+				},
+				MajorPattern: regexp.MustCompile(DefaultMajorPattern),
+				MinorPattern: regexp.MustCompile(DefaultMinorPattern),
+			}
 			version, err := strategy.Bump()
 
 			assert.Nil(err)
@@ -456,5 +466,5 @@ func ExampleBumpStrategy_GoString() {
 	gitRepo := mock_version.NewMockGitRepo(nil)
 	s := NewConventionalCommitBumpStrategy(gitRepo)
 	fmt.Printf("%#v\n", s)
-	// Output: version.BumpStrategy{Strategy: "AUTO", MajorPattern: &regexp.Regexp{expr: "(?m)^BREAKING CHANGE:.*$"}, MinorPattern: &regexp.Regexp{expr: "^feat(?:\\(.+\\))?:.*"}, BumpBranchesStrategies: []version.BumpBranchesStrategy{version.BumpBranchesStrategy{BranchesPattern: &regexp.Regexp{expr: "^(master|release/.*)$"}, PreRelease: false, PreReleaseTemplate: &template.Template{text: ""}, PreReleaseOverwrite: false, BuildMetadataTemplate: &template.Template{text: ""}}}BumpDefaultStrategy: version.BumpBranchesStrategy{BranchesPattern: &regexp.Regexp{expr: ".*"}, PreRelease: false, PreReleaseTemplate: &template.Template{text: ""}, PreReleaseOverwrite: false, BuildMetadataTemplate: &template.Template{text: "{{.Commits | len}}.{{(.Commits | first).Hash.Short}}"}}}
+	// Output: version.BumpStrategy{MajorPattern: &regexp.Regexp{expr: "(?m)^BREAKING CHANGE:.*$"}, MinorPattern: &regexp.Regexp{expr: "^feat(?:\\(.+\\))?:.*"}, BumpBranchesStrategies: []version.BumpBranchesStrategy{version.BumpBranchesStrategy{Strategy: AUTO, BranchesPattern: &regexp.Regexp{expr: "^(master|release/.*)$"}, PreRelease: false, PreReleaseTemplate: &template.Template{text: ""}, PreReleaseOverwrite: false, BuildMetadataTemplate: &template.Template{text: ""}}, version.BumpBranchesStrategy{Strategy: AUTO, BranchesPattern: &regexp.Regexp{expr: ".*"}, PreRelease: false, PreReleaseTemplate: &template.Template{text: ""}, PreReleaseOverwrite: false, BuildMetadataTemplate: &template.Template{text: "{{.Commits | len}}.{{(.Commits | first).Hash.Short}}"}}}}
 }

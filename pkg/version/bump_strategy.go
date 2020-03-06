@@ -52,15 +52,25 @@ type BumpStrategy struct {
 	gitRepo GitRepo
 }
 
+// NewBumpStrategy create an unconfigured BumpStrategy
+func NewBumpStrategy(gitRepo GitRepo) *BumpStrategy {
+	return &BumpStrategy{
+		gitRepo:        gitRepo,
+		BumpStrategies: []BumpBranchesStrategy{},
+	}
+}
+
 /*
 NewConventionalCommitBumpStrategy create a BumpStrategy following https://www.conventionalcommits.org
 
 The strategy configuration is:
 
+	MajorPattern: (?m)^BREAKING CHANGE:.*$
+	MinorPattern: ^feat(?:\(.+\))?:.*
 	BumpBranchesStrategies: [
 		{
 			Strategy: AUTO
-			PatternReleaseBranches: ^(master|release/.*)$
+			BranchesPattern: ^(master|release/.*)$
 			PreRelease:             false
 			PreReleaseTemplate:     ""
 			PreReleaseOverwrite:    false
@@ -68,15 +78,13 @@ The strategy configuration is:
 		},
 		{
 			Strategy: AUTO
-			PatternReleaseBranches: .*
+			BranchesPattern: .*
 			PreRelease:    		    false
 			PreReleaseTemplate:     ""
 			PreReleaseOverwrite:    false
-			BuildMetadataTemplate:  ""
+			BuildMetadataTemplate:  "{{.Commits | len}}.{{(.Commits | first).Hash.Short}}"
 		}
 	]
-	MajorPattern: (?m)^BREAKING CHANGE:.*$
-	MinorPattern: ^feat(?:\(.+\))?:.*
 */
 func NewConventionalCommitBumpStrategy(gitRepo GitRepo) *BumpStrategy {
 	return &BumpStrategy{
@@ -98,6 +106,11 @@ func (o BumpStrategy) GoString() string {
 	sb.WriteString(fmt.Sprintf("BumpBranchesStrategies: %#v", o.BumpStrategies))
 	sb.WriteString("}")
 	return sb.String()
+}
+
+// SetGitRepository configures the git repository to use for the strategy
+func (o *BumpStrategy) SetGitRepository(gitRepo GitRepo) {
+	o.gitRepo = gitRepo
 }
 
 // AddBumpBranchesStrategy add a bump strategy for a matching set of branches
@@ -186,10 +199,10 @@ func (o *BumpStrategy) computeSemverBumperFromCommits(bbs *BumpBranchesStrategy,
 		if o.MajorPattern.MatchString(commit.Message) {
 			if context.LastVersion.IsUnstable() {
 				log.Trace("BumpStrategy: detects a MAJOR change at %#v however the last version is unstable so it will use bump MINOR strategy", commit)
-				return Version.BumpMinor
+				return bbs.createVersionBumperFrom(Version.BumpMinor, context)
 			}
 			log.Trace("BumpStrategy: detects a MAJOR change at %#v", commit)
-			return Version.BumpMajor
+			return bbs.createVersionBumperFrom(Version.BumpMajor, context)
 		}
 		if o.MinorPattern.MatchString(commit.Message) {
 			strategy = MINOR

@@ -10,6 +10,7 @@ import (
 
 	"github.com/arnaud-deprez/gsemver/internal/git"
 	"github.com/arnaud-deprez/gsemver/internal/log"
+	"github.com/arnaud-deprez/gsemver/internal/utils"
 	"github.com/arnaud-deprez/gsemver/pkg/version"
 )
 
@@ -121,16 +122,44 @@ func newBumpCommandsWithRun(globalOpts *globalOptions, run func(o *bumpOptions) 
 	return cmd
 }
 
+type config struct {
+	MajorPattern   string
+	MinorPattern   string
+	BumpStrategies []struct {
+		Strategy              string
+		BranchesPattern       string
+		PreRelease            bool
+		PreReleaseTemplate    string
+		PreReleaseOverwrite   bool
+		BuildMetadataTemplate string
+	}
+}
+
+func (c *config) createBumpStrategy() *version.BumpStrategy {
+	ret := version.BumpStrategy{BumpStrategies: []version.BumpBranchesStrategy{}}
+	ret.MajorPattern = regexp.MustCompile(c.MajorPattern)
+	ret.MinorPattern = regexp.MustCompile(c.MinorPattern)
+	for _, it := range c.BumpStrategies {
+		s := version.BumpBranchesStrategy{
+			Strategy:              version.ParseBumpStrategyType(it.Strategy),
+			BranchesPattern:       regexp.MustCompile(it.BranchesPattern),
+			PreRelease:            it.PreRelease,
+			PreReleaseTemplate:    utils.NewTemplate(it.PreReleaseTemplate),
+			PreReleaseOverwrite:   it.PreReleaseOverwrite,
+			BuildMetadataTemplate: utils.NewTemplate(it.BuildMetadataTemplate),
+		}
+		ret.BumpStrategies = append(ret.BumpStrategies, s)
+	}
+	return &ret
+}
+
 // BumpOptions type to represent the available options for the bump commands
 // It extends GlobalOptions.
 type bumpOptions struct {
 	*globalOptions
+	viperConfig config
 	// Bump is mapped to pkg/version/BumpStrategyOptions#Strategy
 	Bump string
-	// MajorPattern is mapped to pkg/version/BumpStrategyOptions#MajorPattern
-	MajorPattern string
-	// MinorPattern is mapped to pkg/version/BumpStrategyOptions#MinorPattern
-	MinorPattern string
 	// PreRelease is mapped to pkg/version/BumpStrategyOptions#PreRelease
 	// It is set to true only if explicitly set by the user
 	PreRelease bool
@@ -145,23 +174,38 @@ type bumpOptions struct {
 }
 
 func (o *bumpOptions) addBumpFlags(cmd *cobra.Command) {
-	cmd.Flags().String("major-pattern", version.DefaultMajorPattern, "Use major-pattern option to define your regular expression to match a breaking change commit message")
-	cmd.Flags().String("minor-pattern", version.DefaultMinorPattern, "Use major-pattern option to define your regular expression to match a minor change commit message")
-	cmd.Flags().StringVar(&o.PreReleaseTemplate, "pre-release", version.DefaultPreReleaseTemplate, preReleaseTemplateDesc)
-	cmd.Flags().BoolVar(&o.PreReleaseOverwrite, "pre-release-overwrite", version.DefaultPreReleaseOverwrite, "Use pre-release overwrite option to remove the pre-release identifier suffix which will give a version like `X.Y.Z-SNAPSHOT` if pre-release=SNAPSHOT")
-	cmd.Flags().StringVar(&o.BuildMetadataTemplate, "build-metadata", version.DefaultBuildMetadataTemplate, buildMetadataTemplateDesc)
+	cmd.Flags().String("major-pattern", "", "Use major-pattern option to define your regular expression to match a breaking change commit message")
+	cmd.Flags().String("minor-pattern", "", "Use major-pattern option to define your regular expression to match a minor change commit message")
+	cmd.Flags().StringVar(&o.PreReleaseTemplate, "pre-release", "", preReleaseTemplateDesc)
+	cmd.Flags().BoolVar(&o.PreReleaseOverwrite, "pre-release-overwrite", false, "Use pre-release overwrite option to remove the pre-release identifier suffix which will give a version like `X.Y.Z-SNAPSHOT` if pre-release=SNAPSHOT")
+	cmd.Flags().StringVar(&o.BuildMetadataTemplate, "build-metadata", "", buildMetadataTemplateDesc)
 	cmd.Flags().StringArrayVar(&o.BranchStrategies, "branch-strategy", []string{}, branchStrategyDesc)
 
 	viper.BindPFlag("majorPattern", cmd.Flags().Lookup("major-pattern"))
 	viper.BindPFlag("minorPattern", cmd.Flags().Lookup("minor-pattern"))
 
+	viper.SetDefault("majorPattern", version.DefaultMajorPattern)
+	viper.SetDefault("minorPattern", version.DefaultMinorPattern)
+	viper.SetDefault("bumpStrategies", []interface{}{
+		map[string]interface{}{
+			"strategy":        "AUTO",
+			"branchesPattern": version.DefaultReleaseBranchesPattern,
+		},
+		map[string]interface{}{
+			"strategy":              "AUTO",
+			"branchesPattern":       ".*",
+			"buildMetadataTemplate": version.DefaultBuildMetadataTemplate,
+		},
+	})
+
 	o.Cmd = cmd
 }
 
 func (o *bumpOptions) createBumpStrategy() *version.BumpStrategy {
-	ret := version.NewConventionalCommitBumpStrategy(git.NewVersionGitRepo(o.CurrentDir))
-	ret.MajorPattern = regexp.MustCompile(viper.GetString("majorPattern"))
-	ret.MinorPattern = regexp.MustCompile(viper.GetString("minorPattern"))
+	// ret := *version.NewBumpStrategy(git.NewVersionGitRepo(o.CurrentDir))
+	viper.Unmarshal(&o.viperConfig)
+	ret := o.viperConfig.createBumpStrategy()
+	ret.SetGitRepository(git.NewVersionGitRepo(o.CurrentDir))
 
 	for id, s := range o.BranchStrategies {
 		if id == 0 {
@@ -172,13 +216,15 @@ func (o *bumpOptions) createBumpStrategy() *version.BumpStrategy {
 		json.Unmarshal([]byte(s), &b)
 		ret.BumpStrategies = append(ret.BumpStrategies, b)
 	}
-	// configure default BumpBranchesStrategy
-	defaultStrategy := *version.NewBumpAllBranchesStrategy(version.ParseBumpStrategyType(o.Bump), o.PreRelease, o.PreReleaseTemplate, o.PreReleaseOverwrite, o.BuildMetadataTemplate)
-	if len(o.BranchStrategies) == 0 {
-		ret.BumpStrategies[1] = defaultStrategy
-	} else {
-		ret.BumpStrategies = append(ret.BumpStrategies, defaultStrategy)
+
+	if o.Bump != "AUTO" || o.PreRelease || o.PreReleaseTemplate != "" || o.PreReleaseOverwrite || o.BuildMetadataTemplate != "" {
+		// configure default BumpBranchesStrategy
+		defaultStrategy := *version.NewBumpAllBranchesStrategy(version.ParseBumpStrategyType(o.Bump), o.PreRelease, o.PreReleaseTemplate, o.PreReleaseOverwrite, o.BuildMetadataTemplate)
+		var bumpStrategies []version.BumpBranchesStrategy
+		ret.BumpStrategies = append(bumpStrategies, defaultStrategy)
+		//TODO: ret.BumpStrategies = append(bumpStrategies, defaultStrategy, ret.BumpStrategies...)
 	}
+
 	return ret
 }
 
