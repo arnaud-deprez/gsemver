@@ -462,6 +462,18 @@ func TestBumpVersionStrategyAutoWithPreReleaseMavenLike(t *testing.T) {
 	assert.Equal("1.1.0-SNAPSHOT", version.String())
 }
 
+func TestSetGitRepository(t *testing.T) {
+	assert := assert.New(t)
+	s := &BumpStrategy{}
+	// mock
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	gitRepo := mock_version.NewMockGitRepo(ctrl)
+	s.SetGitRepository(gitRepo)
+
+	assert.Equal(gitRepo, s.gitRepo)
+}
 func ExampleBumpStrategy_GoString() {
 	gitRepo := mock_version.NewMockGitRepo(nil)
 	s := NewConventionalCommitBumpStrategy(gitRepo)
