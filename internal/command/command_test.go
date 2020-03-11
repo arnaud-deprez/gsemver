@@ -18,6 +18,13 @@ func TestNew(t *testing.T) {
 	assert.Equal(t, "--noplugin", execCmd.Args[0])
 }
 
+func TestNewWithVarArgs(t *testing.T) {
+	execCmd := NewWithVarArgs("vim", "--noplugin")
+	assert.Equal(t, "vim", execCmd.Name)
+	assert.Equal(t, 1, len(execCmd.Args))
+	assert.Equal(t, "--noplugin", execCmd.Args[0])
+}
+
 func TestWithDir(t *testing.T) {
 	execCmd := New("git")
 	path, _ := filepath.Abs("")

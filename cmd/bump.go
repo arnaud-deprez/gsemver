@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -201,8 +202,11 @@ func (o *bumpOptions) addBumpFlags(cmd *cobra.Command) {
 	o.Cmd = cmd
 }
 
+func (o *bumpOptions) hasDefaultCommandSettings() bool {
+	return strings.ToLower(o.Bump) != "auto" || o.Cmd.Flags().Changed("pre-release") || o.Cmd.Flags().Changed("pre-release-overwrite") || o.Cmd.Flags().Changed("build-metadata")
+}
+
 func (o *bumpOptions) createBumpStrategy() *version.BumpStrategy {
-	// ret := *version.NewBumpStrategy(git.NewVersionGitRepo(o.CurrentDir))
 	viper.Unmarshal(&o.viperConfig)
 	ret := o.viperConfig.createBumpStrategy()
 	ret.SetGitRepository(git.NewVersionGitRepo(o.CurrentDir))
@@ -217,12 +221,10 @@ func (o *bumpOptions) createBumpStrategy() *version.BumpStrategy {
 		ret.BumpStrategies = append(ret.BumpStrategies, b)
 	}
 
-	if o.Bump != "AUTO" || o.PreRelease || o.PreReleaseTemplate != "" || o.PreReleaseOverwrite || o.BuildMetadataTemplate != "" {
+	if o.hasDefaultCommandSettings() {
 		// configure default BumpBranchesStrategy
 		defaultStrategy := *version.NewBumpAllBranchesStrategy(version.ParseBumpStrategyType(o.Bump), o.PreRelease, o.PreReleaseTemplate, o.PreReleaseOverwrite, o.BuildMetadataTemplate)
-		var bumpStrategies []version.BumpBranchesStrategy
-		ret.BumpStrategies = append(bumpStrategies, defaultStrategy)
-		//TODO: ret.BumpStrategies = append(bumpStrategies, defaultStrategy, ret.BumpStrategies...)
+		ret.BumpStrategies = []version.BumpBranchesStrategy{defaultStrategy}
 	}
 
 	return ret

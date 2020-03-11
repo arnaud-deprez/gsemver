@@ -52,14 +52,6 @@ type BumpStrategy struct {
 	gitRepo GitRepo
 }
 
-// NewBumpStrategy create an unconfigured BumpStrategy
-func NewBumpStrategy(gitRepo GitRepo) *BumpStrategy {
-	return &BumpStrategy{
-		gitRepo:        gitRepo,
-		BumpStrategies: []BumpBranchesStrategy{},
-	}
-}
-
 /*
 NewConventionalCommitBumpStrategy create a BumpStrategy following https://www.conventionalcommits.org
 
@@ -90,7 +82,7 @@ func NewConventionalCommitBumpStrategy(gitRepo GitRepo) *BumpStrategy {
 	return &BumpStrategy{
 		BumpStrategies: []BumpBranchesStrategy{
 			*NewDefaultBumpBranchesStrategy(DefaultReleaseBranchesPattern),
-			*NewBumpAllBranchesStrategy(AUTO, DefaultPreRelease, DefaultPreReleaseTemplate, DefaultPreReleaseOverwrite, DefaultBuildMetadataTemplate),
+			*NewBuildBumpBranchesStrategy(".*", DefaultBuildMetadataTemplate),
 		},
 		MajorPattern: regexp.MustCompile(DefaultMajorPattern),
 		MinorPattern: regexp.MustCompile(DefaultMinorPattern),
@@ -111,12 +103,6 @@ func (o BumpStrategy) GoString() string {
 // SetGitRepository configures the git repository to use for the strategy
 func (o *BumpStrategy) SetGitRepository(gitRepo GitRepo) {
 	o.gitRepo = gitRepo
-}
-
-// AddBumpBranchesStrategy add a bump strategy for a matching set of branches
-func (o *BumpStrategy) AddBumpBranchesStrategy(s *BumpBranchesStrategy) *BumpStrategy {
-	o.BumpStrategies = append(o.BumpStrategies, *s)
-	return o
 }
 
 // Bump performs the version bumping based on the strategy
