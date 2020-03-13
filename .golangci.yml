@@ -1,6 +1,9 @@
 run:
   deadline: 2m
 
+skip-files:
+  - "pkg/version/bump_strategy_example_test.go"
+
 linters:
   disable-all: true # explicit configuration is clearer
   enable:
