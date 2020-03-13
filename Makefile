@@ -51,7 +51,8 @@ $(MOCKGEN):
 	$(GO_NOMOD) get -u github.com/golang/mock/mockgen
 
 $(GOLANGCI_LINT):
-	$(GO_NOMOD) get -u github.com/golangci/golangci-lint/cmd/golangci-lint
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin v1.23.8
+	# $(GO_NOMOD) get -u github.com/golangci/golangci-lint/cmd/golangci-lint
  
 $(GOIMPORTS):
 	$(GO_NOMOD) get -u golang.org/x/tools/cmd/goimports
