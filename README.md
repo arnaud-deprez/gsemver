@@ -12,22 +12,25 @@ gsemver is a command line tool developed in [Go (Golang)](https://golang.org/) t
 
 ## Table of Contents
 
-* [Motivations](#motivations)
-* [Thanks](#thanks)
-* [Getting Started](#getting-started)
-  * [Installation](#installation)
-    * [Go users](#go-users)
-    * [Manual](#manual)
-  * [Test Installation](#test-installation)
-* [Usage](#usage)
-  * [Pre-requisites](#pre-requisites)
-  * [CLI](#cli)
-    * [Automatic version bump](#automatic-version-bump)
-    * [Manual version bump](#manual-version-bump)
-  * [API](#api)
-* [Contributing](#contributing)
-  * [Feedback](#feedback)
-* [License](#license)
+- [gsemver](#gsemver)
+  - [Table of Contents](#table-of-contents)
+  - [Motivations](#motivations)
+  - [Thanks](#thanks)
+  - [Getting Started](#getting-started)
+    - [Installation](#installation)
+      - [Go users](#go-users)
+      - [Manual](#manual)
+    - [Test Installation](#test-installation)
+  - [Usage](#usage)
+    - [Pre-requisites](#pre-requisites)
+    - [CLI](#cli)
+      - [Automatic version bump](#automatic-version-bump)
+      - [Manual version bump](#manual-version-bump)
+      - [Configuration file](#configuration-file)
+    - [API](#api)
+  - [Contributing](#contributing)
+    - [Feedback](#feedback)
+  - [License](#license)
 
 ## Motivations
 
@@ -207,6 +210,49 @@ gsemver bump patch
 ```
 
 All the CLI options are documented [here](docs/cmd/gsemver.md).
+
+---
+**NOTE**
+
+When you specify a CLI option for the bump command, it overrides the whole configuration if defined. See bellow.
+
+---
+
+#### Configuration file
+
+You can also use a configuration file to define your own rules. 
+By default it will look for a file in `.gsemver.yaml` or then in `$HOME/.gsemver.yaml` but you can specify your own configuration file thanks to the `--config` (or `-c`) option:
+
+```sh
+gsemver --config my-config.yaml
+# or
+gsemver -c my-config.yaml
+```
+
+The configuration file format looks like:
+
+```yaml
+majorPattern: "(?m)^BREAKING CHANGE:.*$"
+minorPattern: "^feat(?:\(.+\))?:.*"
+bumpStrategies:
+- branchesPattern: "^(master|release/.*)$"
+  strategy: "AUTO"
+  preRelease: false
+  preReleaseTemplate:
+  preReleaseOverwrite: false
+  buildMetadata:
+- branchesPattern: ".*"
+  strategy: "AUTO"
+  buildMetadataTemplate: "{{.Commits | len}}.{{(.Commits | first).Hash.Short}}"
+  preRelease: false
+  preReleaseTemplate:
+  preReleaseOverwrite: false
+  buildMetadata:
+```
+
+This is the default configuration used for Conventional Commits. You can adapt the configuration to your needs.  
+The `bumpStrategies` are applied in order until one matches the `branchesPattern` regular expression with the current branch.
+This allows you to define your strategies based on your own git flow.
 
 ### API
 

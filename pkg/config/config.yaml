@@ -1,0 +1,11 @@
+# This is an example
+majorPattern: "regex"
+minorPattern: "regex"
+# First strategy match wins
+strategies:
+  - strategy: "AUTO|MAJOR|MINOR|PATCH"
+		branchesPattern: <regex>
+		preRelease:            true|false
+		preReleaseTemplate:    "[string]"
+		PreReleaseOverwrite:   true|false
+		BuildMetadataTemplate: "[string]"

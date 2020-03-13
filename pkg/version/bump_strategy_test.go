@@ -2,6 +2,7 @@ package version
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -41,28 +42,28 @@ func TestBumpVersionStrategyWithoutTag(t *testing.T) {
 		{AUTO, "feature/test", false, "", false, "{{ .Commits | len }}.{{ (.Commits | first).Hash.Short }}", "0.0.0+1.1234567"},
 	}
 
-	for _, tc := range testData {
-		gitRepo := mock_version.NewMockGitRepo(ctrl)
-		gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
-		gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{}, nil)
-		// no commit so it should return the same version
-		gitRepo.EXPECT().GetCommits("", "HEAD").Times(1).Return([]git.Commit{
-			{
-				Author:    git.Signature{Name: "Arnaud Deprez", Email: "xxx@example.com"},
-				Committer: git.Signature{Name: "Arnaud Deprez", Email: "xxx@example.com"},
-				Hash:      git.Hash("1234567890"),
-				Message:   `feat: init import`,
-			},
-		}, nil)
-		gitRepo.EXPECT().GetCurrentBranch().Times(1).Return(tc.branch, nil)
+	for idx, tc := range testData {
+		t.Run(fmt.Sprintf("Case %d", idx), func(t *testing.T) {
+			gitRepo := mock_version.NewMockGitRepo(ctrl)
+			gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
+			gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{}, nil)
+			// no commit so it should return the same version
+			gitRepo.EXPECT().GetCommits("", "HEAD").Times(1).Return([]git.Commit{
+				{
+					Author:    git.Signature{Name: "Arnaud Deprez", Email: "xxx@example.com"},
+					Committer: git.Signature{Name: "Arnaud Deprez", Email: "xxx@example.com"},
+					Hash:      git.Hash("1234567890"),
+					Message:   `feat: init import`,
+				},
+			}, nil)
+			gitRepo.EXPECT().GetCurrentBranch().Times(1).Return(tc.branch, nil)
 
-		strategy := NewConventionalCommitBumpStrategy(gitRepo)
-		strategy.Strategy = tc.strategy
-		strategy.BumpBranchesStrategies = []BumpBranchesStrategy{}
-		strategy.BumpDefaultStrategy = NewFallbackBumpBranchesStrategy(tc.preRelease, tc.preReleaseTemplate, tc.preReleaseOverwrite, tc.buildMetadataTemplate)
-		version, err := strategy.Bump()
-		assert.Nil(err)
-		assert.Equal(tc.expected, version.String())
+			strategy := NewConventionalCommitBumpStrategy(gitRepo)
+			strategy.BumpStrategies = []BumpBranchesStrategy{*NewBumpAllBranchesStrategy(tc.strategy, tc.preRelease, tc.preReleaseTemplate, tc.preReleaseOverwrite, tc.buildMetadataTemplate)}
+			version, err := strategy.Bump()
+			assert.Nil(err)
+			assert.Equal(tc.expected, version.String())
+		})
 	}
 }
 
@@ -102,21 +103,22 @@ func TestBumpVersionStrategyNoDeltaCommit(t *testing.T) {
 		{"v1.2.0", AUTO, "feature/test", false, "", false, "build.1", "1.2.0"},
 	}
 
-	for _, tc := range testData {
-		gitRepo := mock_version.NewMockGitRepo(ctrl)
-		gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
-		gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{Name: tc.from}, nil)
-		// no commit so it should return the same version
-		gitRepo.EXPECT().GetCommits(tc.from, "HEAD").Times(1).Return([]git.Commit{}, nil)
-		gitRepo.EXPECT().GetCurrentBranch().Times(1).Return(tc.branch, nil)
+	for idx, tc := range testData {
+		t.Run(fmt.Sprintf("Case %d", idx), func(t *testing.T) {
+			gitRepo := mock_version.NewMockGitRepo(ctrl)
+			gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
+			gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{Name: tc.from}, nil)
+			// no commit so it should return the same version
+			gitRepo.EXPECT().GetCommits(tc.from, "HEAD").Times(1).Return([]git.Commit{}, nil)
+			gitRepo.EXPECT().GetCurrentBranch().Times(1).Return(tc.branch, nil)
 
-		strategy := NewConventionalCommitBumpStrategy(gitRepo)
-		strategy.Strategy = tc.strategy
-		strategy.BumpDefaultStrategy = NewFallbackBumpBranchesStrategy(tc.preRelease, tc.preReleaseTemplate, tc.preReleaseOverwrite, tc.buildMetadata)
-		version, err := strategy.Bump()
+			strategy := NewConventionalCommitBumpStrategy(gitRepo)
+			strategy.BumpStrategies = []BumpBranchesStrategy{*NewBumpAllBranchesStrategy(tc.strategy, tc.preRelease, tc.preReleaseTemplate, tc.preReleaseOverwrite, tc.buildMetadata)}
+			version, err := strategy.Bump()
 
-		assert.Nil(err)
-		assert.Equal(tc.expected, version.String())
+			assert.Nil(err)
+			assert.Equal(tc.expected, version.String())
+		})
 	}
 }
 
@@ -141,7 +143,7 @@ func TestBumpVersionStrategyMajor(t *testing.T) {
 	}, nil)
 	gitRepo.EXPECT().GetCurrentBranch().Times(1).Return("dummy", nil)
 
-	strategy := &BumpStrategy{Strategy: MAJOR, gitRepo: gitRepo}
+	strategy := &BumpStrategy{BumpStrategies: []BumpBranchesStrategy{*NewBumpAllBranchesStrategy(MAJOR, false, "", false, "")}, gitRepo: gitRepo}
 	version, err := strategy.Bump()
 
 	assert.Nil(err)
@@ -169,7 +171,7 @@ func TestBumpVersionStrategyMinor(t *testing.T) {
 	}, nil)
 	gitRepo.EXPECT().GetCurrentBranch().Times(1).Return("dummy", nil)
 
-	strategy := &BumpStrategy{Strategy: MINOR, gitRepo: gitRepo}
+	strategy := &BumpStrategy{BumpStrategies: []BumpBranchesStrategy{*NewBumpAllBranchesStrategy(MINOR, false, "", false, "")}, gitRepo: gitRepo}
 	version, err := strategy.Bump()
 
 	assert.Nil(err)
@@ -197,7 +199,7 @@ func TestBumpVersionStrategyPatch(t *testing.T) {
 	}, nil)
 	gitRepo.EXPECT().GetCurrentBranch().Times(1).Return("dummy", nil)
 
-	strategy := &BumpStrategy{Strategy: PATCH, gitRepo: gitRepo}
+	strategy := &BumpStrategy{BumpStrategies: []BumpBranchesStrategy{*NewBumpAllBranchesStrategy(PATCH, false, "", false, "")}, gitRepo: gitRepo}
 	version, err := strategy.Bump()
 
 	assert.Nil(err)
@@ -220,28 +222,30 @@ func TestBumpVersionStrategyAutoBreakingChangeOnInitialDevelopmentRelease(t *tes
 		{"v0.1.0", "feature/test", "0.1.0+1.1234567"},
 	}
 
-	for _, tc := range testData {
-		gitRepo := mock_version.NewMockGitRepo(ctrl)
-		gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
-		gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{Name: tc.from}, nil)
-		gitRepo.EXPECT().GetCommits(tc.from, "HEAD").Times(1).Return([]git.Commit{
-			{
-				Author:    git.Signature{Name: "Arnaud Deprez", Email: "xxx@example.com"},
-				Committer: git.Signature{Name: "Arnaud Deprez", Email: "xxx@example.com"},
-				Hash:      git.Hash("1234567890"),
-				Message: `feat(version): add auto bump strategies 
-		
+	for idx, tc := range testData {
+		t.Run(fmt.Sprintf("Case %d", idx), func(t *testing.T) {
+			gitRepo := mock_version.NewMockGitRepo(ctrl)
+			gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
+			gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{Name: tc.from}, nil)
+			gitRepo.EXPECT().GetCommits(tc.from, "HEAD").Times(1).Return([]git.Commit{
+				{
+					Author:    git.Signature{Name: "Arnaud Deprez", Email: "xxx@example.com"},
+					Committer: git.Signature{Name: "Arnaud Deprez", Email: "xxx@example.com"},
+					Hash:      git.Hash("1234567890"),
+					Message: `feat(version): add auto bump strategies 
+			
 BREAKING CHANGE: replace next option by bump for more convenience
-			`,
-			},
-		}, nil)
-		gitRepo.EXPECT().GetCurrentBranch().Times(1).Return(tc.branch, nil)
+				`,
+				},
+			}, nil)
+			gitRepo.EXPECT().GetCurrentBranch().Times(1).Return(tc.branch, nil)
 
-		strategy := NewConventionalCommitBumpStrategy(gitRepo)
-		version, err := strategy.Bump()
+			strategy := NewConventionalCommitBumpStrategy(gitRepo)
+			version, err := strategy.Bump()
 
-		assert.Nil(err)
-		assert.Equal(tc.expected, version.String())
+			assert.Nil(err)
+			assert.Equal(tc.expected, version.String())
+		})
 	}
 }
 
@@ -261,34 +265,36 @@ func TestBumpVersionStrategyAutoBreakingChange(t *testing.T) {
 		{"v1.1.0", "feature/test", "1.1.0+2.1234567"},
 	}
 
-	for _, tc := range testData {
-		gitRepo := mock_version.NewMockGitRepo(ctrl)
-		gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
-		gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{Name: tc.from}, nil)
-		gitRepo.EXPECT().GetCommits(tc.from, "HEAD").Times(1).Return([]git.Commit{
-			{
-				Author:    git.Signature{Name: "Arnaud Deprez", Email: "xxx@example.com"},
-				Committer: git.Signature{Name: "Arnaud Deprez", Email: "xxx@example.com"},
-				Hash:      git.Hash("1234567890"),
-				Message: `feat(version): add auto bump strategies 
-		
+	for idx, tc := range testData {
+		t.Run(fmt.Sprintf("Case %d", idx), func(t *testing.T) {
+			gitRepo := mock_version.NewMockGitRepo(ctrl)
+			gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
+			gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{Name: tc.from}, nil)
+			gitRepo.EXPECT().GetCommits(tc.from, "HEAD").Times(1).Return([]git.Commit{
+				{
+					Author:    git.Signature{Name: "Arnaud Deprez", Email: "xxx@example.com"},
+					Committer: git.Signature{Name: "Arnaud Deprez", Email: "xxx@example.com"},
+					Hash:      git.Hash("1234567890"),
+					Message: `feat(version): add auto bump strategies 
+			
 BREAKING CHANGE: replace next option by bump for more convenience
-			`,
-			},
-			{
-				Author:    git.Signature{Name: "Arnaud Deprez", Email: "xxx@example.com"},
-				Committer: git.Signature{Name: "Arnaud Deprez", Email: "xxx@example.com"},
-				Hash:      git.Hash("1234567890"),
-				Message:   `feat(version): add pre-release option`,
-			},
-		}, nil)
-		gitRepo.EXPECT().GetCurrentBranch().Times(1).Return(tc.branch, nil)
+				`,
+				},
+				{
+					Author:    git.Signature{Name: "Arnaud Deprez", Email: "xxx@example.com"},
+					Committer: git.Signature{Name: "Arnaud Deprez", Email: "xxx@example.com"},
+					Hash:      git.Hash("1234567890"),
+					Message:   `feat(version): add pre-release option`,
+				},
+			}, nil)
+			gitRepo.EXPECT().GetCurrentBranch().Times(1).Return(tc.branch, nil)
 
-		strategy := NewConventionalCommitBumpStrategy(gitRepo)
-		version, err := strategy.Bump()
+			strategy := NewConventionalCommitBumpStrategy(gitRepo)
+			version, err := strategy.Bump()
 
-		assert.Nil(err)
-		assert.Equal(tc.expected, version.String())
+			assert.Nil(err)
+			assert.Equal(tc.expected, version.String())
+		})
 	}
 }
 
@@ -308,25 +314,27 @@ func TestBumpVersionStrategyAutoWithNewFeature(t *testing.T) {
 		{"v1.1.0", "feature/test", "1.1.0+1.1234567"},
 	}
 
-	for _, tc := range testData {
-		gitRepo := mock_version.NewMockGitRepo(ctrl)
-		gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
-		gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{Name: tc.from}, nil)
-		gitRepo.EXPECT().GetCommits(tc.from, "HEAD").Times(1).Return([]git.Commit{
-			{
-				Author:    git.Signature{Name: "Arnaud Deprez", Email: "xxx@example.com"},
-				Committer: git.Signature{Name: "Arnaud Deprez", Email: "xxx@example.com"},
-				Hash:      git.Hash("1234567890"),
-				Message:   `feat(version): add pre-release option`,
-			},
-		}, nil)
-		gitRepo.EXPECT().GetCurrentBranch().Times(1).Return(tc.branch, nil)
+	for idx, tc := range testData {
+		t.Run(fmt.Sprintf("Case %d", idx), func(t *testing.T) {
+			gitRepo := mock_version.NewMockGitRepo(ctrl)
+			gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
+			gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{Name: tc.from}, nil)
+			gitRepo.EXPECT().GetCommits(tc.from, "HEAD").Times(1).Return([]git.Commit{
+				{
+					Author:    git.Signature{Name: "Arnaud Deprez", Email: "xxx@example.com"},
+					Committer: git.Signature{Name: "Arnaud Deprez", Email: "xxx@example.com"},
+					Hash:      git.Hash("1234567890"),
+					Message:   `feat(version): add pre-release option`,
+				},
+			}, nil)
+			gitRepo.EXPECT().GetCurrentBranch().Times(1).Return(tc.branch, nil)
 
-		strategy := NewConventionalCommitBumpStrategy(gitRepo)
-		version, err := strategy.Bump()
+			strategy := NewConventionalCommitBumpStrategy(gitRepo)
+			version, err := strategy.Bump()
 
-		assert.Nil(err)
-		assert.Equal(tc.expected, version.String())
+			assert.Nil(err)
+			assert.Equal(tc.expected, version.String())
+		})
 	}
 }
 
@@ -347,25 +355,27 @@ func TestBumpVersionStrategyAutoWithPatch(t *testing.T) {
 		{"v1.1.0", "release/1.1.x", "1.1.1"},
 	}
 
-	for _, tc := range testData {
-		gitRepo := mock_version.NewMockGitRepo(ctrl)
-		gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
-		gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{Name: tc.from}, nil)
-		gitRepo.EXPECT().GetCommits(tc.from, "HEAD").Times(1).Return([]git.Commit{
-			{
-				Author:    git.Signature{Name: "Arnaud Deprez", Email: "xxx@example.com"},
-				Committer: git.Signature{Name: "Arnaud Deprez", Email: "xxx@example.com"},
-				Hash:      git.Hash("1234567890"),
-				Message:   `fix: typo error`,
-			},
-		}, nil)
-		gitRepo.EXPECT().GetCurrentBranch().Times(1).Return(tc.branch, nil)
+	for idx, tc := range testData {
+		t.Run(fmt.Sprintf("Case %d", idx), func(t *testing.T) {
+			gitRepo := mock_version.NewMockGitRepo(ctrl)
+			gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
+			gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{Name: tc.from}, nil)
+			gitRepo.EXPECT().GetCommits(tc.from, "HEAD").Times(1).Return([]git.Commit{
+				{
+					Author:    git.Signature{Name: "Arnaud Deprez", Email: "xxx@example.com"},
+					Committer: git.Signature{Name: "Arnaud Deprez", Email: "xxx@example.com"},
+					Hash:      git.Hash("1234567890"),
+					Message:   `fix: typo error`,
+				},
+			}, nil)
+			gitRepo.EXPECT().GetCurrentBranch().Times(1).Return(tc.branch, nil)
 
-		strategy := NewConventionalCommitBumpStrategy(gitRepo)
-		version, err := strategy.Bump()
+			strategy := NewConventionalCommitBumpStrategy(gitRepo)
+			version, err := strategy.Bump()
 
-		assert.Nil(err)
-		assert.Equal(tc.expected, version.String())
+			assert.Nil(err)
+			assert.Equal(tc.expected, version.String())
+		})
 	}
 }
 
@@ -390,25 +400,36 @@ func TestBumpVersionStrategyAutoWithPreReleaseStrategyAndNewFeature(t *testing.T
 		{"v1.1.0-alpha.0", "feature/test", true, "alpha", "1.1.0-alpha.0+1.1234567"},
 	}
 
-	for _, tc := range testData {
-		gitRepo := mock_version.NewMockGitRepo(ctrl)
-		gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
-		gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{Name: tc.from}, nil)
-		gitRepo.EXPECT().GetCommits(tc.from, "HEAD").Times(1).Return([]git.Commit{
-			{
-				Author:    git.Signature{Name: "Arnaud Deprez", Email: "xxx@example.com"},
-				Committer: git.Signature{Name: "Arnaud Deprez", Email: "xxx@example.com"},
-				Hash:      git.Hash("1234567890"),
-				Message:   `feat(version): add pre-release option`,
-			},
-		}, nil)
-		gitRepo.EXPECT().GetCurrentBranch().Times(1).Return(tc.branch, nil)
+	for idx, tc := range testData {
+		t.Run(fmt.Sprintf("Case %d", idx), func(t *testing.T) {
+			gitRepo := mock_version.NewMockGitRepo(ctrl)
+			gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
+			gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{Name: tc.from}, nil)
+			gitRepo.EXPECT().GetCommits(tc.from, "HEAD").Times(1).Return([]git.Commit{
+				{
+					Author:    git.Signature{Name: "Arnaud Deprez", Email: "xxx@example.com"},
+					Committer: git.Signature{Name: "Arnaud Deprez", Email: "xxx@example.com"},
+					Hash:      git.Hash("1234567890"),
+					Message:   `feat(version): add pre-release option`,
+				},
+			}, nil)
+			gitRepo.EXPECT().GetCurrentBranch().Times(1).Return(tc.branch, nil)
 
-		strategy := NewConventionalCommitBumpStrategy(gitRepo).AddBumpBranchesStrategy(NewBumpBranchesStrategy("milestone-1.2", tc.preRelease, tc.preReleaseTemplate, false, ""))
-		version, err := strategy.Bump()
+			strategy := &BumpStrategy{
+				gitRepo: gitRepo,
+				BumpStrategies: []BumpBranchesStrategy{
+					*NewDefaultBumpBranchesStrategy(DefaultReleaseBranchesPattern),
+					*NewBumpBranchesStrategy(AUTO, "milestone-1.2", tc.preRelease, tc.preReleaseTemplate, false, ""),
+					*NewBumpAllBranchesStrategy(AUTO, DefaultPreRelease, DefaultPreReleaseTemplate, DefaultPreReleaseOverwrite, DefaultBuildMetadataTemplate),
+				},
+				MajorPattern: regexp.MustCompile(DefaultMajorPattern),
+				MinorPattern: regexp.MustCompile(DefaultMinorPattern),
+			}
+			version, err := strategy.Bump()
 
-		assert.Nil(err)
-		assert.Equal(tc.expected, version.String())
+			assert.Nil(err)
+			assert.Equal(tc.expected, version.String())
+		})
 	}
 }
 
@@ -434,16 +455,28 @@ func TestBumpVersionStrategyAutoWithPreReleaseMavenLike(t *testing.T) {
 	gitRepo.EXPECT().GetCurrentBranch().Times(1).Return("feature/xyz", nil)
 
 	strategy := NewConventionalCommitBumpStrategy(gitRepo)
-	strategy.BumpDefaultStrategy = NewFallbackBumpBranchesStrategy(true, "SNAPSHOT", true, "")
+	strategy.BumpStrategies = []BumpBranchesStrategy{*NewBumpAllBranchesStrategy(AUTO, true, "SNAPSHOT", true, "")}
 	version, err := strategy.Bump()
 
 	assert.Nil(err)
 	assert.Equal("1.1.0-SNAPSHOT", version.String())
 }
 
+func TestSetGitRepository(t *testing.T) {
+	assert := assert.New(t)
+	s := &BumpStrategy{}
+	// mock
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	gitRepo := mock_version.NewMockGitRepo(ctrl)
+	s.SetGitRepository(gitRepo)
+
+	assert.Equal(gitRepo, s.gitRepo)
+}
 func ExampleBumpStrategy_GoString() {
 	gitRepo := mock_version.NewMockGitRepo(nil)
 	s := NewConventionalCommitBumpStrategy(gitRepo)
 	fmt.Printf("%#v\n", s)
-	// Output: version.BumpStrategy{Strategy: "AUTO", MajorPattern: &regexp.Regexp{expr: "(?m)^BREAKING CHANGE:.*$"}, MinorPattern: &regexp.Regexp{expr: "^feat(?:\\(.+\\))?:.*"}, BumpBranchesStrategies: []version.BumpBranchesStrategy{version.BumpBranchesStrategy{BranchesPattern: &regexp.Regexp{expr: "^(master|release/.*)$"}, PreRelease: false, PreReleaseTemplate: &template.Template{text: ""}, PreReleaseOverwrite: false, BuildMetadataTemplate: &template.Template{text: ""}}}BumpDefaultStrategy: version.BumpBranchesStrategy{BranchesPattern: &regexp.Regexp{expr: ".*"}, PreRelease: false, PreReleaseTemplate: &template.Template{text: ""}, PreReleaseOverwrite: false, BuildMetadataTemplate: &template.Template{text: "{{.Commits | len}}.{{(.Commits | first).Hash.Short}}"}}}
+	// Output: version.BumpStrategy{MajorPattern: &regexp.Regexp{expr: "(?m)^BREAKING CHANGE:.*$"}, MinorPattern: &regexp.Regexp{expr: "^feat(?:\\(.+\\))?:.*"}, BumpBranchesStrategies: []version.BumpBranchesStrategy{version.BumpBranchesStrategy{Strategy: AUTO, BranchesPattern: &regexp.Regexp{expr: "^(master|release/.*)$"}, PreRelease: false, PreReleaseTemplate: &template.Template{text: ""}, PreReleaseOverwrite: false, BuildMetadataTemplate: &template.Template{text: ""}}, version.BumpBranchesStrategy{Strategy: AUTO, BranchesPattern: &regexp.Regexp{expr: ".*"}, PreRelease: false, PreReleaseTemplate: &template.Template{text: ""}, PreReleaseOverwrite: false, BuildMetadataTemplate: &template.Template{text: "{{.Commits | len}}.{{(.Commits | first).Hash.Short}}"}}}}
 }

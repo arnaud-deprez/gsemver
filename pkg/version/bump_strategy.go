@@ -25,24 +25,29 @@ const (
 	DefaultBuildMetadataTemplate = `{{.Commits | len}}.{{(.Commits | first).Hash.Short}}`
 )
 
+var (
+	// strategyVersionBumperMap defined the link between BumpStrategyType and versionBumper.
+	// Note that AUTO BumpStrategyType versionBumper is dynamically computed and therefore cannot be part of this static links
+	/* const */ strategyVersionBumperMap = map[BumpStrategyType]versionBumper{
+		MAJOR: Version.BumpMajor,
+		MINOR: Version.BumpMinor,
+		PATCH: Version.BumpPatch,
+	}
+)
+
 // versionBumper type helper for the bump process
 type versionBumper func(Version) Version
 
 // BumpStrategy allows you to configure the bump strategy
 type BumpStrategy struct {
-	// Strategy defines the strategy to use to bump the version.
-	// It can be automatic (AUTO) or manual (MAJOR, MINOR, PATCH)
-	Strategy BumpStrategyType `json:"strategy"`
 	// MajorPattern is the regex used to detect if a commit contains a breaking/major change
 	// See RegexMinor for more details
 	MajorPattern *regexp.Regexp `json:"majorPattern,omitempty"`
 	// MinorPattern is the regex used to detect if a commit contains a minor change
 	// If no commit match RegexMajor or RegexMinor, the change is considered as a patch
 	MinorPattern *regexp.Regexp `json:"minorPattern,omitempty"`
-	// BumpBranchesStrategies is a list of bump strategies for matching branches
-	BumpBranchesStrategies []BumpBranchesStrategy `json:"bumpBranchesStrategies,omitempty"`
-	// BumpDefaultStrategy is a default bump strategy to apply when BumpReleaseStrategies matched.
-	BumpDefaultStrategy *BumpBranchesStrategy `json:"bumpDefaultStrategy,omitempty"`
+	// BumpStrategies is a list of bump strategies for matching branches
+	BumpStrategies []BumpBranchesStrategy `json:"bumpStrategies,omitempty"`
 	// gitRepo is an implementation of GitRepo
 	gitRepo GitRepo
 }
@@ -52,36 +57,36 @@ NewConventionalCommitBumpStrategy create a BumpStrategy following https://www.co
 
 The strategy configuration is:
 
-	Strategy: AUTO
+	MajorPattern: (?m)^BREAKING CHANGE:.*$
+	MinorPattern: ^feat(?:\(.+\))?:.*
 	BumpBranchesStrategies: [
 		{
-			PatternReleaseBranches: ^(master|release/.*)$
+			Strategy: AUTO
+			BranchesPattern: ^(master|release/.*)$
 			PreRelease:             false
 			PreReleaseTemplate:     ""
 			PreReleaseOverwrite:    false
 			BuildMetadataTemplate:  ""
+		},
+		{
+			Strategy: AUTO
+			BranchesPattern: .*
+			PreRelease:    		    false
+			PreReleaseTemplate:     ""
+			PreReleaseOverwrite:    false
+			BuildMetadataTemplate:  "{{.Commits | len}}.{{(.Commits | first).Hash.Short}}"
 		}
 	]
-	BumpDefaultStrategy: {
-		PatternReleaseBranches: .*
-		PreRelease:    		    false
-		PreReleaseTemplate:     ""
-		PreReleaseOverwrite:    false
-		BuildMetadataTemplate:  ""
-	}
-	MajorPattern: (?m)^BREAKING CHANGE:.*$
-	MinorPattern: ^feat(?:\(.+\))?:.*
 */
 func NewConventionalCommitBumpStrategy(gitRepo GitRepo) *BumpStrategy {
 	return &BumpStrategy{
-		Strategy: AUTO,
-		BumpBranchesStrategies: []BumpBranchesStrategy{
+		BumpStrategies: []BumpBranchesStrategy{
 			*NewDefaultBumpBranchesStrategy(DefaultReleaseBranchesPattern),
+			*NewBuildBumpBranchesStrategy(".*", DefaultBuildMetadataTemplate),
 		},
-		BumpDefaultStrategy: NewFallbackBumpBranchesStrategy(DefaultPreRelease, DefaultPreReleaseTemplate, DefaultPreReleaseOverwrite, DefaultBuildMetadataTemplate),
-		MajorPattern:        regexp.MustCompile(DefaultMajorPattern),
-		MinorPattern:        regexp.MustCompile(DefaultMinorPattern),
-		gitRepo:             gitRepo,
+		MajorPattern: regexp.MustCompile(DefaultMajorPattern),
+		MinorPattern: regexp.MustCompile(DefaultMinorPattern),
+		gitRepo:      gitRepo,
 	}
 }
 
@@ -89,17 +94,15 @@ func NewConventionalCommitBumpStrategy(gitRepo GitRepo) *BumpStrategy {
 func (o BumpStrategy) GoString() string {
 	var sb strings.Builder
 	sb.WriteString("version.BumpStrategy{")
-	sb.WriteString(fmt.Sprintf("Strategy: %q, MajorPattern: &regexp.Regexp{expr: %q}, MinorPattern: &regexp.Regexp{expr: %q}, ", o.Strategy, o.MajorPattern, o.MinorPattern))
-	sb.WriteString(fmt.Sprintf("BumpBranchesStrategies: %#v", o.BumpBranchesStrategies))
-	sb.WriteString(fmt.Sprintf("BumpDefaultStrategy: %#v", o.BumpDefaultStrategy))
+	sb.WriteString(fmt.Sprintf("MajorPattern: &regexp.Regexp{expr: %q}, MinorPattern: &regexp.Regexp{expr: %q}, ", o.MajorPattern, o.MinorPattern))
+	sb.WriteString(fmt.Sprintf("BumpBranchesStrategies: %#v", o.BumpStrategies))
 	sb.WriteString("}")
 	return sb.String()
 }
 
-// AddBumpBranchesStrategy add a bump strategy for a matching set of branches
-func (o *BumpStrategy) AddBumpBranchesStrategy(s *BumpBranchesStrategy) *BumpStrategy {
-	o.BumpBranchesStrategies = append(o.BumpBranchesStrategies, *s)
-	return o
+// SetGitRepository configures the git repository to use for the strategy
+func (o *BumpStrategy) SetGitRepository(gitRepo GitRepo) {
+	o.gitRepo = gitRepo
 }
 
 // Bump performs the version bumping based on the strategy
@@ -151,53 +154,41 @@ func (o *BumpStrategy) Bump() (Version, error) {
 
 // computeAutoVersionBumper computes what bump strategy to apply
 func (o *BumpStrategy) computeVersionBumper(context *Context) versionBumper {
-	if log.IsLevelEnabled(log.DebugLevel) && o.Strategy != AUTO {
-		log.Debug("BumpStrategy: will use bump %s", strings.ToUpper(o.Strategy.String()))
+	for _, it := range o.BumpStrategies {
+		if it.BranchesPattern.MatchString(context.Branch) {
+			if log.IsLevelEnabled(log.DebugLevel) {
+				log.Debug("BumpStrategy: will use bump %s", strings.ToUpper(it.Strategy.String()))
+			}
+
+			// find the correct bumper
+			if val, ok := strategyVersionBumperMap[it.Strategy]; ok {
+				return it.createVersionBumperFrom(val, context)
+			} else if it.Strategy == AUTO {
+				return o.computeSemverBumperFromCommits(&it, context)
+			}
+		}
 	}
 
-	switch o.Strategy {
-	case MAJOR:
-		return o.BumpDefaultStrategy.createVersionBumperFrom(Version.BumpMajor, context)
-	case MINOR:
-		return o.BumpDefaultStrategy.createVersionBumperFrom(Version.BumpMinor, context)
-	case PATCH:
-		return o.BumpDefaultStrategy.createVersionBumperFrom(Version.BumpPatch, context)
-	case AUTO:
-		return o.computeAutoVersionBumper(context)
-	default:
-		log.Debug("BumpStrategy: will not use any bump strategy because the strategy is unknown")
-		return versionBumperIdentity
-	}
+	log.Debug("BumpStrategy: not matching strategy found in %#v. versionBumperIdentity will be used", o.BumpStrategies)
+	return versionBumperIdentity
 }
 
-// computeAutoVersionBumper detects what bump strategy to apply based on commits history in auto mode
-func (o *BumpStrategy) computeAutoVersionBumper(context *Context) versionBumper {
+func (o *BumpStrategy) computeSemverBumperFromCommits(bbs *BumpBranchesStrategy, context *Context) versionBumper {
 	if len(context.Commits) == 0 {
 		log.Debug("BumpStrategy: will not use identity bump strategy because there is not commit")
 		return versionBumperIdentity
 	}
 
-	semverBumper := o.computeSemverBumperFromCommits(context)
-
-	for _, it := range o.BumpBranchesStrategies {
-		if it.BranchesPattern.MatchString(context.Branch) {
-			return it.createVersionBumperFrom(semverBumper, context)
-		}
-	}
-	return o.BumpDefaultStrategy.createVersionBumperFrom(semverBumper, context)
-}
-
-func (o *BumpStrategy) computeSemverBumperFromCommits(context *Context) versionBumper {
 	strategy := PATCH
 	bumper := Version.BumpPatch
 	for _, commit := range context.Commits {
 		if o.MajorPattern.MatchString(commit.Message) {
 			if context.LastVersion.IsUnstable() {
 				log.Trace("BumpStrategy: detects a MAJOR change at %#v however the last version is unstable so it will use bump MINOR strategy", commit)
-				return Version.BumpMinor
+				return bbs.createVersionBumperFrom(Version.BumpMinor, context)
 			}
 			log.Trace("BumpStrategy: detects a MAJOR change at %#v", commit)
-			return Version.BumpMajor
+			return bbs.createVersionBumperFrom(Version.BumpMajor, context)
 		}
 		if o.MinorPattern.MatchString(commit.Message) {
 			strategy = MINOR
@@ -205,6 +196,7 @@ func (o *BumpStrategy) computeSemverBumperFromCommits(context *Context) versionB
 			bumper = Version.BumpMinor
 		}
 	}
+
 	log.Debug("BumpStrategy: will use bump %s strategy", strategy)
-	return bumper
+	return bbs.createVersionBumperFrom(bumper, context)
 }

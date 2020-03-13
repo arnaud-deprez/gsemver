@@ -4,11 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/arnaud-deprez/gsemver/internal/git"
 	"github.com/arnaud-deprez/gsemver/internal/log"
+	"github.com/arnaud-deprez/gsemver/internal/utils"
 	"github.com/arnaud-deprez/gsemver/pkg/version"
 )
 
@@ -54,12 +57,16 @@ gsemver bump patch
 
 # To use a pre-release version
 gsemver bump --pre-release alpha
+# Or with go-template
+gsemver bump --pre-release "alpha-{{.Branch}}"
 
 # To use a pre-release version without indexation (maven like SNAPSHOT)
 gsemver bump minor --pre-release SNAPSHOT --pre-release-overwrite true
 
 # To use version with build metadata
-gsemver bump --build "issue-1.build.1"
+gsemver bump --build-metadata "issue-1.build.1"
+# Or with go-template
+gsemver bump --build-metadata "{{(.Commits | first).Hash.Short}}"
 
 # To use bump auto with one or many branch strategies
 gsemver bump --branch-strategy='{"branchesPattern":"^miletone-1.1$","preReleaseTemplate":"beta"}' --branch-strategy='{"branchesPattern":"^miletone-2.0$","preReleaseTemplate":"alpha"}'
@@ -120,16 +127,44 @@ func newBumpCommandsWithRun(globalOpts *globalOptions, run func(o *bumpOptions) 
 	return cmd
 }
 
+type config struct {
+	MajorPattern   string
+	MinorPattern   string
+	BumpStrategies []struct {
+		Strategy              string
+		BranchesPattern       string
+		PreRelease            bool
+		PreReleaseTemplate    string
+		PreReleaseOverwrite   bool
+		BuildMetadataTemplate string
+	}
+}
+
+func (c *config) createBumpStrategy() *version.BumpStrategy {
+	ret := version.BumpStrategy{BumpStrategies: []version.BumpBranchesStrategy{}}
+	ret.MajorPattern = regexp.MustCompile(c.MajorPattern)
+	ret.MinorPattern = regexp.MustCompile(c.MinorPattern)
+	for _, it := range c.BumpStrategies {
+		s := version.BumpBranchesStrategy{
+			Strategy:              version.ParseBumpStrategyType(it.Strategy),
+			BranchesPattern:       regexp.MustCompile(it.BranchesPattern),
+			PreRelease:            it.PreRelease,
+			PreReleaseTemplate:    utils.NewTemplate(it.PreReleaseTemplate),
+			PreReleaseOverwrite:   it.PreReleaseOverwrite,
+			BuildMetadataTemplate: utils.NewTemplate(it.BuildMetadataTemplate),
+		}
+		ret.BumpStrategies = append(ret.BumpStrategies, s)
+	}
+	return &ret
+}
+
 // BumpOptions type to represent the available options for the bump commands
 // It extends GlobalOptions.
 type bumpOptions struct {
 	*globalOptions
+	viperConfig config
 	// Bump is mapped to pkg/version/BumpStrategyOptions#Strategy
 	Bump string
-	// MajorPattern is mapped to pkg/version/BumpStrategyOptions#MajorPattern
-	MajorPattern string
-	// MinorPattern is mapped to pkg/version/BumpStrategyOptions#MinorPattern
-	MinorPattern string
 	// PreRelease is mapped to pkg/version/BumpStrategyOptions#PreRelease
 	// It is set to true only if explicitly set by the user
 	PreRelease bool
@@ -144,33 +179,58 @@ type bumpOptions struct {
 }
 
 func (o *bumpOptions) addBumpFlags(cmd *cobra.Command) {
-	cmd.Flags().StringVarP(&o.MajorPattern, "major-pattern", "", version.DefaultMajorPattern, "Use major-pattern option to define your regular expression to match a breaking change commit message")
-	cmd.Flags().StringVarP(&o.MinorPattern, "minor-pattern", "", version.DefaultMinorPattern, "Use major-pattern option to define your regular expression to match a minor change commit message")
-	cmd.Flags().StringVarP(&o.PreReleaseTemplate, "pre-release", "", version.DefaultPreReleaseTemplate, preReleaseTemplateDesc)
-	cmd.Flags().BoolVarP(&o.PreReleaseOverwrite, "pre-release-overwrite", "", version.DefaultPreReleaseOverwrite, "Use pre-release overwrite option to remove the pre-release identifier suffix which will give a version like `X.Y.Z-SNAPSHOT` if pre-release=SNAPSHOT")
-	cmd.Flags().StringVarP(&o.BuildMetadataTemplate, "build", "", version.DefaultBuildMetadataTemplate, buildMetadataTemplateDesc)
-	cmd.Flags().StringArrayVarP(&o.BranchStrategies, "branch-strategy", "", []string{}, branchStrategyDesc)
+	cmd.Flags().String("major-pattern", "", "Use major-pattern option to define your regular expression to match a breaking change commit message")
+	cmd.Flags().String("minor-pattern", "", "Use major-pattern option to define your regular expression to match a minor change commit message")
+	cmd.Flags().StringVar(&o.PreReleaseTemplate, "pre-release", "", preReleaseTemplateDesc)
+	cmd.Flags().BoolVar(&o.PreReleaseOverwrite, "pre-release-overwrite", false, "Use pre-release overwrite option to remove the pre-release identifier suffix which will give a version like `X.Y.Z-SNAPSHOT` if pre-release=SNAPSHOT")
+	cmd.Flags().StringVar(&o.BuildMetadataTemplate, "build-metadata", "", buildMetadataTemplateDesc)
+	cmd.Flags().StringArrayVar(&o.BranchStrategies, "branch-strategy", []string{}, branchStrategyDesc)
+
+	viper.BindPFlag("majorPattern", cmd.Flags().Lookup("major-pattern"))
+	viper.BindPFlag("minorPattern", cmd.Flags().Lookup("minor-pattern"))
+
+	viper.SetDefault("majorPattern", version.DefaultMajorPattern)
+	viper.SetDefault("minorPattern", version.DefaultMinorPattern)
+	viper.SetDefault("bumpStrategies", []interface{}{
+		map[string]interface{}{
+			"strategy":        "AUTO",
+			"branchesPattern": version.DefaultReleaseBranchesPattern,
+		},
+		map[string]interface{}{
+			"strategy":              "AUTO",
+			"branchesPattern":       ".*",
+			"buildMetadataTemplate": version.DefaultBuildMetadataTemplate,
+		},
+	})
 
 	o.Cmd = cmd
 }
 
+func (o *bumpOptions) hasDefaultCommandSettings() bool {
+	return strings.ToLower(o.Bump) != "auto" || o.Cmd.Flags().Changed("pre-release") || o.Cmd.Flags().Changed("pre-release-overwrite") || o.Cmd.Flags().Changed("build-metadata")
+}
+
 func (o *bumpOptions) createBumpStrategy() *version.BumpStrategy {
-	ret := version.NewConventionalCommitBumpStrategy(git.NewVersionGitRepo(o.CurrentDir))
-	ret.Strategy = version.ParseBumpStrategyType(o.Bump)
-	ret.MajorPattern = regexp.MustCompile(o.MajorPattern)
-	ret.MinorPattern = regexp.MustCompile(o.MinorPattern)
+	viper.Unmarshal(&o.viperConfig)
+	ret := o.viperConfig.createBumpStrategy()
+	ret.SetGitRepository(git.NewVersionGitRepo(o.CurrentDir))
 
 	for id, s := range o.BranchStrategies {
 		if id == 0 {
 			// reset branch strategy
-			ret.BumpBranchesStrategies = []version.BumpBranchesStrategy{}
+			ret.BumpStrategies = []version.BumpBranchesStrategy{}
 		}
 		var b version.BumpBranchesStrategy
 		json.Unmarshal([]byte(s), &b)
-		ret.BumpBranchesStrategies = append(ret.BumpBranchesStrategies, b)
+		ret.BumpStrategies = append(ret.BumpStrategies, b)
 	}
-	// configure default BumpBranchesStrategy
-	ret.BumpDefaultStrategy = version.NewFallbackBumpBranchesStrategy(o.PreRelease, o.PreReleaseTemplate, o.PreReleaseOverwrite, o.BuildMetadataTemplate)
+
+	if o.hasDefaultCommandSettings() {
+		// configure default BumpBranchesStrategy
+		defaultStrategy := *version.NewBumpAllBranchesStrategy(version.ParseBumpStrategyType(o.Bump), o.PreRelease, o.PreReleaseTemplate, o.PreReleaseOverwrite, o.BuildMetadataTemplate)
+		ret.BumpStrategies = []version.BumpBranchesStrategy{defaultStrategy}
+	}
+
 	return ret
 }
 
