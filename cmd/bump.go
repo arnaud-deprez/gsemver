@@ -57,12 +57,16 @@ gsemver bump patch
 
 # To use a pre-release version
 gsemver bump --pre-release alpha
+# Or with go-template
+gsemver bump --pre-release "alpha-{{.Branch}}"
 
 # To use a pre-release version without indexation (maven like SNAPSHOT)
 gsemver bump minor --pre-release SNAPSHOT --pre-release-overwrite true
 
 # To use version with build metadata
-gsemver bump --build "issue-1.build.1"
+gsemver bump --build-metadata "issue-1.build.1"
+# Or with go-template
+gsemver bump --build-metadata "{{(.Commits | first).Hash.Short}}"
 
 # To use bump auto with one or many branch strategies
 gsemver bump --branch-strategy='{"branchesPattern":"^miletone-1.1$","preReleaseTemplate":"beta"}' --branch-strategy='{"branchesPattern":"^miletone-2.0$","preReleaseTemplate":"alpha"}'
