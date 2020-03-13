@@ -26,7 +26,11 @@ func executeCommandC(root *cobra.Command, args ...string) (c *cobra.Command, out
 
 func TestConfigFile(t *testing.T) {
 	assert := assert.New(t)
-	_, err := executeCommand(newDefaultRootCommand(), "-c", "../test/data/gsemver-test-config.yaml")
-	assert.NoError(err)
-	assert.Equal("../test/data/gsemver-test-config.yaml", viper.ConfigFileUsed())
+	for _, opt := range []string{"--config", "-c"} {
+		t.Run(opt, func(t *testing.T) {
+			_, err := executeCommand(newDefaultRootCommand(), opt, "../test/data/gsemver-test-config.yaml")
+			assert.NoError(err)
+			assert.Equal("../test/data/gsemver-test-config.yaml", viper.ConfigFileUsed())
+		})
+	}
 }
