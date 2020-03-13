@@ -240,14 +240,13 @@ bumpStrategies:
   preRelease: false
   preReleaseTemplate:
   preReleaseOverwrite: false
-  buildMetadata:
+  buildMetadataTemplate:
 - branchesPattern: ".*"
   strategy: "AUTO"
-  buildMetadataTemplate: "{{.Commits | len}}.{{(.Commits | first).Hash.Short}}"
   preRelease: false
   preReleaseTemplate:
   preReleaseOverwrite: false
-  buildMetadata:
+  buildMetadataTemplate: "{{.Commits | len}}.{{(.Commits | first).Hash.Short}}"
 ```
 
 This is the default configuration used for Conventional Commits. You can adapt the configuration to your needs.  
