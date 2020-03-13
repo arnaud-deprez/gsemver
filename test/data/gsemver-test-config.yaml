@@ -1,0 +1,8 @@
+majorPattern: "majorPatternConfig"
+minorPattern: "minorPatternConfig"
+bumpStrategies:
+- branchesPattern: "releaseBranchesPattern"
+  strategy: "AUTO"
+- branchesPattern: "all"
+  strategy: "AUTO"
+  buildMetadataTemplate: "myBuildMetadataTemplate"

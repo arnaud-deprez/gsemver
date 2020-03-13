@@ -25,6 +25,7 @@ gsemver is a command line tool developed in [Go (Golang)](https://golang.org/) t
     * [Automatic version bump](#automatic-version-bump)
     * [Manual version bump](#manual-version-bump)
   * [API](#api)
+  * 
 * [Contributing](#contributing)
   * [Feedback](#feedback)
 * [License](#license)
