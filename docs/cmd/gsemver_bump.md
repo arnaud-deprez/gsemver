@@ -53,12 +53,16 @@ gsemver bump patch
 
 # To use a pre-release version
 gsemver bump --pre-release alpha
+# Or with go-template
+gsemver bump --pre-release "alpha-{{.Branch}}"
 
 # To use a pre-release version without indexation (maven like SNAPSHOT)
 gsemver bump minor --pre-release SNAPSHOT --pre-release-overwrite true
 
 # To use version with build metadata
-gsemver bump --build "issue-1.build.1"
+gsemver bump --build-metadata "issue-1.build.1"
+# Or with go-template
+gsemver bump --build-metadata "{{(.Commits | first).Hash.Short}}"
 
 # To use bump auto with one or many branch strategies
 gsemver bump --branch-strategy='{"branchesPattern":"^miletone-1.1$","preReleaseTemplate":"beta"}' --branch-strategy='{"branchesPattern":"^miletone-2.0$","preReleaseTemplate":"alpha"}'
@@ -72,12 +76,12 @@ gsemver bump --branch-strategy='{"branchesPattern":"^miletone-1.1$","preReleaseT
                                                The strategy is defined in json and looks like {"branchesPattern":"^milestone-.*$", "preReleaseTemplate":"alpha"} for example.
                                                This will use pre-release alpha version for every milestone-* branches. 
                                                You can find all available options https://godoc.org/github.com/arnaud-deprez/gsemver/pkg/version#BumpBranchesStrategy
-      --build string                           Use build metadata template which will give something like X.Y.Z+<build>.
+      --build-metadata string                  Use build metadata template which will give something like X.Y.Z+<build>.
                                                You can also use go-template expression with context https://godoc.org/github.com/arnaud-deprez/gsemver/pkg/version#Context and http://masterminds.github.io/sprig functions.
-                                               This flag cannot be used with --pre-release* flags and take precedence over them. (default "{{.Commits | len}}.{{(.Commits | first).Hash.Short}}")
+                                               This flag cannot be used with --pre-release* flags and take precedence over them.
   -h, --help                                   help for bump
-      --major-pattern string                   Use major-pattern option to define your regular expression to match a breaking change commit message (default "(?m)^BREAKING CHANGE:.*$")
-      --minor-pattern string                   Use major-pattern option to define your regular expression to match a minor change commit message (default "^feat(?:\\(.+\\))?:.*")
+      --major-pattern string                   Use major-pattern option to define your regular expression to match a breaking change commit message
+      --minor-pattern string                   Use major-pattern option to define your regular expression to match a minor change commit message
       --pre-release string                     Use pre-release template version such as 'alpha' which will give a version like 'X.Y.Z-alpha.N'.
                                                If pre-release flag is present but does not contain template value, it will give a version like 'X.Y.Z-N' where 'N' is the next pre-release increment for the version 'X.Y.Z'.
                                                You can also use go-template expression with context https://godoc.org/github.com/arnaud-deprez/gsemver/pkg/version#Context and http://masterminds.github.io/sprig functions.
@@ -88,6 +92,7 @@ gsemver bump --branch-strategy='{"branchesPattern":"^miletone-1.1$","preReleaseT
 ### Options inherited from parent commands
 
 ```
+  -c, --config string      config file (default is .gsemver.yaml)
       --log-level string   Sets the logging level (fatal, error, warning, info, debug, trace) (default "info")
   -v, --verbose            Enables verbose output by setting log level to debug. This is a shortland to --log-level debug.
 ```

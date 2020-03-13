@@ -45,6 +45,7 @@ $ gsemver version
 ### Options inherited from parent commands
 
 ```
+  -c, --config string      config file (default is .gsemver.yaml)
       --log-level string   Sets the logging level (fatal, error, warning, info, debug, trace) (default "info")
   -v, --verbose            Enables verbose output by setting log level to debug. This is a shortland to --log-level debug.
 ```
