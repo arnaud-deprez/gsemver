@@ -1,0 +1,59 @@
+name: Go
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    env:
+      GIT_AUTHOR_NAME: "Arnaud Deprez"
+      GIT_AUTHOR_EMAIL: "arnaudeprez@gmail.com"
+      GIT_COMMITTER_NAME: "Arnaud Deprez"
+      GIT_COMMITTER_EMAIL: "arnaudeprez@gmail.com"
+      GIT_COMMIT: ${{ github.sha }}
+    steps:
+
+    - name: Extract Branch Name in GIT_BRANCH env
+      run: echo "::set-env name=GIT_BRANCH::$(echo ${GITHUB_REF##*/})"
+    
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ^1.14
+      id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+    
+    - name: Unshallow git repo
+      run: git fetch --prune --unshallow
+
+    - name: Get dependencies
+      run: |
+        go get -v -t -d ./...
+        if [ -f Gopkg.toml ]; then
+            curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+            dep ensure
+        fi
+
+    - name: Build
+      run: make --environment-overrides test-release
+
+    - name: Test
+      run: make --environment-overrides test-integration
+    
+    - uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true # optional (default = false)
+    
+    - name: Release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: make --environment-overrides release
+      # if: github.event_name != 'pull_request' && (env.GIT_BRANCH == 'master' || startsWith(env.GIT_BRANCH, 'release/'))

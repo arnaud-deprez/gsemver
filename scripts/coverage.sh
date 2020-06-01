@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-
 set -euo pipefail
 
 covermode=${COVERMODE:-atomic}
 coverdir=build/coverage
 profile="${coverdir}/cover.out"
 
-hash goveralls 2>/dev/null || go get github.com/mattn/goveralls
-hash godir 2>/dev/null || go get github.com/Masterminds/godir
+# make sure we don't use go 1.11 modules, see https://github.com/golang/go/wiki/Modules
+hash goveralls 2>/dev/null || GO111MODULE=off go get github.com/mattn/goveralls
+hash godir 2>/dev/null || GO111MODULE=off go get github.com/Masterminds/godir
 
 generate_cover_data() {
   for d in $(godir) ; do

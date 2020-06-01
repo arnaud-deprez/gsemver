@@ -2,6 +2,7 @@
 
 gsemver is a command line tool developed in [Go (Golang)](https://golang.org/) that uses git commit convention to automate the generation of your next version compliant with [semver 2.0.0 spec](https://semver.org/spec/v2.0.0.html).
 
+[![Build Status](https://github.com/arnaud-deprez/gsemver/workflows/Go/badge.svg)]()
 [![Build Status](https://travis-ci.com/arnaud-deprez/gsemver.svg?token=uYA1Qbgs8qpfX4ajYZsn&branch=master)](https://travis-ci.com/arnaud-deprez/gsemver)
 [![GoDoc](https://godoc.org/github.com/arnaud-deprez/gsemver?status.svg)](https://godoc.org/github.com/arnaud-deprez/gsemver)
 [![Downloads](https://img.shields.io/github/downloads/arnaud-deprez/gsemver/total.svg)](https://github.com/arnaud-deprez/gsemver/releases)
