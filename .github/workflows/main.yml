@@ -1,4 +1,4 @@
-name: Go
+name: Main
 
 on:
   push:
@@ -20,7 +20,14 @@ jobs:
     steps:
 
     - name: Extract Branch Name in GIT_BRANCH env
-      run: echo "::set-env name=GIT_BRANCH::$(echo ${GITHUB_REF##*/})"
+      run: |
+        echo "GITHUB_HEAD_REF=${GITHUB_HEAD_REF} & GITHUB_REF=${GITHUB_REF}"
+        if [ -n $GITHUB_HEAD_REF ]
+        then
+          echo "::set-env name=GIT_BRANCH::$(echo ${GITHUB_HEAD_REF#refs/head/})"
+        else
+          echo "::set-env name=GIT_BRANCH::$(echo ${GITHUB_REF#refs/head/})"
+        fi
     
     - name: Set up Go
       uses: actions/setup-go@v2
@@ -56,4 +63,4 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: make --environment-overrides release
-      # if: github.event_name != 'pull_request' && (env.GIT_BRANCH == 'master' || startsWith(env.GIT_BRANCH, 'release/'))
+      if: github.event_name != 'pull_request' && (env.GIT_BRANCH == 'master' || startsWith(env.GIT_BRANCH, 'release/'))
