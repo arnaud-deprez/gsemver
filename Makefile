@@ -94,7 +94,7 @@ test: test-coverage
 test-coverage:
 	@echo
 	@echo "==> Running unit tests with coverage <=="
-	@scripts/coverage.sh --html
+	scripts/coverage.sh
 
 .PHONY: test-style
 test-style: $(GOLANGCI_LINT)

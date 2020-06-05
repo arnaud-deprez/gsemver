@@ -11,7 +11,7 @@
 {{- $lenRefs := len .Refs -}}
 {{- if gt $lenRefs 0 }}, closes 
 {{- range $idx, $ref := .Refs }}
-{{- if $idx }}, {{ end }}[#{{ $ref.Ref }}]({{ $.Info.RepositoryURL }}/issues/{{ $ref.Ref }})
+{{- if $idx }},{{ end }} [#{{ $ref.Ref }}]({{ $.Info.RepositoryURL }}/issues/{{ $ref.Ref }})
 {{- end }}
 {{- end }})
 {{- end }}
