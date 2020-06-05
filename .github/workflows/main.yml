@@ -22,11 +22,11 @@ jobs:
     - name: Extract Branch Name in GIT_BRANCH env
       run: |
         echo "GITHUB_HEAD_REF=${GITHUB_HEAD_REF} & GITHUB_REF=${GITHUB_REF}"
-        if [ -n $GITHUB_HEAD_REF ]
+        if [ -n "$GITHUB_HEAD_REF" ]
         then
-          echo "::set-env name=GIT_BRANCH::$(echo ${GITHUB_HEAD_REF#refs/head/})"
+          echo "::set-env name=GIT_BRANCH::$(echo ${GITHUB_HEAD_REF#refs/heads/})"
         else
-          echo "::set-env name=GIT_BRANCH::$(echo ${GITHUB_REF#refs/head/})"
+          echo "::set-env name=GIT_BRANCH::$(echo ${GITHUB_REF#refs/heads/})"
         fi
     
     - name: Set up Go
