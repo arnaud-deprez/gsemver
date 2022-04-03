@@ -23,5 +23,6 @@ gsemver [flags]
 ### SEE ALSO
 
 * [gsemver bump](gsemver_bump.md)	 - Bump to next version
+* [gsemver completion](gsemver_completion.md)	 - Generate the autocompletion script for the specified shell
 * [gsemver version](gsemver_version.md)	 - Print the CLI version information
 
