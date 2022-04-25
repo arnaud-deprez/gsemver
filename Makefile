@@ -4,7 +4,7 @@ DIST_DIRS  := find * -type d -exec
 TARGETS    := darwin/amd64 linux/amd64 linux/386 linux/arm linux/arm64 linux/ppc64le windows/amd64
 BINNAME    ?= gsemver
 
-# GO_NOMOD      := GO111MODULE=off go
+GO_NOMOD      := GO111MODULE=off go
 GOPATH        := $(shell go env GOPATH)
 GOX           := $(GOPATH)/bin/gox
 MOCKGEN		  := $(GOPATH)/bin/mockgen
@@ -48,16 +48,13 @@ $(GOX):
 	$(GO_NOMOD) install github.com/mitchellh/gox
 
 $(MOCKGEN):
-	$(GO_NOMOD) install github.com/golang/mock/mockgen@v1.6.0
+	go install github.com/golang/mock/mockgen@v1.6.0
 
 $(GOLANGCI_LINT):
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin v1.45.2
  
 $(GOIMPORTS):
 	$(GO_NOMOD) install golang.org/x/tools/cmd/goimports
-
-$(GHR):
-	$(GO_NOMOD) install github.com/tcnksm/ghr
 
 $(GIT_CHGLOG):
 	$(GO_NOMOD) install github.com/git-chglog/git-chglog/cmd/git-chglog
