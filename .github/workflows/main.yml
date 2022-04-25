@@ -24,15 +24,15 @@ jobs:
         echo "GITHUB_HEAD_REF=${GITHUB_HEAD_REF} & GITHUB_REF=${GITHUB_REF}"
         if [ -n "$GITHUB_HEAD_REF" ]
         then
-          echo "::set-env name=GIT_BRANCH::$(echo ${GITHUB_HEAD_REF#refs/heads/})"
+          echo "GIT_BRANCH=${GITHUB_HEAD_REF#refs/heads/} >> $GITHUB_ENV"
         else
-          echo "::set-env name=GIT_BRANCH::$(echo ${GITHUB_REF#refs/heads/})"
+          echo "GIT_BRANCH=${GITHUB_REF#refs/heads/} >> $GITHUB_ENV"
         fi
     
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
-        go-version: ^1.14
+        go-version: ^1.18
       id: go
 
     - name: Check out code into the Go module directory
