@@ -48,7 +48,7 @@ $(GOX):
 	$(GO_NOMOD) install github.com/mitchellh/gox
 
 $(MOCKGEN):
-	$(GO_NOMOD) install github.com/golang/mock/mockgen
+	$(GO_NOMOD) install github.com/golang/mock/mockgen@v1.6.0
 
 $(GOLANGCI_LINT):
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin v1.45.2
@@ -65,20 +65,23 @@ $(GIT_CHGLOG):
 # ------------------------------------------------------------------------------
 #  build
 
-.PHONY: build docs
-build: $(BINDIR)/$(BINNAME)
+build: download-dependencies generate $(BINDIR)/$(BINNAME) docs
+
+download-dependencies: 
+	go mod download
 
 .PHONY: generate
-generate: $(MOCKGEN)
+generate: download-dependencies $(MOCKGEN)
 	go generate ./...
 
+.PHONY: build
 $(BINDIR)/$(BINNAME): generate $(SRC)
 	go build $(GOFLAGS) -tags '$(TAGS)' -ldflags '$(LDFLAGS)' -o $(BINDIR)/$(BINNAME) github.com/arnaud-deprez/gsemver
 
-.PHONY: docs
+.PHONY: download-dependencies docs
 docs: $(BINDIR)/$(BINNAME)
-	@mkdir -p docs/cmd
-	@$(BINDIR)/$(BINNAME) docs markdown --dir docs/cmd
+	mkdir -p docs/cmd
+	$(BINDIR)/$(BINNAME) docs markdown --dir docs/cmd
 
 # ------------------------------------------------------------------------------
 #  test
