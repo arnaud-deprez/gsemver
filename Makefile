@@ -44,9 +44,6 @@ all: build docs release
 
 # ------------------------------------------------------------------------------
 #  dependencies
-$(GOX):
-	$(GO_NOMOD) install github.com/mitchellh/gox
-
 $(MOCKGEN):
 	go install github.com/golang/mock/mockgen@v1.6.0
 
@@ -54,10 +51,10 @@ $(GOLANGCI_LINT):
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin v1.45.2
  
 $(GOIMPORTS):
-	$(GO_NOMOD) install golang.org/x/tools/cmd/goimports
+	go install golang.org/x/tools/cmd/goimports@latest
 
 $(GIT_CHGLOG):
-	$(GO_NOMOD) install github.com/git-chglog/git-chglog/cmd/git-chglog
+	go install github.com/git-chglog/git-chglog/cmd/git-chglog@latest
 
 # ------------------------------------------------------------------------------
 #  build
