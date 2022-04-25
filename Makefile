@@ -44,42 +44,38 @@ all: build docs release
 
 # ------------------------------------------------------------------------------
 #  dependencies
-$(GOX):
-	$(GO_NOMOD) get -u github.com/mitchellh/gox
-
 $(MOCKGEN):
-	$(GO_NOMOD) get -u github.com/golang/mock/mockgen
+	go install github.com/golang/mock/mockgen@v1.6.0
 
 $(GOLANGCI_LINT):
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin v1.23.8
-	# $(GO_NOMOD) get -u github.com/golangci/golangci-lint/cmd/golangci-lint
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin v1.45.2
  
 $(GOIMPORTS):
-	$(GO_NOMOD) get -u golang.org/x/tools/cmd/goimports
-
-$(GHR):
-	$(GO_NOMOD) get -u github.com/tcnksm/ghr
+	go install golang.org/x/tools/cmd/goimports@latest
 
 $(GIT_CHGLOG):
-	$(GO_NOMOD) get -u github.com/git-chglog/git-chglog/cmd/git-chglog
+	go install github.com/git-chglog/git-chglog/cmd/git-chglog@latest
 
 # ------------------------------------------------------------------------------
 #  build
 
-.PHONY: build docs
-build: $(BINDIR)/$(BINNAME)
+build: download-dependencies generate $(BINDIR)/$(BINNAME) docs
+
+download-dependencies: 
+	go mod download
 
 .PHONY: generate
-generate: $(MOCKGEN)
+generate: download-dependencies $(MOCKGEN)
 	go generate ./...
 
+.PHONY: build
 $(BINDIR)/$(BINNAME): generate $(SRC)
 	go build $(GOFLAGS) -tags '$(TAGS)' -ldflags '$(LDFLAGS)' -o $(BINDIR)/$(BINNAME) github.com/arnaud-deprez/gsemver
 
-.PHONY: docs
+.PHONY: download-dependencies docs
 docs: $(BINDIR)/$(BINNAME)
-	@mkdir -p docs/cmd
-	@$(BINDIR)/$(BINNAME) docs markdown --dir docs/cmd
+	mkdir -p docs/cmd
+	$(BINDIR)/$(BINNAME) docs markdown --dir docs/cmd
 
 # ------------------------------------------------------------------------------
 #  test

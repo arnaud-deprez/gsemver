@@ -4,8 +4,7 @@ dist: build/dist
 before:
   hooks:
     - make clean
-    - go mod download
-    - make generate docs
+    - make build
 builds:
 - main: main.go
   goos:
