@@ -4,7 +4,7 @@ DIST_DIRS  := find * -type d -exec
 TARGETS    := darwin/amd64 linux/amd64 linux/386 linux/arm linux/arm64 linux/ppc64le windows/amd64
 BINNAME    ?= gsemver
 
-GO_NOMOD      := GO111MODULE=off go
+# GO_NOMOD      := GO111MODULE=off go
 GOPATH        := $(shell go env GOPATH)
 GOX           := $(GOPATH)/bin/gox
 MOCKGEN		  := $(GOPATH)/bin/mockgen
@@ -45,23 +45,22 @@ all: build docs release
 # ------------------------------------------------------------------------------
 #  dependencies
 $(GOX):
-	$(GO_NOMOD) get -u github.com/mitchellh/gox
+	$(GO_NOMOD) install github.com/mitchellh/gox
 
 $(MOCKGEN):
-	$(GO_NOMOD) get -u github.com/golang/mock/mockgen
+	$(GO_NOMOD) install github.com/golang/mock/mockgen
 
 $(GOLANGCI_LINT):
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin v1.23.8
-	# $(GO_NOMOD) get -u github.com/golangci/golangci-lint/cmd/golangci-lint
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin v1.45.2
  
 $(GOIMPORTS):
-	$(GO_NOMOD) get -u golang.org/x/tools/cmd/goimports
+	$(GO_NOMOD) install golang.org/x/tools/cmd/goimports
 
 $(GHR):
-	$(GO_NOMOD) get -u github.com/tcnksm/ghr
+	$(GO_NOMOD) install github.com/tcnksm/ghr
 
 $(GIT_CHGLOG):
-	$(GO_NOMOD) get -u github.com/git-chglog/git-chglog/cmd/git-chglog
+	$(GO_NOMOD) install github.com/git-chglog/git-chglog/cmd/git-chglog
 
 # ------------------------------------------------------------------------------
 #  build

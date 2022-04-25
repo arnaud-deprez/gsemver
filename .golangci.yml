@@ -18,7 +18,7 @@ linters:
     - deadcode
     - typecheck
     - gofmt
-    - golint
+    - revive
     - gocyclo
     - dupl
     - misspell
