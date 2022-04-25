@@ -24,9 +24,9 @@ jobs:
         echo "GITHUB_HEAD_REF=${GITHUB_HEAD_REF} & GITHUB_REF=${GITHUB_REF}"
         if [ -n "$GITHUB_HEAD_REF" ]
         then
-          echo "GIT_BRANCH=${GITHUB_HEAD_REF#refs/heads/} >> $GITHUB_ENV"
+          echo "GIT_BRANCH=${GITHUB_HEAD_REF#refs/heads/}" >> $GITHUB_ENV
         else
-          echo "GIT_BRANCH=${GITHUB_REF#refs/heads/} >> $GITHUB_ENV"
+          echo "GIT_BRANCH=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
         fi
     
     - name: Set up Go
