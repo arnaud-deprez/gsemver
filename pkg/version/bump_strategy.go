@@ -12,7 +12,7 @@ const (
 	// DefaultMajorPattern defines default regular expression to match a commit message with a major change.
 	DefaultMajorPattern = `(?:^.+\!:.*$|(?m)^BREAKING CHANGE:.*$)`
 	// DefaultMinorPattern defines default regular expression to match a commit message with a minor change.
-	DefaultMinorPattern = `^feat(?:\(.+\))?:.*`
+	DefaultMinorPattern = `^(?:feat|chore|build|ci|refactor|perf)(?:\(.+\))?:.*$`
 	// DefaultReleaseBranchesPattern defines default regular expression to match release branches
 	DefaultReleaseBranchesPattern = `^(master|release/.*)$`
 	// DefaultPreRelease defines default pre-release activation for non release branches
@@ -58,7 +58,7 @@ NewConventionalCommitBumpStrategy create a BumpStrategy following https://www.co
 The strategy configuration is:
 
 	MajorPattern: (?:^.+\!:.*$|(?m)^BREAKING CHANGE:.*$)
-	MinorPattern: ^feat(?:\(.+\))?:.*
+	MinorPattern: ^(?:feat|chore|build|ci|refactor|perf)(?:\(.+\))?:.*$
 	BumpBranchesStrategies: [
 		{
 			Strategy: AUTO
