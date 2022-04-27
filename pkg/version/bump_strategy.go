@@ -10,7 +10,7 @@ import (
 
 const (
 	// DefaultMajorPattern defines default regular expression to match a commit message with a major change.
-	DefaultMajorPattern = `(?m)^BREAKING CHANGE:.*$`
+	DefaultMajorPattern = `(?:^.+\!:.*$|(?m)^BREAKING CHANGE:.*$)`
 	// DefaultMinorPattern defines default regular expression to match a commit message with a minor change.
 	DefaultMinorPattern = `^feat(?:\(.+\))?:.*`
 	// DefaultReleaseBranchesPattern defines default regular expression to match release branches
@@ -57,7 +57,7 @@ NewConventionalCommitBumpStrategy create a BumpStrategy following https://www.co
 
 The strategy configuration is:
 
-	MajorPattern: (?m)^BREAKING CHANGE:.*$
+	MajorPattern: (?:^.+\!:.*$|(?m)^BREAKING CHANGE:.*$)
 	MinorPattern: ^feat(?:\(.+\))?:.*
 	BumpBranchesStrategies: [
 		{
@@ -187,7 +187,7 @@ func (o *BumpStrategy) computeSemverBumperFromCommits(bbs *BumpBranchesStrategy,
 				log.Trace("BumpStrategy: detects a MAJOR change at %#v however the last version is unstable so it will use bump MINOR strategy", commit)
 				return bbs.createVersionBumperFrom(Version.BumpMinor, context)
 			}
-			log.Trace("BumpStrategy: detects a MAJOR change at %#v", commit)
+			log.Debug("BumpStrategy: detects a MAJOR change at %#v", commit)
 			return bbs.createVersionBumperFrom(Version.BumpMajor, context)
 		}
 		if o.MinorPattern.MatchString(commit.Message) {
