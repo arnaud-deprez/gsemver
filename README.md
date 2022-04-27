@@ -232,8 +232,8 @@ gsemver -c my-config.yaml
 The configuration file format looks like:
 
 ```yaml
-majorPattern: "(?m)^BREAKING CHANGE:.*$"
-minorPattern: "^feat(?:\(.+\))?:.*"
+majorPattern: "(?:^.+\!:.*$|(?m)^BREAKING CHANGE:.*$)"
+minorPattern: "^(?:feat|chore|build|ci|refactor|perf)(?:\(.+\))?:.*$"
 bumpStrategies:
 - branchesPattern: "^(master|release/.*)$"
   strategy: "AUTO"
