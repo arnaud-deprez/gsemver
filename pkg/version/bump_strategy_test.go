@@ -39,6 +39,10 @@ func TestBumpVersionStrategyWithoutTag(t *testing.T) {
 		{AUTO, "master", true, "", false, "", "0.1.0-0"},
 		{AUTO, "master", true, "alpha", false, "", "0.1.0-alpha.0"},
 		{AUTO, "master", false, "", false, "build.1", "0.0.0+build.1"},
+		{AUTO, "main", false, "", false, "", "0.1.0"},
+		{AUTO, "main", true, "", false, "", "0.1.0-0"},
+		{AUTO, "main", true, "alpha", false, "", "0.1.0-alpha.0"},
+		{AUTO, "main", false, "", false, "build.1", "0.0.0+build.1"},
 		{AUTO, "feature/test", false, "", false, "{{ .Commits | len }}.{{ (.Commits | first).Hash.Short }}", "0.0.0+1.1234567"},
 	}
 
@@ -93,13 +97,19 @@ func TestBumpVersionStrategyNoDeltaCommit(t *testing.T) {
 		// in AUTO the version should not change
 		{"1.2.0", AUTO, "master", false, "", false, "", "1.2.0"},
 		{"v1.2.0", AUTO, "master", false, "", false, "", "1.2.0"},
+		{"1.2.0", AUTO, "main", false, "", false, "", "1.2.0"},
+		{"v1.2.0", AUTO, "main", false, "", false, "", "1.2.0"},
 		{"v1.2.0", AUTO, "feature/test", false, "", false, "", "1.2.0"},
 		{"v1.2.0", AUTO, "master", true, "", false, "", "1.2.0"},
 		{"v1.2.0", AUTO, "master", true, "alpha", false, "", "1.2.0"},
+		{"v1.2.0", AUTO, "main", true, "", false, "", "1.2.0"},
+		{"v1.2.0", AUTO, "main", true, "alpha", false, "", "1.2.0"},
 		{"v1.2.0", AUTO, "feature/test", true, "alpha", false, "", "1.2.0"},
 		{"v1.2.0", AUTO, "master", true, "SNAPSHOT", true, "", "1.2.0"},
+		{"v1.2.0", AUTO, "main", true, "SNAPSHOT", true, "", "1.2.0"},
 		{"v1.2.0", AUTO, "feature/test", true, "SNAPSHOT", true, "", "1.2.0"},
 		{"v1.2.0", AUTO, "master", false, "", false, "build.1", "1.2.0"},
+		{"v1.2.0", AUTO, "main", false, "", false, "build.1", "1.2.0"},
 		{"v1.2.0", AUTO, "feature/test", false, "", false, "build.1", "1.2.0"},
 	}
 
@@ -219,6 +229,7 @@ func TestBumpVersionStrategyAutoBreakingChangeOnInitialDevelopmentRelease(t *tes
 		expected string
 	}{
 		{"v0.1.0", "master", "0.2.0"},
+		{"v0.1.0", "main", "0.2.0"},
 		{"v0.1.0", "feature/test", "0.1.0+1.1234567"},
 	}
 
@@ -262,6 +273,7 @@ func TestBumpVersionStrategyAutoBreakingChangeOnInitialDevelopmentReleaseShortFo
 		expected string
 	}{
 		{"v0.1.0", "master", "0.2.0"},
+		{"v0.1.0", "main", "0.2.0"},
 		{"v0.1.0", "feature/test", "0.1.0+1.1234567"},
 	}
 
@@ -302,6 +314,7 @@ func TestBumpVersionStrategyAutoBreakingChange(t *testing.T) {
 		expected string
 	}{
 		{"v1.1.0", "master", "2.0.0"},
+		{"v1.1.0", "main", "2.0.0"},
 		{"v1.1.0", "feature/test", "1.1.0+2.1234567"},
 	}
 
@@ -351,6 +364,7 @@ func TestBumpVersionStrategyAutoBreakingChangeShortForm(t *testing.T) {
 		expected string
 	}{
 		{"v1.1.0", "master", "2.0.0"},
+		{"v1.1.0", "main", "2.0.0"},
 		{"v1.1.0", "feature/test", "1.1.0+2.1234567"},
 	}
 
@@ -397,6 +411,7 @@ func TestBumpVersionStrategyAutoWithNewFeature(t *testing.T) {
 		expected string
 	}{
 		{"v1.1.0", "master", "1.2.0"},
+		{"v1.1.0", "main", "1.2.0"},
 		{"v1.1.0", "feature/test", "1.1.0+2.1234567"},
 	}
 
@@ -443,6 +458,7 @@ func TestBumpVersionStrategyAutoWithNewFeatureAndBody(t *testing.T) {
 		expected string
 	}{
 		{"v1.1.0", "master", "1.2.0"},
+		{"v1.1.0", "main", "1.2.0"},
 		{"v1.1.0", "feature/test", "1.1.0+2.1234567"},
 	}
 
@@ -493,6 +509,7 @@ func TestBumpVersionStrategyAutoWithPatch(t *testing.T) {
 		expected string
 	}{
 		{"v1.1.0", "master", "1.1.1"},
+		{"v1.1.0", "main", "1.1.1"},
 		{"v1.1.0", "feature/test", "1.1.0+1.1234567"},
 		{"v1.1.0", "release/1.1.x", "1.1.1"},
 	}
@@ -536,6 +553,7 @@ func TestBumpVersionStrategyAutoWithPreReleaseStrategyAndNewFeature(t *testing.T
 		expected           string
 	}{
 		{"v1.1.0", "master", true, "alpha", "1.2.0"},
+		{"v1.1.0", "main", true, "alpha", "1.2.0"},
 		{"v1.1.0", "milestone-1.2", true, "alpha", "1.2.0-alpha.0"},
 		{"v1.2.0-alpha.0", "milestone-1.2", true, "alpha", "1.2.0-alpha.1"},
 		{"v1.1.0", "feature/test", true, "alpha", "1.1.0+1.1234567"},
@@ -620,5 +638,5 @@ func ExampleBumpStrategy_GoString() {
 	gitRepo := mock_version.NewMockGitRepo(nil)
 	s := NewConventionalCommitBumpStrategy(gitRepo)
 	fmt.Printf("%#v\n", s)
-	// Output: version.BumpStrategy{MajorPattern: &regexp.Regexp{expr: "(?:^.+\\!:.+|(?m)^BREAKING CHANGE:.+$)"}, MinorPattern: &regexp.Regexp{expr: "^(?:feat|chore|build|ci|refactor|perf)(?:\\(.+\\))?:.+"}, BumpBranchesStrategies: []version.BumpBranchesStrategy{version.BumpBranchesStrategy{Strategy: AUTO, BranchesPattern: &regexp.Regexp{expr: "^(master|release/.*)$"}, PreRelease: false, PreReleaseTemplate: &template.Template{text: ""}, PreReleaseOverwrite: false, BuildMetadataTemplate: &template.Template{text: ""}}, version.BumpBranchesStrategy{Strategy: AUTO, BranchesPattern: &regexp.Regexp{expr: ".*"}, PreRelease: false, PreReleaseTemplate: &template.Template{text: ""}, PreReleaseOverwrite: false, BuildMetadataTemplate: &template.Template{text: "{{.Commits | len}}.{{(.Commits | first).Hash.Short}}"}}}}
+	// Output: version.BumpStrategy{MajorPattern: &regexp.Regexp{expr: "(?:^.+\\!:.+|(?m)^BREAKING CHANGE:.+$)"}, MinorPattern: &regexp.Regexp{expr: "^(?:feat|chore|build|ci|refactor|perf)(?:\\(.+\\))?:.+"}, BumpBranchesStrategies: []version.BumpBranchesStrategy{version.BumpBranchesStrategy{Strategy: AUTO, BranchesPattern: &regexp.Regexp{expr: "^(main|master|release/.*)$"}, PreRelease: false, PreReleaseTemplate: &template.Template{text: ""}, PreReleaseOverwrite: false, BuildMetadataTemplate: &template.Template{text: ""}}, version.BumpBranchesStrategy{Strategy: AUTO, BranchesPattern: &regexp.Regexp{expr: ".*"}, PreRelease: false, PreReleaseTemplate: &template.Template{text: ""}, PreReleaseOverwrite: false, BuildMetadataTemplate: &template.Template{text: "{{.Commits | len}}.{{(.Commits | first).Hash.Short}}"}}}}
 }

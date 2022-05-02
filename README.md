@@ -153,7 +153,7 @@ gsemver bump
 This will use the git commits convention to generate the next version.
 
 The only current supported convention is [conventional commits](https://www.conventionalcommits.org).
-It also uses by default `master` and `release/*` branches by default as release branches and it generates version with build metadata for any branch that does not match.
+It also uses by default `main`, `master` and `release/*` branches by default as release branches and it generates version with build metadata for any branch that does not match.
 This is a current limitation but the [roadmap](https://github.com/arnaud-deprez/gsemver/issues/4) is to make more configurable.
 
 The [conventional commits integration tests](test/integration/gsemver_bump_auto_conventionalcommits_test.go) shows you in depth how version is generated.
@@ -235,7 +235,7 @@ The configuration file format looks like:
 majorPattern: "(?:^.+\!:.*$|(?m)^BREAKING CHANGE:.*$)"
 minorPattern: "^(?:feat|chore|build|ci|refactor|perf)(?:\(.+\))?:.*$"
 bumpStrategies:
-- branchesPattern: "^(master|release/.*)$"
+- branchesPattern: "^(main|master|release/.*)$"
   strategy: "AUTO"
   preRelease: false
   preReleaseTemplate:

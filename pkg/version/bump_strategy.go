@@ -14,7 +14,7 @@ const (
 	// DefaultMinorPattern defines default regular expression to match a commit message with a minor change.
 	DefaultMinorPattern = `^(?:feat|chore|build|ci|refactor|perf)(?:\(.+\))?:.+`
 	// DefaultReleaseBranchesPattern defines default regular expression to match release branches
-	DefaultReleaseBranchesPattern = `^(master|release/.*)$`
+	DefaultReleaseBranchesPattern = `^(main|master|release/.*)$`
 	// DefaultPreRelease defines default pre-release activation for non release branches
 	DefaultPreRelease = false
 	// DefaultPreReleaseTemplate defines default pre-release go template for non release branches
@@ -62,7 +62,7 @@ The strategy configuration is:
 	BumpBranchesStrategies: [
 		{
 			Strategy: AUTO
-			BranchesPattern: ^(master|release/.*)$
+			BranchesPattern: ^(main|master|release/.*)$
 			PreRelease:             false
 			PreReleaseTemplate:     ""
 			PreReleaseOverwrite:    false

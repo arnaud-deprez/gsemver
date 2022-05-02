@@ -200,7 +200,7 @@ func TestBumpBranchStrategy(t *testing.T) {
 		expectedPreReleaseOverwrite bool
 		expectedBuildMetadata       string
 	}{
-		{``, `^(master|release/.*)$`, false, "", false, ""},
+		{``, `^(main|master|release/.*)$`, false, "", false, ""},
 		{`--branch-strategy '{"branchesPattern":".*","preRelease":true,"preReleaseTemplate":"foo","preReleaseOverwrite":true,"buildMetadataTemplate":"bar"}'`, `.*`, true, "foo", true, "bar"},
 	}
 
