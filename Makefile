@@ -123,7 +123,7 @@ format: $(GOIMPORTS) generate
 test-release: $(GIT_CHGLOG)
 	@echo "Test release $(VERSION) on $(GIT_BRANCH), last version was $(LAST_TAG)"
 	# Because of https://github.com/git-chglog/git-chglog/issues/45, it will generate changelog for both LAST_TAG and VERSION
-	export GIT_DIRTY=$(GIT_DIRTY) && curl -sL https://git.io/goreleaser | bash -s -- release --config=./.goreleaser.yml --snapshot --skip-publish --rm-dist --release-notes <($(GIT_CHGLOG) --next-tag v$(VERSION) $(strip $(LAST_TAG))..)
+	export GIT_DIRTY=$(GIT_DIRTY) && curl -sL https://git.io/goreleaser | bash -s -- release --config=./.goreleaser.yml --snapshot --skip-publish --debug --rm-dist --release-notes <($(GIT_CHGLOG) --next-tag v$(VERSION) $(strip $(LAST_TAG))..)
 
 .PHONY: release
 release: $(GIT_CHGLOG)
