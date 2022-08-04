@@ -110,12 +110,12 @@ Please install `gsemver` in a way that matches your environment.
 #### Go users
 
 ```sh
-go get -u github.com/arnaud-deprez/gsemver
+go install github.com/arnaud-deprez/gsemver@latest
 ```
 
 #### Manual
 
-For a manual installation, you can download binary from [release page](https://github.com/arnaud-deprez/gsemver/releases) and place it in `$PATH` directory.
+For a manual installation, you can download binary from [release page](https://github.com/arnaud-deprez/gsemver/releases) and place it in directory registered in your `$PATH` environment variable.
 
 ### Test Installation
 
@@ -134,8 +134,9 @@ Most of CI server uses - by default - [shallow git clone](https://git-scm.com/do
 
 When performing such a clone, the local copy of your git repository will contain a _truncated history_ and most probably will be _detached from HEAD_.
 
-As `gsemver` is currently using `git describe` to compute the next version, it needs to have access to the whole history or at least to the last parent tag.
-For this reason, `gsemver` will execute `git fetch --tags` before computing the next version.
+As `gsemver` is currently using `git describe` to compute the next version, it means you should use **annotated tag** instead of _lightweight tag_ to release your code (see [lightweight vs annotated tag](https://git-scm.com/book/en/v2/Git-Basics-Tagging#:~:text=Git%20supports%20two%20types%20of,objects%20in%20the%20Git%20database.)).  
+Likewise, it also needs to have access to at least to the last parent annotated tag.  
+For these reasons, `gsemver` will execute `git fetch --tags` before computing the next version.
 
 As `gsemver` also needs to know the current branch and it tries to retrieve it with `git symbolic-ref HEAD` command.
 However most of CI server execute the build in _detached from HEAD_ state and then it becomes hard in git to retrieve the branch from where the build has been triggered.
