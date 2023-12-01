@@ -26,6 +26,7 @@ func beforeAll(t *testing.T) {
 	assert.NoError(t, os.RemoveAll(GitRepoPath))
 	os.MkdirAll(GitRepoPath, 0755)
 	execInGitRepo(t, "git init")
+	execInGitRepo(t, "git branch -m main")
 	execInGitRepo(t, "git status")
 	gitRepo := git.NewVersionGitRepo(GitRepoPath)
 	bumper = version.NewConventionalCommitBumpStrategy(gitRepo)
@@ -36,13 +37,13 @@ func afterAll(t *testing.T) {
 	appendToFile(t, "git.log", out)
 }
 
-func beforeEach(t *testing.T) {}
+func beforeEach(_ *testing.T) {}
 
 func afterEach(t *testing.T) {
 	v, err := bumper.Bump()
 	assert.NoError(t, err)
 	if v.String() != "0.0.0" {
-		execInGitRepo(t, "git checkout master")
+		execInGitRepo(t, "git checkout main")
 	}
 }
 
@@ -59,9 +60,9 @@ func TestSuite(t *testing.T) {
 		testWithFirstFixCommit,
 		testCreateFeaturePullRequest,
 		testCreateFeature2PullRequest,
-		testCreateFixPullRequestOnMaster,
+		testCreateFixPullRequestOnMain,
 		testCreateReleaseBranchWithFix,
-		testMergeDirectlyReleaseBranchShouldHaveSameVersionOnMaster,
+		testMergeDirectlyReleaseBranchShouldHaveSameVersionOnMain,
 		testCreateFeature3PullRequest,
 		testMergeReleaseBranch,
 		testCreateFixPullRequestInReleaseBranch,
@@ -129,7 +130,7 @@ BREAKING CHANGE: this is a breaking change but should not bump major as it is a 
 	assert.NoError(err)
 	assert.Regexp(regexp.MustCompile(`0.1.1\+1\..*`), v.String())
 
-	mergePullRequest(t, branch, "master")
+	mergePullRequest(t, branch, "main")
 
 	v, err = bumper.Bump()
 	assert.NoError(err)
@@ -155,25 +156,25 @@ func testCreateFeature2PullRequest(t *testing.T) {
 	assert.NoError(err)
 	assert.Regexp(regexp.MustCompile(`1.0.0\+1\..*`), v.String())
 
-	mergePullRequest(t, branch, "master")
+	mergePullRequest(t, branch, "main")
 	v, err = bumper.Bump()
 	assert.NoError(err)
 	assert.Equal("1.1.0", v.String())
 	createTag(t, v.String())
 }
 
-func testCreateFixPullRequestOnMaster(t *testing.T) {
+func testCreateFixPullRequestOnMain(t *testing.T) {
 	assert := assert.New(t)
 	branch := "bug/fix-1"
 	execInGitRepo(t, "git checkout -b "+branch)
-	appendToFile(t, README, "Bug fix on master")
-	commit(t, `fix: my bug fix on master`)
+	appendToFile(t, README, "Bug fix on main")
+	commit(t, `fix: my bug fix on main`)
 
 	v, err := bumper.Bump()
 	assert.NoError(err)
 	assert.Regexp(regexp.MustCompile(`1.1.0\+1\..*`), v.String())
 
-	mergePullRequest(t, branch, "master")
+	mergePullRequest(t, branch, "main")
 	v, err = bumper.Bump()
 	assert.NoError(err)
 	assert.Equal("1.1.1", v.String())
@@ -206,18 +207,18 @@ func testCreateReleaseBranchWithFix(t *testing.T) {
 	createTag(t, v.String())
 }
 
-func testMergeDirectlyReleaseBranchShouldHaveSameVersionOnMaster(t *testing.T) {
+func testMergeDirectlyReleaseBranchShouldHaveSameVersionOnMain(t *testing.T) {
 	assert := assert.New(t)
 
 	// to merge into release branch, we should first perform the merge in a working branch
 	branch := "feature/merge-direct-release-1.1.x"
 	execInGitRepo(t, "git checkout -b "+branch)
 	merge(t, "release/1.1.x", branch)
-	mergePullRequest(t, branch, "master")
+	mergePullRequest(t, branch, "main")
 
 	v, err := bumper.Bump()
 	assert.NoError(err)
-	// We should have the same version as semantically nothing is different from release and master branch
+	// We should have the same version as semantically nothing is different from release and main branch
 	assert.Equal(`1.1.2`, v.String())
 
 	// revert this change
@@ -235,7 +236,7 @@ func testCreateFeature3PullRequest(t *testing.T) {
 	assert.NoError(err)
 	assert.Regexp(regexp.MustCompile(`1.1.1\+1\..*`), v.String())
 
-	mergePullRequest(t, branch, "master")
+	mergePullRequest(t, branch, "main")
 	v, err = bumper.Bump()
 	assert.NoError(err)
 	assert.Equal("1.2.0", v.String())
@@ -249,7 +250,7 @@ func testMergeReleaseBranch(t *testing.T) {
 	branch := "feature/merge-release-1.1.x"
 	execInGitRepo(t, "git checkout -b "+branch)
 	merge(t, "release/1.1.x", branch)
-	mergePullRequest(t, branch, "master")
+	mergePullRequest(t, branch, "main")
 
 	v, err := bumper.Bump()
 	assert.NoError(err)
@@ -285,7 +286,7 @@ func testMerge2ReleaseBranch(t *testing.T) {
 	branch := "feature/merge2-release-1.1.x"
 	execInGitRepo(t, "git checkout -b "+branch)
 	merge(t, "release/1.1.x", branch)
-	mergePullRequest(t, branch, "master")
+	mergePullRequest(t, branch, "main")
 
 	v, err := bumper.Bump()
 	assert.NoError(err)

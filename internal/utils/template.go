@@ -3,7 +3,7 @@ package utils
 import (
 	"text/template"
 
-	"github.com/Masterminds/sprig"
+	"github.com/Masterminds/sprig/v3"
 )
 
 // NewTemplate create a new Template with sprig functions

@@ -5,6 +5,7 @@ import (
 )
 
 // GitRepo defines common git actions used by gsemver
+//
 //go:generate mockgen -destination mock/git_repo.go github.com/arnaud-deprez/gsemver/pkg/version GitRepo
 type GitRepo interface {
 	// FetchTags fetches the tags from remote
