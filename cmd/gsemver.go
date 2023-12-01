@@ -139,7 +139,7 @@ func (o *globalOptions) configureLogger() {
 	}
 }
 
-func runHelp(cmd *cobra.Command, args []string) {
+func runHelp(cmd *cobra.Command, _ []string) {
 	cmd.Help()
 }
 

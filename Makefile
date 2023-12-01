@@ -1,7 +1,7 @@
 BUILDDIR   := $(CURDIR)/build
 BINDIR     := $(BUILDDIR)/bin
 DIST_DIRS  := find * -type d -exec
-TARGETS    := darwin/amd64 linux/amd64 linux/386 linux/arm linux/arm64 linux/ppc64le windows/amd64
+TARGETS    := darwin/amd64 darwin/arm64 linux/amd64 linux/386 linux/arm linux/arm64 linux/ppc64le windows/amd64
 BINNAME    ?= gsemver
 
 GO_NOMOD      := GO111MODULE=off go
@@ -45,10 +45,10 @@ all: build docs release
 # ------------------------------------------------------------------------------
 #  dependencies
 $(MOCKGEN):
-	go install github.com/golang/mock/mockgen@v1.6.0
+	go install go.uber.org/mock/mockgen@v0.3.0
 
 $(GOLANGCI_LINT):
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin v1.45.2
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin v1.55.2
  
 $(GOIMPORTS):
 	go install golang.org/x/tools/cmd/goimports@latest
