@@ -219,6 +219,12 @@ When you specify a CLI option for the bump command, it overrides the whole confi
 
 ---
 
+#### Go module tags
+
+Since v0.8.0, it can extract the version from a [go module tag](https://github.com/golang/go/wiki/Modules#publishing-a-release).
+
+**Example:** if your last tag is `foo/v1.2.0`, it will use `v1.2.0` to calculate the next version and return a version in the form of `vX.Y.Z` without the module prefix.
+
 #### Configuration file
 
 You can also use a configuration file to define your own rules. 
