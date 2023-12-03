@@ -111,8 +111,8 @@ func TestBumpVersionStrategyNoDeltaCommit(t *testing.T) {
 		{"v1.2.0", AUTO, "master", false, "", false, "build.1", "1.2.0"},
 		{"v1.2.0", AUTO, "main", false, "", false, "build.1", "1.2.0"},
 		{"v1.2.0", AUTO, "feature/test", false, "", false, "build.1", "1.2.0"},
-		{"github.com/arnaud-deprez/gsemver/1.2.0", AUTO, "feature/test", false, "", false, "build.1", "1.2.0"},
-		{"github.com/arnaud-deprez/gsemver/v1.2.0", AUTO, "feature/test", false, "", false, "build.1", "1.2.0"},
+		{"arnaud-deprez/gsemver/1.2.0", AUTO, "feature/test", false, "", false, "build.1", "1.2.0"},
+		{"arnaud-deprez/gsemver/v1.2.0", AUTO, "feature/test", false, "", false, "build.1", "1.2.0"},
 	}
 
 	for idx, tc := range testData {
@@ -233,8 +233,8 @@ func TestBumpVersionStrategyAutoBreakingChangeOnInitialDevelopmentRelease(t *tes
 		{"v0.1.0", "master", "0.2.0"},
 		{"v0.1.0", "main", "0.2.0"},
 		{"v0.1.0", "feature/test", "0.1.0+1.1234567"},
-		{"github.com/foo/bar/0.1.0", "feature/test", "0.1.0+1.1234567"},
-		{"github.com/foo/bar/v0.1.0", "feature/test", "0.1.0+1.1234567"},
+		{"foo/bar/0.1.0", "feature/test", "0.1.0+1.1234567"},
+		{"foo/bar/v0.1.0", "feature/test", "0.1.0+1.1234567"},
 	}
 
 	for idx, tc := range testData {
@@ -278,9 +278,9 @@ func TestBumpVersionStrategyAutoBreakingChangeOnInitialDevelopmentReleaseShortFo
 	}{
 		{"v0.1.0", "master", "0.2.0"},
 		{"v0.1.0", "main", "0.2.0"},
-		{"github.com/foo/bar/v0.1.0", "main", "0.2.0"},
+		{"foo/bar/v0.1.0", "main", "0.2.0"},
 		{"v0.1.0", "feature/test", "0.1.0+1.1234567"},
-		{"github.com/foo/bar/v0.1.0", "feature/test", "0.1.0+1.1234567"},
+		{"foo/bar/v0.1.0", "feature/test", "0.1.0+1.1234567"},
 	}
 
 	for idx, tc := range testData {
@@ -321,9 +321,9 @@ func TestBumpVersionStrategyAutoBreakingChange(t *testing.T) {
 	}{
 		{"v1.1.0", "master", "2.0.0"},
 		{"v1.1.0", "main", "2.0.0"},
-		{"github.com/foo/bar/v1.1.0", "main", "2.0.0"},
+		{"foo/bar/v1.1.0", "main", "2.0.0"},
 		{"v1.1.0", "feature/test", "1.1.0+2.1234567"},
-		{"github.com/foo/bar/v1.1.0", "feature/test", "1.1.0+2.1234567"},
+		{"foo/bar/v1.1.0", "feature/test", "1.1.0+2.1234567"},
 	}
 
 	for idx, tc := range testData {
@@ -373,9 +373,9 @@ func TestBumpVersionStrategyAutoBreakingChangeShortForm(t *testing.T) {
 	}{
 		{"v1.1.0", "master", "2.0.0"},
 		{"v1.1.0", "main", "2.0.0"},
-		{"github.com/foo/bar/v1.1.0", "main", "2.0.0"},
+		{"foo/bar/v1.1.0", "main", "2.0.0"},
 		{"v1.1.0", "feature/test", "1.1.0+2.1234567"},
-		{"github.com/foo/bar/v1.1.0", "feature/test", "1.1.0+2.1234567"},
+		{"foo/bar/v1.1.0", "feature/test", "1.1.0+2.1234567"},
 	}
 
 	for idx, tc := range testData {
@@ -422,9 +422,9 @@ func TestBumpVersionStrategyAutoWithNewFeature(t *testing.T) {
 	}{
 		{"v1.1.0", "master", "1.2.0"},
 		{"v1.1.0", "main", "1.2.0"},
-		{"github.com/foo/bar/v1.1.0", "main", "1.2.0"},
+		{"foo/bar/v1.1.0", "main", "1.2.0"},
 		{"v1.1.0", "feature/test", "1.1.0+2.1234567"},
-		{"github.com/foo/bar/v1.1.0", "feature/test", "1.1.0+2.1234567"},
+		{"foo/bar/v1.1.0", "feature/test", "1.1.0+2.1234567"},
 	}
 
 	for idx, tc := range testData {
@@ -471,9 +471,9 @@ func TestBumpVersionStrategyAutoWithNewFeatureAndBody(t *testing.T) {
 	}{
 		{"v1.1.0", "master", "1.2.0"},
 		{"v1.1.0", "main", "1.2.0"},
-		{"github.com/foo/bar/v1.1.0", "main", "1.2.0"},
+		{"foo/bar/v1.1.0", "main", "1.2.0"},
 		{"v1.1.0", "feature/test", "1.1.0+2.1234567"},
-		{"github.com/foo/bar/v1.1.0", "feature/test", "1.1.0+2.1234567"},
+		{"foo/bar/v1.1.0", "feature/test", "1.1.0+2.1234567"},
 	}
 
 	for idx, tc := range testData {
@@ -524,11 +524,11 @@ func TestBumpVersionStrategyAutoWithPatch(t *testing.T) {
 	}{
 		{"v1.1.0", "master", "1.1.1"},
 		{"v1.1.0", "main", "1.1.1"},
-		{"github.com/foo/bar/v1.1.0", "main", "1.1.1"},
+		{"foo/bar/v1.1.0", "main", "1.1.1"},
 		{"v1.1.0", "feature/test", "1.1.0+1.1234567"},
-		{"github.com/foo/bar/v1.1.0", "feature/test", "1.1.0+1.1234567"},
+		{"foo/bar/v1.1.0", "feature/test", "1.1.0+1.1234567"},
 		{"v1.1.0", "release/1.1.x", "1.1.1"},
-		{"github.com/foo/bar/v1.1.0", "release/1.1.x", "1.1.1"},
+		{"foo/bar/v1.1.0", "release/1.1.x", "1.1.1"},
 	}
 
 	for idx, tc := range testData {
@@ -572,12 +572,12 @@ func TestBumpVersionStrategyAutoWithPreReleaseStrategyAndNewFeature(t *testing.T
 		{"v1.1.0", "master", true, "alpha", "1.2.0"},
 		{"v1.1.0", "main", true, "alpha", "1.2.0"},
 		{"v1.1.0", "milestone-1.2", true, "alpha", "1.2.0-alpha.0"},
-		{"github.com/foo/bar/v1.1.0", "milestone-1.2", true, "alpha", "1.2.0-alpha.0"},
+		{"foo/bar/v1.1.0", "milestone-1.2", true, "alpha", "1.2.0-alpha.0"},
 		{"v1.2.0-alpha.0", "milestone-1.2", true, "alpha", "1.2.0-alpha.1"},
-		{"github.com/foo/bar/v1.2.0-alpha.0", "milestone-1.2", true, "alpha", "1.2.0-alpha.1"},
+		{"foo/bar/v1.2.0-alpha.0", "milestone-1.2", true, "alpha", "1.2.0-alpha.1"},
 		{"v1.1.0", "feature/test", true, "alpha", "1.1.0+1.1234567"},
 		{"v1.1.0-alpha.0", "feature/test", true, "alpha", "1.1.0-alpha.0+1.1234567"},
-		{"github.com/foo/bar/v1.1.0-alpha.0", "feature/test", true, "alpha", "1.1.0-alpha.0+1.1234567"},
+		{"foo/bar/v1.1.0-alpha.0", "feature/test", true, "alpha", "1.1.0-alpha.0+1.1234567"},
 	}
 
 	for idx, tc := range testData {
