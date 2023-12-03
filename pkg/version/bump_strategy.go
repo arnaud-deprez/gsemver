@@ -126,7 +126,7 @@ func (o *BumpStrategy) Bump() (Version, error) {
 	}
 
 	// Parse the last version from the tag name
-	lastVersion, err := NewVersion(lastTag.Name)
+	lastVersion, err := NewVersion(extractVersionFromTag(lastTag.Name))
 	if err != nil {
 		return zeroVersion, err
 	}
@@ -150,6 +150,10 @@ func (o *BumpStrategy) Bump() (Version, error) {
 
 	// Bump the version
 	return versionBumper(lastVersion), nil
+}
+
+func extractVersionFromTag(tagName string) string {
+	return tagName[strings.LastIndex(tagName, "/")+1:]
 }
 
 // computeAutoVersionBumper computes what bump strategy to apply

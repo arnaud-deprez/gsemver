@@ -6,31 +6,31 @@ before:
     - make clean
     - make build
 builds:
-- main: main.go
-  goos:
-  - linux
-  - windows
-  - darwin
-  goarch:
-  - 386
-  - amd64
-  - arm
-  - arm64
-  env:
-  - CGO_ENABLED=0
-  ldflags:
-  - -s -w -X "github.com/arnaud-deprez/gsemver/internal/version.version={{ .Version }}" -X "github.com/arnaud-deprez/gsemver/internal/version.gitCommit={{ .FullCommit }}" -X "github.com/arnaud-deprez/gsemver/internal/version.gitTreeState={{ .Env.GIT_DIRTY }}" -X "github.com/arnaud-deprez/gsemver/internal/version.buildDate={{ .Date }}"
+  - main: main.go
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - "386"
+      - amd64
+      - arm
+      - arm64
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s -w -X "github.com/arnaud-deprez/gsemver/internal/version.version={{ .Version }}" -X "github.com/arnaud-deprez/gsemver/internal/version.gitCommit={{ .FullCommit }}" -X "github.com/arnaud-deprez/gsemver/internal/version.gitTreeState={{ .Env.GIT_DIRTY }}" -X "github.com/arnaud-deprez/gsemver/internal/version.buildDate={{ .Date }}"
 archives:
-- format_overrides:
-  - goos: windows
-    format: zip
+  - format_overrides:
+      - goos: windows
+        format: zip
 checksum:
-  name_template: 'checksums.txt'
+  name_template: "checksums.txt"
 snapshot:
   name_template: "v{{ .Version }}"
 changelog:
   sort: asc
   filters:
     exclude:
-    - '^docs:'
-    - '^test:'
+      - "^docs:"
+      - "^test:"
