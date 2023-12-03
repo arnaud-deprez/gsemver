@@ -1,16 +1,13 @@
 BUILDDIR   := $(CURDIR)/build
 BINDIR     := $(BUILDDIR)/bin
 DIST_DIRS  := find * -type d -exec
-TARGETS    := darwin/amd64 darwin/arm64 linux/amd64 linux/386 linux/arm linux/arm64 linux/ppc64le windows/amd64
 BINNAME    ?= gsemver
 
 GO_NOMOD      := GO111MODULE=off go
 GOPATH        := $(shell go env GOPATH)
-GOX           := $(GOPATH)/bin/gox
 MOCKGEN		  := $(GOPATH)/bin/mockgen
 GOIMPORTS     := $(GOPATH)/bin/goimports
 GOLANGCI_LINT := $(GOPATH)/bin/golangci-lint
-GHR           := $(GOPATH)/bin/ghr
 GIT_CHGLOG    := $(GOPATH)/bin/git-chglog
 
 # go option
