@@ -6,8 +6,8 @@ gsemver is a command line tool developed in [Go (Golang)](https://golang.org/) t
 [![GoDoc](https://godoc.org/github.com/arnaud-deprez/gsemver?status.svg)](https://godoc.org/github.com/arnaud-deprez/gsemver)
 [![Downloads](https://img.shields.io/github/downloads/arnaud-deprez/gsemver/total.svg)](https://github.com/arnaud-deprez/gsemver/releases)
 [![Go Report Card](https://goreportcard.com/badge/github.com/arnaud-deprez/gsemver)](https://goreportcard.com/report/github.com/arnaud-deprez/gsemver)
-[![MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/arnaud-deprez/gsemver/blob/master/LICENSE)
-[![codecov](https://codecov.io/gh/arnaud-deprez/gsemver/branch/master/graph/badge.svg)](https://codecov.io/gh/arnaud-deprez/gsemver)
+[![MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/arnaud-deprez/gsemver/blob/main/LICENSE)
+[![codecov](https://codecov.io/gh/arnaud-deprez/gsemver/branch/main/graph/badge.svg)](https://codecov.io/gh/arnaud-deprez/gsemver)
 [![GitHub release](https://img.shields.io/github/release/arnaud-deprez/gsemver.svg)](https://github.com/arnaud-deprez/gsemver/releases)
 
 ## Table of Contents
@@ -59,7 +59,7 @@ So for the second option, in order to provide human meaningful information by fo
 You can find some git convention such as:
 
 * [conventional commits](https://www.conventionalcommits.org): generalization of angular commit convention to other projects
-* [angular commit convention](https://github.com/angular/angular/blob/master/CONTRIBUTING.md#-commit-message-guidelines)
+* [angular commit convention](https://github.com/angular/angular/blob/main/CONTRIBUTING.md#-commit-message-guidelines)
 * [gitflow](https://datasift.github.io/gitflow/IntroducingGitFlow.html)
 
 Then I looked for existing tools and here is a non exhaustive list of what I've found so far:
@@ -161,7 +161,7 @@ The [conventional commits integration tests](test/integration/gsemver_bump_auto_
 For a more comprehension view, here an example of the logs graph these tests generate:
 
 ```git
-*   34385d9 (HEAD -> master, tag: v1.2.2) Merge from feature/merge2-release-1.1.x
+*   34385d9 (HEAD -> main, tag: v1.2.2) Merge from feature/merge2-release-1.1.x
 |\  
 | *   b884197 Merge from release/1.1.x
 | |\  
@@ -188,7 +188,7 @@ For a more comprehension view, here an example of the logs graph these tests gen
 |/  
 *   145cbff (tag: v1.1.1) Merge from bug/fix-1
 |\  
-| * 681a11b fix: my bug fix on master
+| * 681a11b fix: my bug fix on main
 |/  
 *   e9e7644 (tag: v1.1.0) Merge from feature/awesome-2
 |\  

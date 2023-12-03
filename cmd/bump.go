@@ -33,7 +33,7 @@ It can work in 2 fashions, the automatic or manual.
 Automatic way assumes: 
 - your previous tags are semver compatible.
 - you follow some conventions in your commit and ideally https://www.conventionalcommits.org
-- you follow some branch convention for your releases (eg. a release should be done on master or release/* branches) 
+- you follow some branch convention for your releases (eg. a release should be done on main, master or release/* branches) 
 
 Base on this information, it is able to compute the next version.
 
