@@ -241,6 +241,6 @@ func run(o *bumpOptions) error {
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(o.globalOptions.ioStreams.Out, "%v", version)
+	fmt.Fprintf(o.ioStreams.Out, "%v", version)
 	return nil
 }

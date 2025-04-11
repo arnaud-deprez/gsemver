@@ -18,7 +18,7 @@ func executeCommand(root *cobra.Command, args ...string) (output string, err err
 
 func executeCommandC(root *cobra.Command, args ...string) (c *cobra.Command, output string, err error) {
 	buf := new(bytes.Buffer)
-	root.SetOutput(buf)
+	root.SetOut(buf)
 	root.SetArgs(args)
 	c, err = root.ExecuteC()
 	return c, buf.String(), err
@@ -27,7 +27,7 @@ func executeCommandC(root *cobra.Command, args ...string) (c *cobra.Command, out
 func TestConfigFile(t *testing.T) {
 	assert := assert.New(t)
 	for _, opt := range []string{"--config", "-c"} {
-		t.Run(opt, func(t *testing.T) {
+		t.Run(opt, func(_ *testing.T) {
 			_, err := executeCommand(newDefaultRootCommand(), opt, "../test/data/gsemver-test-config.yaml")
 			assert.NoError(err)
 			assert.Equal("../test/data/gsemver-test-config.yaml", viper.ConfigFileUsed())

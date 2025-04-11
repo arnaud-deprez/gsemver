@@ -87,7 +87,7 @@ func (g *gitRepoCLI) GetCurrentBranch() (string, error) {
 		// And so we can retrieve the current branch name from environment variable.
 		branchFromEnv := getCurrentBranchFromEnv()
 		if branchFromEnv == "" {
-			return "", fmt.Errorf("Unable to retrieve branch name from `git symbolic-ref HEAD` nor %s environment variable", gitRepoBranchEnv)
+			return "", fmt.Errorf("unable to retrieve branch name from `git symbolic-ref HEAD` nor %s environment variable", gitRepoBranchEnv)
 		}
 		return branchFromEnv, nil
 	}

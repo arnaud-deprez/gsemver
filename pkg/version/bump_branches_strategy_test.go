@@ -30,13 +30,13 @@ func TestBumpBranchesStrategyEncodingJson(t *testing.T) {
 	}
 
 	for idx, tc := range testData {
-		t.Run(fmt.Sprintf("Case %d Marshal", idx), func(t *testing.T) {
+		t.Run(fmt.Sprintf("Case %d Marshal", idx), func(_ *testing.T) {
 			out, err := json.Marshal(tc.objVal)
 			assert.NoError(err)
 			assert.JSONEq(tc.jsonVal, string(out))
 		})
 
-		t.Run(fmt.Sprintf("Case %d Unmarshal", idx), func(t *testing.T) {
+		t.Run(fmt.Sprintf("Case %d Unmarshal", idx), func(_ *testing.T) {
 			var out BumpBranchesStrategy
 			err := json.Unmarshal([]byte(tc.jsonVal), &out)
 			assert.NoError(err)

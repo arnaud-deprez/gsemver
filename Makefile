@@ -103,7 +103,7 @@ test-unit: test
 test-integration: test
 	@echo
 	@echo "==> Running integration tests <=="
-	go test $(GOFLAGS) -run $(TESTS) $(PKG) $(TESTFLAGS)
+	go test $(GOFLAGS) -run $(TESTS) $(PKG) $(TESTFLAGS) -failfast
 
 # .PHONY: verify-docs
 # verify-docs: build
