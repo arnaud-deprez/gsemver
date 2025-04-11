@@ -11,7 +11,7 @@ func NewTemplate(value string) *template.Template {
 	if value == "" {
 		return nil
 	}
-	return template.Must(template.New("").Funcs(sprig.TxtFuncMap()).Parse(value))
+	return template.Must(template.New("").Funcs(sprig.TxtFuncMap()).Parse(value)) //nolint:typecheck
 }
 
 // TemplateToString	converts *template.Template instance to string
