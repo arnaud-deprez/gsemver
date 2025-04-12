@@ -45,7 +45,7 @@ func newVersionCommands(globalOpts *globalOptions) *cobra.Command {
 		Long:    versionDesc,
 		Example: versionExample,
 		Args:    cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			return options.run()
 		},
 	}
@@ -69,7 +69,7 @@ func (o *versionOptions) addVersionFlags(cmd *cobra.Command) {
 func (o *versionOptions) run() error {
 	log.Debug("Run version command with configuration: %#v", o)
 
-	fmt.Fprintln(o.globalOptions.ioStreams.Out, formatVersion(o.short))
+	fmt.Fprintln(o.ioStreams.Out, formatVersion(o.short))
 	return nil
 }
 

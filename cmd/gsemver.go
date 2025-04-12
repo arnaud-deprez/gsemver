@@ -5,7 +5,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -98,7 +97,7 @@ func initConfig() {
 		viper.SetConfigFile(globalOpts.ConfigFile)
 	} else {
 		// Find home directory.
-		home, err := homedir.Dir()
+		home, err := os.UserHomeDir()
 		if err != nil {
 			log.Fatal("Unable to home directory: %v", err)
 		}

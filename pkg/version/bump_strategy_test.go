@@ -47,7 +47,7 @@ func TestBumpVersionStrategyWithoutTag(t *testing.T) {
 	}
 
 	for idx, tc := range testData {
-		t.Run(fmt.Sprintf("Case %d", idx), func(t *testing.T) {
+		t.Run(fmt.Sprintf("Case %d", idx), func(_ *testing.T) {
 			gitRepo := mock_version.NewMockGitRepo(ctrl)
 			gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
 			gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{}, nil)
@@ -116,7 +116,7 @@ func TestBumpVersionStrategyNoDeltaCommit(t *testing.T) {
 	}
 
 	for idx, tc := range testData {
-		t.Run(fmt.Sprintf("Case %d", idx), func(t *testing.T) {
+		t.Run(fmt.Sprintf("Case %d", idx), func(_ *testing.T) {
 			gitRepo := mock_version.NewMockGitRepo(ctrl)
 			gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
 			gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{Name: tc.from}, nil)
@@ -238,7 +238,7 @@ func TestBumpVersionStrategyAutoBreakingChangeOnInitialDevelopmentRelease(t *tes
 	}
 
 	for idx, tc := range testData {
-		t.Run(fmt.Sprintf("Case %d", idx), func(t *testing.T) {
+		t.Run(fmt.Sprintf("Case %d", idx), func(_ *testing.T) {
 			gitRepo := mock_version.NewMockGitRepo(ctrl)
 			gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
 			gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{Name: tc.from}, nil)
@@ -284,7 +284,7 @@ func TestBumpVersionStrategyAutoBreakingChangeOnInitialDevelopmentReleaseShortFo
 	}
 
 	for idx, tc := range testData {
-		t.Run(fmt.Sprintf("Case %d", idx), func(t *testing.T) {
+		t.Run(fmt.Sprintf("Case %d", idx), func(_ *testing.T) {
 			gitRepo := mock_version.NewMockGitRepo(ctrl)
 			gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
 			gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{Name: tc.from}, nil)
@@ -327,7 +327,7 @@ func TestBumpVersionStrategyAutoBreakingChange(t *testing.T) {
 	}
 
 	for idx, tc := range testData {
-		t.Run(fmt.Sprintf("Case %d", idx), func(t *testing.T) {
+		t.Run(fmt.Sprintf("Case %d", idx), func(_ *testing.T) {
 			gitRepo := mock_version.NewMockGitRepo(ctrl)
 			gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
 			gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{Name: tc.from}, nil)
@@ -379,7 +379,7 @@ func TestBumpVersionStrategyAutoBreakingChangeShortForm(t *testing.T) {
 	}
 
 	for idx, tc := range testData {
-		t.Run(fmt.Sprintf("Case %d", idx), func(t *testing.T) {
+		t.Run(fmt.Sprintf("Case %d", idx), func(_ *testing.T) {
 			gitRepo := mock_version.NewMockGitRepo(ctrl)
 			gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
 			gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{Name: tc.from}, nil)
@@ -428,7 +428,7 @@ func TestBumpVersionStrategyAutoWithNewFeature(t *testing.T) {
 	}
 
 	for idx, tc := range testData {
-		t.Run(fmt.Sprintf("Case %d", idx), func(t *testing.T) {
+		t.Run(fmt.Sprintf("Case %d", idx), func(_ *testing.T) {
 			gitRepo := mock_version.NewMockGitRepo(ctrl)
 			gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
 			gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{Name: tc.from}, nil)
@@ -477,7 +477,7 @@ func TestBumpVersionStrategyAutoWithNewFeatureAndBody(t *testing.T) {
 	}
 
 	for idx, tc := range testData {
-		t.Run(fmt.Sprintf("Case %d", idx), func(t *testing.T) {
+		t.Run(fmt.Sprintf("Case %d", idx), func(_ *testing.T) {
 			gitRepo := mock_version.NewMockGitRepo(ctrl)
 			gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
 			gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{Name: tc.from}, nil)
@@ -532,7 +532,7 @@ func TestBumpVersionStrategyAutoWithPatch(t *testing.T) {
 	}
 
 	for idx, tc := range testData {
-		t.Run(fmt.Sprintf("Case %d", idx), func(t *testing.T) {
+		t.Run(fmt.Sprintf("Case %d", idx), func(_ *testing.T) {
 			gitRepo := mock_version.NewMockGitRepo(ctrl)
 			gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
 			gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{Name: tc.from}, nil)
@@ -581,7 +581,7 @@ func TestBumpVersionStrategyAutoWithPreReleaseStrategyAndNewFeature(t *testing.T
 	}
 
 	for idx, tc := range testData {
-		t.Run(fmt.Sprintf("Case %d", idx), func(t *testing.T) {
+		t.Run(fmt.Sprintf("Case %d", idx), func(_ *testing.T) {
 			gitRepo := mock_version.NewMockGitRepo(ctrl)
 			gitRepo.EXPECT().FetchTags().Times(1).Return(nil)
 			gitRepo.EXPECT().GetLastRelativeTag("HEAD").Times(1).Return(git.Tag{Name: tc.from}, nil)

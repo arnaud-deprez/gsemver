@@ -42,10 +42,10 @@ all: build docs release
 # ------------------------------------------------------------------------------
 #  dependencies
 $(MOCKGEN):
-	go install go.uber.org/mock/mockgen@v0.3.0
+	go install go.uber.org/mock/mockgen@v0.5.1
 
 $(GOLANGCI_LINT):
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin v1.55.2
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $(GOPATH)/bin v2.0.2
  
 $(GOIMPORTS):
 	go install golang.org/x/tools/cmd/goimports@latest
@@ -103,7 +103,7 @@ test-unit: test
 test-integration: test
 	@echo
 	@echo "==> Running integration tests <=="
-	go test $(GOFLAGS) -run $(TESTS) $(PKG) $(TESTFLAGS)
+	go test $(GOFLAGS) -run $(TESTS) $(PKG) $(TESTFLAGS) -failfast
 
 # .PHONY: verify-docs
 # verify-docs: build
@@ -120,14 +120,14 @@ format: $(GOIMPORTS) generate
 test-release: $(GIT_CHGLOG)
 	@echo "Test release $(VERSION) on $(GIT_BRANCH), last version was $(LAST_TAG)"
 	# Because of https://github.com/git-chglog/git-chglog/issues/45, it will generate changelog for both LAST_TAG and VERSION
-	export GIT_DIRTY=$(GIT_DIRTY) && curl -sL https://git.io/goreleaser | bash -s -- release --config=./.goreleaser.yml --snapshot --skip-publish --debug --rm-dist --release-notes <($(GIT_CHGLOG) --next-tag v$(VERSION) $(strip $(LAST_TAG))..)
+	export GIT_DIRTY=$(GIT_DIRTY) && curl -sL https://git.io/goreleaser | bash -s -- release --config=./.goreleaser.yml --snapshot --skip=publish --verbose --clean --release-notes <($(GIT_CHGLOG) --next-tag v$(VERSION) $(strip $(LAST_TAG))..)
 
 .PHONY: release
 release: $(GIT_CHGLOG)
 	@echo "Release $(VERSION) on $(GIT_BRANCH), last version was $(LAST_TAG)"
 	git tag -am "Release v$(VERSION) by ci script" v$(VERSION)
 	# This is a bit weird: https://github.com/git-chglog/git-chglog/issues/45
-	export GIT_DIRTY=$(GIT_DIRTY) && curl -sL https://git.io/goreleaser | bash -s -- release --config=./.goreleaser.yml --rm-dist --release-notes <($(GIT_CHGLOG) v$(VERSION))
+	export GIT_DIRTY=$(GIT_DIRTY) && curl -sL https://git.io/goreleaser | bash -s -- release --config=./.goreleaser.yml --clean --release-notes <($(GIT_CHGLOG) v$(VERSION))
 
 # ------------------------------------------------------------------------------
 # clean

@@ -1,32 +1,44 @@
-run:
-  deadline: 2m
-
-skip-files:
-  - "pkg/version/bump_strategy_example_test.go"
-
+version: "2"
 linters:
-  disable-all: true # explicit configuration is clearer
+  default: none
   enable:
-    - govet
-    # - errcheck this is a bit too much
-    - staticcheck
-    - unused
-    - gosimple
-    - ineffassign
-    - typecheck
-    - gofmt
-    - revive
-    - gocyclo
     - dupl
+    - gocyclo
+    - govet
+    - ineffassign
     - misspell
     - nakedret
-
-linters-settings:
-  gofmt:
-    simplify: true
-  goimports:
-    local-prefixes: github.com/arnaud-deprez/gsemver
-  dupl:
-    threshold: 400
-  gocyclo:
-    min-complexity: 15
+    - revive
+    - staticcheck
+    - unused
+  settings:
+    dupl:
+      threshold: 400
+    gocyclo:
+      min-complexity: 15
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofmt
+  settings:
+    gofmt:
+      simplify: true
+    goimports:
+      local-prefixes:
+        - github.com/arnaud-deprez/gsemver
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

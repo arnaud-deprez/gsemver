@@ -23,6 +23,7 @@ var (
 )
 
 func beforeAll(t *testing.T) {
+	t.Log("BeforeAll: initializing git repo at", GitRepoPath)
 	assert.NoError(t, os.RemoveAll(GitRepoPath))
 	os.MkdirAll(GitRepoPath, 0755)
 	execInGitRepo(t, "git init")
@@ -70,11 +71,12 @@ func TestSuite(t *testing.T) {
 	}
 
 	for _, tf := range tests {
-		t.Run(runtime.FuncForPC(reflect.ValueOf(tf).Pointer()).Name(), func(t *testing.T) {
+		code := t.Run(runtime.FuncForPC(reflect.ValueOf(tf).Pointer()).Name(), func(t *testing.T) {
 			beforeEach(t)
 			tf(t)
 			afterEach(t)
 		})
+		assert.True(t, code, "Test failed: %s", runtime.FuncForPC(reflect.ValueOf(tf).Pointer()).Name())
 	}
 
 	afterAll(t)
