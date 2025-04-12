@@ -11,12 +11,13 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     env:
-      # needed to create commit or tag
-      # see https://github.com/orgs/community/discussions/26560#discussioncomment-3531273
-      GIT_COMMITTER_NAME: "github-actions[bot]"
-      GIT_COMMITTER_EMAIL: "41898282+github-actions[bot]@users.noreply.github.com"
       GIT_COMMIT: ${{ github.sha }}
     steps:
+      - name: Setup Git
+        run: |
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+
       - name: Extract Branch Name in GIT_BRANCH env
         run: |
           echo "GITHUB_HEAD_REF=${GITHUB_HEAD_REF} & GITHUB_REF=${GITHUB_REF}"
