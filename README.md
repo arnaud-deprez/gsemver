@@ -158,7 +158,7 @@ It also uses by default `main`, `master` and `release/*` branches by default as 
 This is a current limitation but the [roadmap](https://github.com/arnaud-deprez/gsemver/issues/4) is to make more configurable.
 
 The [conventional commits integration tests](test/integration/gsemver_bump_auto_conventionalcommits_test.go) shows you in depth how version is generated.
-For a more comprehension view, here an example of the logs graph these tests generate:
+For a more comprehensive view, here is an example of the logs graph these tests generate:
 
 ```git
 *   34385d9 (HEAD -> main, tag: v1.2.2) Merge from feature/merge2-release-1.1.x
