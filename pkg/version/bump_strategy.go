@@ -94,8 +94,8 @@ func NewConventionalCommitBumpStrategy(gitRepo GitRepo) *BumpStrategy {
 func (o BumpStrategy) GoString() string {
 	var sb strings.Builder
 	sb.WriteString("version.BumpStrategy{")
-	sb.WriteString(fmt.Sprintf("MajorPattern: &regexp.Regexp{expr: %q}, MinorPattern: &regexp.Regexp{expr: %q}, ", o.MajorPattern, o.MinorPattern))
-	sb.WriteString(fmt.Sprintf("BumpBranchesStrategies: %#v", o.BumpStrategies))
+	fmt.Fprintf(&sb, "MajorPattern: &regexp.Regexp{expr: %q}, MinorPattern: &regexp.Regexp{expr: %q}, ", o.MajorPattern, o.MinorPattern)
+	fmt.Fprintf(&sb, "BumpBranchesStrategies: %#v", o.BumpStrategies)
 	sb.WriteString("}")
 	return sb.String()
 }

@@ -81,10 +81,10 @@ func (s *BumpBranchesStrategy) createVersionBumperFrom(bumper versionBumper, ctx
 func (s BumpBranchesStrategy) GoString() string {
 	var sb strings.Builder
 	sb.WriteString("version.BumpBranchesStrategy{")
-	sb.WriteString(fmt.Sprintf("Strategy: %v, ", s.Strategy))
-	sb.WriteString(fmt.Sprintf("BranchesPattern: &regexp.Regexp{expr: %q}, ", s.BranchesPattern))
-	sb.WriteString(fmt.Sprintf("PreRelease: %v, PreReleaseTemplate: &template.Template{text: %q}, PreReleaseOverwrite: %v, ", s.PreRelease, utils.TemplateToString(s.PreReleaseTemplate), s.PreReleaseOverwrite))
-	sb.WriteString(fmt.Sprintf("BuildMetadataTemplate: &template.Template{text: %q}", utils.TemplateToString(s.BuildMetadataTemplate)))
+	fmt.Fprintf(&sb, "Strategy: %v, ", s.Strategy)
+	fmt.Fprintf(&sb, "BranchesPattern: &regexp.Regexp{expr: %q}, ", s.BranchesPattern)
+	fmt.Fprintf(&sb, "PreRelease: %v, PreReleaseTemplate: &template.Template{text: %q}, PreReleaseOverwrite: %v, ", s.PreRelease, utils.TemplateToString(s.PreReleaseTemplate), s.PreReleaseOverwrite)
+	fmt.Fprintf(&sb, "BuildMetadataTemplate: &template.Template{text: %q}", utils.TemplateToString(s.BuildMetadataTemplate))
 	sb.WriteString("}")
 	return sb.String()
 }
