@@ -51,7 +51,7 @@ Then, you have 2 choices:
 
 The first option is easy and does not required any tool.
 
-However some tools/tech require you to use a [semver](https://semver.org/spec/v2.0.0.html) compatible format version (eg. [go modules](https://github.com/golang/go/wiki/Modules), [helm](https://helm.sh/), etc.).
+However some tools/tech require you to use a [semver](https://semver.org/spec/v2.0.0.html) compatible format version (eg. [go modules](https://go.dev/wiki/Modules), [helm](https://helm.sh/), etc.).
 You can still decide to always bump the major, minor or patch number but then your version is not meaningful in you are just doing a hack to be compliant with the spec format but not with spec semantic.
 
 So for the second option, in order to provide human meaningful information by following the spec semantic, you need to rely on some conventions.
@@ -221,7 +221,7 @@ When you specify a CLI option for the bump command, it overrides the whole confi
 
 #### Go module tags
 
-Since v0.8.0, it can extract the version from a [go module tag](https://github.com/golang/go/wiki/Modules#publishing-a-release).
+Since v0.8.0, it can extract the version from a [go module tag](https://go.dev/wiki/Modules#publishing-a-release).
 
 **Example:** if your last tag is `foo/v1.2.0`, it will use `v1.2.0` to calculate the next version and return a version in the form of `vX.Y.Z` without the module prefix.
 
