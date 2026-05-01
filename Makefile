@@ -9,6 +9,7 @@ MOCKGEN		  := $(GOPATH)/bin/mockgen
 GOIMPORTS     := $(GOPATH)/bin/goimports
 GOLANGCI_LINT := $(GOPATH)/bin/golangci-lint
 GIT_CHGLOG    := $(GOPATH)/bin/git-chglog
+GORELEASER    := $(GOPATH)/bin/goreleaser
 
 # go option
 PKG        := ./...
@@ -42,16 +43,19 @@ all: build docs release
 # ------------------------------------------------------------------------------
 #  dependencies
 $(MOCKGEN):
-	go install go.uber.org/mock/mockgen@v0.5.1
+	go install go.uber.org/mock/mockgen@v0.6.0
 
 $(GOLANGCI_LINT):
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $(GOPATH)/bin v2.0.2
- 
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $(GOPATH)/bin v2.12.0
+
 $(GOIMPORTS):
 	go install golang.org/x/tools/cmd/goimports@latest
 
 $(GIT_CHGLOG):
 	go install github.com/git-chglog/git-chglog/cmd/git-chglog@latest
+
+$(GORELEASER):
+	go install github.com/goreleaser/goreleaser/v2@v2.15.4
 
 # ------------------------------------------------------------------------------
 #  build
@@ -63,7 +67,7 @@ download-dependencies:
 
 .PHONY: generate
 generate: download-dependencies $(MOCKGEN)
-	go generate ./...
+	PATH="$(GOPATH)/bin:$(PATH)" go generate ./...
 
 .PHONY: build
 $(BINDIR)/$(BINNAME): generate $(SRC)
@@ -117,17 +121,17 @@ format: $(GOIMPORTS) generate
 #  release
 
 .PHONY: test-release
-test-release: $(GIT_CHGLOG)
+test-release: $(GIT_CHGLOG) $(GORELEASER)
 	@echo "Test release $(VERSION) on $(GIT_BRANCH), last version was $(LAST_TAG)"
 	# Because of https://github.com/git-chglog/git-chglog/issues/45, it will generate changelog for both LAST_TAG and VERSION
-	export GIT_DIRTY=$(GIT_DIRTY) && curl -sL https://git.io/goreleaser | bash -s -- release --config=./.goreleaser.yml --snapshot --skip=publish --verbose --clean --release-notes <($(GIT_CHGLOG) --next-tag v$(VERSION) $(strip $(LAST_TAG))..)
+	export GIT_DIRTY=$(GIT_DIRTY) && $(GORELEASER) release --config=./.goreleaser.yml --snapshot --skip=publish --verbose --clean --release-notes <($(GIT_CHGLOG) --next-tag v$(VERSION) $(strip $(LAST_TAG))..)
 
 .PHONY: release
-release: $(GIT_CHGLOG)
+release: $(GIT_CHGLOG) $(GORELEASER)
 	@echo "Release $(VERSION) on $(GIT_BRANCH), last version was $(LAST_TAG)"
 	git tag -am "Release v$(VERSION) by ci script" v$(VERSION)
 	# This is a bit weird: https://github.com/git-chglog/git-chglog/issues/45
-	export GIT_DIRTY=$(GIT_DIRTY) && curl -sL https://git.io/goreleaser | bash -s -- release --config=./.goreleaser.yml --clean --release-notes <($(GIT_CHGLOG) v$(VERSION))
+	export GIT_DIRTY=$(GIT_DIRTY) && $(GORELEASER) release --config=./.goreleaser.yml --clean --release-notes <($(GIT_CHGLOG) v$(VERSION))
 
 # ------------------------------------------------------------------------------
 # clean
