@@ -29,13 +29,13 @@ jobs:
           fi
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
-          go-version: ^1.24
+          go-version: ^1.26
         id: go
 
       - name: Check out code into the Go module directory
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Unshallow git repo
         run: git fetch --prune --unshallow
@@ -46,7 +46,7 @@ jobs:
       - name: Test
         run: make --environment-overrides test-integration
 
-      - uses: codecov/codecov-action@v5
+      - uses: codecov/codecov-action@v6
         with:
           fail_ci_if_error: true # optional (default = false)
           token: ${{ secrets.CODECOV_TOKEN }} # required if not using the GitHub app
