@@ -70,3 +70,5 @@ Tests build a real temporary git repo at `build/git-tmp`, make commits and tags 
 - **Mock generation**: Never edit files under `*/mock/` directly; regenerate with `make generate`.
 - **`pkg/` vs `internal/`**: `pkg/` is the stable public API intended for library consumers. Logic that isn't part of the public contract belongs in `internal/`.
 - **Templates**: Pre-release and build metadata strings in `BumpBranchesStrategy` are Go templates with access to `Context` (branch, commits, last tag/version). Sprig functions are available.
+- **Custom errors**: When returning a custom error, use `pkg/error.NewError(format, args...)` for standalone errors or `pkg/error.NewErrorC(cause, format, args...)` to wrap an underlying error. These produce a consistent `"<message> caused by: <cause>"` format. Do not use bare `fmt.Errorf` for domain errors in `pkg/` or `internal/`.
+- **One statement per line**: Do not combine a statement and a condition in a single `if`. Write the statement on its own line first, then check the result. Prefer `err := foo(); \n if err != nil {` over `if err := foo(); err != nil {`.

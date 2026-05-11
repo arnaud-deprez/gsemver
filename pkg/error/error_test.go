@@ -1,13 +1,13 @@
-package version
+package error
 
 import (
 	"fmt"
 )
 
 func ExampleError_Error() {
-	err := newError("Error 1 occurred")
+	err := NewError("Error 1 occurred")
 	fmt.Println(err)
-	err = newErrorC(newError("Error 3"), "Error 2 occurred")
+	err = NewErrorC(NewError("Error 3"), "Error 2 occurred")
 	fmt.Println(err)
 	// Output:
 	// Error 1 occurred

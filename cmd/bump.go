@@ -12,6 +12,7 @@ import (
 	"github.com/arnaud-deprez/gsemver/internal/git"
 	"github.com/arnaud-deprez/gsemver/internal/log"
 	"github.com/arnaud-deprez/gsemver/internal/utils"
+	errorutil "github.com/arnaud-deprez/gsemver/pkg/error"
 	"github.com/arnaud-deprez/gsemver/pkg/version"
 )
 
@@ -140,22 +141,30 @@ type config struct {
 	}
 }
 
-func (c *config) createBumpStrategy() *version.BumpStrategy {
+func (c *config) createBumpStrategy() (*version.BumpStrategy, error) {
 	ret := version.BumpStrategy{BumpStrategies: []version.BumpBranchesStrategy{}}
 	ret.MajorPattern = regexp.MustCompile(c.MajorPattern)
 	ret.MinorPattern = regexp.MustCompile(c.MinorPattern)
 	for _, it := range c.BumpStrategies {
+		preReleaseTemplate, err := utils.NewTemplate(it.PreReleaseTemplate)
+		if err != nil {
+			return nil, errorutil.NewErrorC(err, "Invalid preReleaseTemplate in config")
+		}
+		buildMetadataTemplate, err := utils.NewTemplate(it.BuildMetadataTemplate)
+		if err != nil {
+			return nil, errorutil.NewErrorC(err, "Invalid buildMetadataTemplate in config")
+		}
 		s := version.BumpBranchesStrategy{
 			Strategy:              version.ParseBumpStrategyType(it.Strategy),
 			BranchesPattern:       regexp.MustCompile(it.BranchesPattern),
 			PreRelease:            it.PreRelease,
-			PreReleaseTemplate:    utils.NewTemplate(it.PreReleaseTemplate),
+			PreReleaseTemplate:    preReleaseTemplate,
 			PreReleaseOverwrite:   it.PreReleaseOverwrite,
-			BuildMetadataTemplate: utils.NewTemplate(it.BuildMetadataTemplate),
+			BuildMetadataTemplate: buildMetadataTemplate,
 		}
 		ret.BumpStrategies = append(ret.BumpStrategies, s)
 	}
-	return &ret
+	return &ret, nil
 }
 
 // BumpOptions type to represent the available options for the bump commands
@@ -210,9 +219,15 @@ func (o *bumpOptions) hasDefaultCommandSettings() bool {
 	return strings.ToLower(o.Bump) != "auto" || o.Cmd.Flags().Changed("pre-release") || o.Cmd.Flags().Changed("pre-release-overwrite") || o.Cmd.Flags().Changed("build-metadata")
 }
 
-func (o *bumpOptions) createBumpStrategy() *version.BumpStrategy {
-	viper.Unmarshal(&o.viperConfig)
-	ret := o.viperConfig.createBumpStrategy()
+func (o *bumpOptions) createBumpStrategy() (*version.BumpStrategy, error) {
+	err := viper.Unmarshal(&o.viperConfig)
+	if err != nil {
+		return nil, errorutil.NewErrorC(err, "Failed to load config")
+	}
+	ret, err := o.viperConfig.createBumpStrategy()
+	if err != nil {
+		return nil, err
+	}
 	ret.SetGitRepository(git.NewVersionGitRepo(o.CurrentDir))
 
 	for id, s := range o.BranchStrategies {
@@ -221,26 +236,40 @@ func (o *bumpOptions) createBumpStrategy() *version.BumpStrategy {
 			ret.BumpStrategies = []version.BumpBranchesStrategy{}
 		}
 		var b version.BumpBranchesStrategy
-		json.Unmarshal([]byte(s), &b)
+		err := json.Unmarshal([]byte(s), &b)
+		if err != nil {
+			return nil, errorutil.NewErrorC(err, "invalid --branch-strategy JSON")
+		}
 		ret.BumpStrategies = append(ret.BumpStrategies, b)
 	}
 
 	if o.hasDefaultCommandSettings() {
-		// configure default BumpBranchesStrategy
+		_, err := utils.NewTemplate(o.PreReleaseTemplate)
+		if err != nil {
+			return nil, errorutil.NewErrorC(err, "invalid --pre-release template")
+		}
+		_, err = utils.NewTemplate(o.BuildMetadataTemplate)
+		if err != nil {
+			return nil, errorutil.NewErrorC(err, "invalid --build-metadata template")
+		}
 		defaultStrategy := *version.NewBumpAllBranchesStrategy(version.ParseBumpStrategyType(o.Bump), o.PreRelease, o.PreReleaseTemplate, o.PreReleaseOverwrite, o.BuildMetadataTemplate)
 		ret.BumpStrategies = []version.BumpBranchesStrategy{defaultStrategy}
 	}
 
-	return ret
+	return ret, nil
 }
 
 func run(o *bumpOptions) error {
 	log.Debug("Run bump command with configuration: %#v", o)
 
-	version, err := o.createBumpStrategy().Bump()
+	strategy, err := o.createBumpStrategy()
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(o.ioStreams.Out, "%v", version)
+	v, err := strategy.Bump()
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(o.ioStreams.Out, "%v", v)
 	return nil
 }

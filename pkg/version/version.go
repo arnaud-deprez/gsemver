@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/arnaud-deprez/gsemver/internal/utils"
+	errorutil "github.com/arnaud-deprez/gsemver/pkg/error"
 )
 
 var (
@@ -25,7 +26,7 @@ func NewVersion(value string) (Version, error) {
 
 	m := versionRegex.FindStringSubmatch(value)
 	if m == nil {
-		return zeroVersion, newError("'%s' is not a semver compatible version", value)
+		return zeroVersion, errorutil.NewError("'%s' is not a semver compatible version", value)
 	}
 
 	major, _ := strconv.Atoi(m[1])
@@ -167,7 +168,7 @@ func (v Version) IsPreRelease() bool {
 // GetPreReleaseIncrement returns the current pre-release increment or an error if there is not.
 func (v Version) GetPreReleaseIncrement() (int, error) {
 	if !v.IsPreRelease() {
-		return -1, newError("%#v is not a pre-release version", v)
+		return -1, errorutil.NewError("%#v is not a pre-release version", v)
 	}
 	currentIdentifiers := extractIdentifiers(v.PreRelease)
 	return strconv.Atoi(currentIdentifiers[len(currentIdentifiers)-1])

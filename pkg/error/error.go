@@ -1,4 +1,4 @@
-package version
+package error
 
 import "fmt"
 
@@ -17,11 +17,11 @@ func (e Error) Error() string {
 }
 
 // NewError create an error based on a format error message
-func newError(format string, args ...interface{}) Error {
-	return newErrorC(nil, format, args...)
+func NewError(format string, args ...interface{}) Error {
+	return NewErrorC(nil, format, args...)
 }
 
 // NewErrorC create an error based on a cause error and a format error message
-func newErrorC(cause error, format string, args ...interface{}) Error {
+func NewErrorC(cause error, format string, args ...interface{}) Error {
 	return Error{message: fmt.Sprintf(format, args...), cause: cause}
 }
