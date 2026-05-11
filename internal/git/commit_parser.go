@@ -65,6 +65,9 @@ func (p *commitParser) parseCommit(input string) *git.Commit {
 
 	for _, token := range tokens {
 		firstSep := strings.Index(token, ":")
+		if firstSep < 0 {
+			continue
+		}
 		field := token[0:firstSep]
 		value := strings.TrimSpace(token[firstSep+1:])
 
@@ -85,6 +88,9 @@ func (p *commitParser) parseCommit(input string) *git.Commit {
 
 func (p *commitParser) parseSignature(input string) git.Signature {
 	arr := strings.Split(input, "\t")
+	if len(arr) < 3 {
+		return git.Signature{}
+	}
 	ts, err := strconv.Atoi(arr[2])
 	if err != nil {
 		ts = 0

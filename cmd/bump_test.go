@@ -45,7 +45,10 @@ func TestBumpNoFlag(t *testing.T) {
 			args, err := shellquote.Split(tc.args)
 			assert.NoError(err)
 			root := newBumpCommandsWithRun(globalOpts, func(o *bumpOptions) error {
-				s := o.createBumpStrategy()
+				s, err := o.createBumpStrategy()
+				if !assert.NoError(err) {
+					return err
+				}
 
 				assert.Equal(version.DefaultMajorPattern, utils.RegexpToString(s.MajorPattern))
 				assert.Equal(version.DefaultMinorPattern, utils.RegexpToString(s.MinorPattern))
@@ -87,7 +90,10 @@ func TestBumpChangePattern(t *testing.T) {
 			args, err := shellquote.Split(tc.args)
 			assert.NoError(err)
 			root := newBumpCommandsWithRun(globalOpts, func(o *bumpOptions) error {
-				s := o.createBumpStrategy()
+				s, err := o.createBumpStrategy()
+				if !assert.NoError(err) {
+					return err
+				}
 
 				assert.Equal(tc.expectedMajorPattern, utils.RegexpToString(s.MajorPattern))
 				assert.Equal(tc.expectedMinorPattern, utils.RegexpToString(s.MinorPattern))
@@ -127,7 +133,10 @@ func TestBumpPreRelease(t *testing.T) {
 			args, err := shellquote.Split(tc.args)
 			assert.NoError(err)
 			root := newBumpCommandsWithRun(globalOpts, func(o *bumpOptions) error {
-				s := o.createBumpStrategy()
+				s, err := o.createBumpStrategy()
+				if !assert.NoError(err) {
+					return err
+				}
 
 				assert.Len(s.BumpStrategies, 1)
 				assert.Equal(".*", utils.RegexpToString(s.BumpStrategies[0].BranchesPattern))
@@ -174,7 +183,10 @@ func TestBumpBuildMetadata(t *testing.T) {
 			args, err := shellquote.Split(tc.args)
 			assert.NoError(err)
 			root := newBumpCommandsWithRun(globalOpts, func(o *bumpOptions) error {
-				s := o.createBumpStrategy()
+				s, err := o.createBumpStrategy()
+				if !assert.NoError(err) {
+					return err
+				}
 
 				assert.Equal(len(tc.expectedBumpBranchesStrategy), len(s.BumpStrategies))
 				for i := range tc.expectedBumpBranchesStrategy {
@@ -215,7 +227,10 @@ func TestBumpBranchStrategy(t *testing.T) {
 			args, err := shellquote.Split(tc.args)
 			assert.NoError(err)
 			root := newBumpCommandsWithRun(globalOpts, func(o *bumpOptions) error {
-				s := o.createBumpStrategy()
+				s, err := o.createBumpStrategy()
+				if !assert.NoError(err) {
+					return err
+				}
 
 				size := 1
 				if tc.args == "" {
@@ -249,7 +264,10 @@ func TestWithConfiguration(t *testing.T) {
 	//args, err := shellquote.Split(tc.args)
 	// assert.NoError(err)
 	cmd := newBumpCommandsWithRun(globalOpts, func(o *bumpOptions) error {
-		s := o.createBumpStrategy()
+		s, err := o.createBumpStrategy()
+		if !assert.NoError(err) {
+			return err
+		}
 
 		assert.Equal("majorPatternConfig", s.MajorPattern.String(), "majorPattern does not match")
 		assert.Equal("minorPatternConfig", s.MinorPattern.String(), "minorPattern does not match")
@@ -261,7 +279,7 @@ func TestWithConfiguration(t *testing.T) {
 			{
 				Strategy:              version.AUTO,
 				BranchesPattern:       regexp.MustCompile("all"),
-				BuildMetadataTemplate: utils.NewTemplate("myBuildMetadataTemplate"),
+				BuildMetadataTemplate: utils.MustNewTemplate("myBuildMetadataTemplate"),
 			},
 		}
 		assert.Equal(len(expectedBumpBranchesStrategy), len(s.BumpStrategies))

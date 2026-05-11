@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/arnaud-deprez/gsemver/internal/log"
+	errorutil "github.com/arnaud-deprez/gsemver/pkg/error"
 )
 
 const (
@@ -112,7 +113,7 @@ func (o *BumpStrategy) Bump() (Version, error) {
 	// Make sure we have the tags
 	err := o.gitRepo.FetchTags()
 	if err != nil {
-		return zeroVersion, newErrorC(err, "Cannot fetch tags")
+		return zeroVersion, errorutil.NewErrorC(err, "Cannot fetch tags")
 	}
 
 	// This assumes we used annotated tags for the release. Annotated tag are created with: git tag -a -m "<message>" <tag>
@@ -122,7 +123,7 @@ func (o *BumpStrategy) Bump() (Version, error) {
 	lastTag, err := o.gitRepo.GetLastRelativeTag("HEAD")
 	if err != nil {
 		// just log for debug but the program can continue
-		log.Debug("%v", newErrorC(err, "Unable to get last relative tag"))
+		log.Debug("%v", errorutil.NewErrorC(err, "Unable to get last relative tag"))
 	}
 
 	// Parse the last version from the tag name
@@ -133,14 +134,18 @@ func (o *BumpStrategy) Bump() (Version, error) {
 
 	currentBranch, err := o.gitRepo.GetCurrentBranch()
 	if err != nil {
-		return zeroVersion, newErrorC(err, "Cannot get current branch name")
+		return zeroVersion, errorutil.NewErrorC(err, "Cannot get current branch name")
 	}
 
 	// Check if describe is a tag, if so return the version that matches this tag
-	commits, cErr := o.gitRepo.GetCommits(lastTag.Name, "HEAD")
-	if cErr != nil {
-		// Oops
-		return zeroVersion, err
+	commits, err := o.gitRepo.GetCommits(lastTag.Name, "HEAD")
+	if err != nil {
+		// An empty repo (no commits yet) has no HEAD, so git log fails.
+		// When there is also no previous tag, this is a valid starting state — return 0.0.0.
+		if lastTag.Name == "" {
+			return zeroVersion, nil
+		}
+		return zeroVersion, errorutil.NewErrorC(err, "Cannot get commits since last tag")
 	}
 
 	context := NewContext(currentBranch, &lastVersion, &lastTag, commits)

@@ -7,6 +7,8 @@ import (
 	"strings"
 	"text/template"
 
+	errorutil "github.com/arnaud-deprez/gsemver/pkg/error"
+
 	"github.com/arnaud-deprez/gsemver/internal/utils"
 )
 
@@ -16,9 +18,9 @@ func NewBumpBranchesStrategy(strategy BumpStrategyType, pattern string, preRelea
 		Strategy:              strategy,
 		BranchesPattern:       regexp.MustCompile(pattern),
 		PreRelease:            preRelease,
-		PreReleaseTemplate:    utils.NewTemplate(preReleaseTemplate),
+		PreReleaseTemplate:    utils.MustNewTemplate(preReleaseTemplate),
 		PreReleaseOverwrite:   preReleaseOverwrite,
-		BuildMetadataTemplate: utils.NewTemplate(buildMetadataTemplate),
+		BuildMetadataTemplate: utils.MustNewTemplate(buildMetadataTemplate),
 	}
 }
 
@@ -120,7 +122,15 @@ func (s *BumpBranchesStrategy) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	s.BranchesPattern = regexp.MustCompile(aux.BranchesPattern)
-	s.PreReleaseTemplate = utils.NewTemplate(aux.PreReleaseTemplate)
-	s.BuildMetadataTemplate = utils.NewTemplate(aux.BuildMetadataTemplate)
+	preReleaseTemplate, err := utils.NewTemplate(aux.PreReleaseTemplate)
+	if err != nil {
+		return errorutil.NewErrorC(err, "invalid preReleaseTemplate")
+	}
+	buildMetadataTemplate, err := utils.NewTemplate(aux.BuildMetadataTemplate)
+	if err != nil {
+		return errorutil.NewErrorC(err, "invalid buildMetadataTemplate")
+	}
+	s.PreReleaseTemplate = preReleaseTemplate
+	s.BuildMetadataTemplate = buildMetadataTemplate
 	return nil
 }
